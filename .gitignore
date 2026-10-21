@@ -1,0 +1,7 @@
+node_modules/
+.DS_Store
+.atl/
+.codegraph/
+*.mp4
+*.mov
+*.wav
