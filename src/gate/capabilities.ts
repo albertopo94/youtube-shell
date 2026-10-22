@@ -20,6 +20,50 @@ export interface ToolCapabilityEntry {
   validationMethod?: string;
 }
 
+export const FILMCRAFT_MCP_CAPABILITIES: readonly ToolCapabilityEntry[] = [
+  // Read-only FilmCraft 0.9.0 inspection tools
+  ...([
+    "command_list",
+    "doc_inspect",
+    "project_inspect",
+    "sequence_inspect",
+    "render_frame",
+    "render_preview",
+    "ui_elements",
+    "ui_inspect",
+    "ui_screenshot",
+  ] as const).map(
+    (id): ToolCapabilityEntry => ({
+      id,
+      capability: "read",
+      allowedPhases: "ALL",
+      requiresHumanConfirmation: false,
+      evidenceStatus: "probada",
+    }),
+  ),
+  // Headless timeline & render operations (gated to P05_ANIMATIC / P06_ASSEMBLY + command/path guard)
+  ...(["media_import", "command_run", "command_batch"] as const).map(
+    (id): ToolCapabilityEntry => ({
+      id,
+      capability: "render",
+      allowedPhases: ["P05_ANIMATIC", "P06_ASSEMBLY"],
+      requiresHumanConfirmation: false,
+      evidenceStatus: "probada",
+      validationMethod: "filmcraft_command_guard",
+    }),
+  ),
+  // Live desktop bridge UI controls (require active assembly phase + human confirmation)
+  ...(["ui_click", "ui_control", "ui_drag", "ui_key", "ui_type"] as const).map(
+    (id): ToolCapabilityEntry => ({
+      id,
+      capability: "render",
+      allowedPhases: ["P05_ANIMATIC", "P06_ASSEMBLY"],
+      requiresHumanConfirmation: true,
+      evidenceStatus: "documentada",
+    }),
+  ),
+];
+
 export const DEFAULT_CAPABILITIES: readonly ToolCapabilityEntry[] = [
   {
     id: "read",
@@ -60,6 +104,14 @@ export const DEFAULT_CAPABILITIES: readonly ToolCapabilityEntry[] = [
     validationMethod: "contract_checker",
   },
   {
+    id: "yts_measure_master",
+    capability: "measure",
+    allowedPhases: "ALL",
+    requiresHumanConfirmation: false,
+    evidenceStatus: "probada",
+    validationMethod: "ffprobe_ffmpeg_loudnorm",
+  },
+  {
     id: "yts_transition",
     capability: "state_control",
     allowedPhases: "ALL",
@@ -67,6 +119,7 @@ export const DEFAULT_CAPABILITIES: readonly ToolCapabilityEntry[] = [
     evidenceStatus: "probada",
     validationMethod: "state_machine",
   },
+  ...FILMCRAFT_MCP_CAPABILITIES,
 ];
 
 export function buildCapabilityCatalog(

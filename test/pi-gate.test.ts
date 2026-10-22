@@ -497,3 +497,62 @@ test("yts_check_contract is exposed and yts_transition(submit) auto-verifies con
   assert.match(badFactcheckSubmit.reason, /factcheck_resolved/);
 });
 
+test("FilmCraft MCP inventory is gated by phase and blocks unsafe engine commands or path escapes", async (t) => {
+  const { videoDir } = setupTempVideo(t);
+  const h = createPiHarness({ videoDir });
+
+  // 1. Read-only FilmCraft inspection is allowed in any phase
+  const inspectRes = await h.invokeTool("sequence_inspect", {});
+  assert.equal(inspectRes.blocked, false);
+
+  // 2. Mutating FilmCraft command_run is blocked during P01_PACKAGING
+  await h.invokeTool("yts_transition", { action: "start", phase: "P01_PACKAGING" });
+  const earlyRun = await h.invokeTool("command_run", {
+    id: "file.newSequence",
+    params: { name: "Pilot" },
+  });
+  assert.equal(earlyRun.blocked, true);
+  assert.equal(h.getBackendSideEffects(), 1); // only sequence_inspect ran
+
+  // Advance to P05_ANIMATIC EN_CURSO
+  await h.invokeTool("yts_transition", { action: "submit", phase: "P01_PACKAGING" });
+  await h.invokeCommand("yts-approve", "P01_PACKAGING");
+  await h.invokeTool("yts_transition", { action: "start", phase: "P02_RESEARCH" });
+  await h.invokeTool("yts_transition", { action: "submit", phase: "P02_RESEARCH" });
+  await h.invokeCommand("yts-approve", "P02_RESEARCH");
+  await h.invokeTool("yts_transition", { action: "start", phase: "P03_SCRIPT" });
+  await h.invokeTool("yts_transition", { action: "submit", phase: "P03_SCRIPT" });
+  await h.invokeCommand("yts-approve", "P03_SCRIPT");
+  await h.invokeTool("yts_transition", { action: "start", phase: "P04_FACTCHECK" });
+  await h.invokeTool("yts_transition", {
+    action: "submit",
+    phase: "P04_FACTCHECK",
+    checks: [{ id: "factcheck_resolved", result: "PASS" }],
+  });
+  await h.invokeCommand("yts-approve", "P04_FACTCHECK");
+  await h.invokeTool("yts_transition", { action: "start", phase: "P05_ANIMATIC" });
+
+  // 3. Safe FilmCraft timeline command is allowed in P05_ANIMATIC
+  const okRun = await h.invokeTool("command_run", {
+    id: "file.newSequence",
+    params: { name: "Animatic", video: 2, audio: 3 },
+  });
+  assert.equal(okRun.blocked, false);
+
+  // 4. Unsafe FilmCraft command (prefs.reset or exporting over a Markdown artifact / escaping videoDir) is blocked
+  const badPref = await h.invokeTool("command_run", { id: "prefs.reset", params: {} });
+  assert.equal(badPref.blocked, true);
+
+  const badExportOverwrite = await h.invokeTool("command_run", {
+    id: "file.exportMedia",
+    params: { path: "02-guion.md" },
+  });
+  assert.equal(badExportOverwrite.blocked, true);
+
+  const badBatchEscape = await h.invokeTool("command_batch", {
+    steps: [{ id: "file.saveAs", params: { path: "../outside.fcproj" } }],
+  });
+  assert.equal(badBatchEscape.blocked, true);
+});
+
+

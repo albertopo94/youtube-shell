@@ -16,7 +16,12 @@ import { getPhase, PHASE_IDS } from "../core/phases.ts";
 import { extractSection } from "../core/sections.ts";
 import type { CheckRun, Context, DeclaredEvidence, PhaseId, Result } from "../core/types.ts";
 import { createFsReader, loadRegistry, saveRegistry } from "../store/fs-store.ts";
-import { checkVideoContract } from "../checks/contract-checker.ts";
+import { CANONICAL_FILES, checkVideoContract } from "../checks/contract-checker.ts";
+import {
+  evaluateMasterAcceptance,
+  measureMasterFile,
+  type AcceptanceSheet,
+} from "../checks/media-measurement.ts";
 import { buildCapabilityCatalog, type ToolCapabilityEntry } from "./capabilities.ts";
 
 export interface YoutubeShellExtensionOptions {
@@ -195,6 +200,65 @@ function verifyWriteTargetAndSharedSections(
   return { ok: true };
 }
 
+const BLOCKED_FILMCRAFT_COMMANDS = new Set([
+  "prefs.set",
+  "prefs.reset",
+  "file.discardRecovery",
+  "file.closeAllProjects",
+  "file.closeAllOtherProjects",
+]);
+
+function verifyFilmcraftCommandStep(
+  id: string,
+  params: Record<string, unknown> | null | undefined,
+): { ok: true } | { ok: false; reason: string } {
+  if (!id || BLOCKED_FILMCRAFT_COMMANDS.has(id)) {
+    return {
+      ok: false,
+      reason: `Operación bloqueada: el comando de FilmCraft "${id}" no está permitido en el flujo controlado.`,
+    };
+  }
+  const pathVal = params && typeof params === "object" ? params.path : undefined;
+  if (typeof pathVal === "string") {
+    const safe = isSafeEvidencePath(pathVal);
+    if (!safe.ok) {
+      return { ok: false, reason: `Operación bloqueada en FilmCraft (${id}): ${safe.reason}` };
+    }
+    if ((CANONICAL_FILES as readonly string[]).includes(pathVal) || pathVal.endsWith(".md")) {
+      return {
+        ok: false,
+        reason: `Operación bloqueada en FilmCraft (${id}): no puede sobrescribir documentos Markdown ("${pathVal}").`,
+      };
+    }
+  }
+  return { ok: true };
+}
+
+function verifyFilmcraftCall(
+  toolName: string,
+  input: Record<string, unknown>,
+): { ok: true } | { ok: false; reason: string } {
+  if (toolName === "command_run") {
+    const id = String(input.id ?? "");
+    const params = (input.params as Record<string, unknown> | null | undefined) ?? undefined;
+    return verifyFilmcraftCommandStep(id, params);
+  }
+  if (toolName === "command_batch") {
+    const steps = Array.isArray(input.steps) ? input.steps : [];
+    if (steps.length === 0) {
+      return { ok: false, reason: "Operación bloqueada: command_batch requiere al menos un paso." };
+    }
+    for (const step of steps) {
+      const check = verifyFilmcraftCommandStep(
+        String(step?.id ?? ""),
+        (step?.params as Record<string, unknown> | null | undefined) ?? undefined,
+      );
+      if (!check.ok) return check;
+    }
+  }
+  return { ok: true };
+}
+
 export function createYoutubeShellExtension(options: YoutubeShellExtensionOptions = {}) {
   const catalog = buildCapabilityCatalog(options.extraCapabilities);
   const nowFn = options.now ?? (() => new Date().toISOString());
@@ -230,6 +294,50 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
       },
       async execute(_toolCallId: string, _params: Record<string, unknown>, _signal: unknown, _onUpdate: unknown, ctx: any) {
         const report = checkVideoContract(ctx.cwd);
+        return {
+          content: [{ type: "text", text: JSON.stringify(report, null, 2) }],
+          details: report,
+        };
+      },
+    });
+
+    pi.registerTool({
+      name: "yts_measure_master",
+      label: "Medición de Master YouTube-Shell",
+      description:
+        "Mide el archivo master con ffprobe/ffmpeg contra una hoja de aceptación versionada antes del render.",
+      parameters: {
+        type: "object",
+        properties: {
+          masterPath: { type: "string" },
+          acceptanceSheetPath: { type: "string" },
+        },
+        required: ["masterPath", "acceptanceSheetPath"],
+      },
+      async execute(_toolCallId: string, params: Record<string, unknown>, _signal: unknown, _onUpdate: unknown, ctx: any) {
+        const masterRel = String(params.masterPath ?? "");
+        const sheetRel = String(params.acceptanceSheetPath ?? "");
+        const safeMaster = isSafeEvidencePath(masterRel);
+        const safeSheet = isSafeEvidencePath(sheetRel);
+        if (!safeMaster.ok || !safeSheet.ok) {
+          return {
+            content: [{ type: "text", text: "Ruta de master o de hoja de aceptación inválida." }],
+            isError: true,
+          };
+        }
+        const measured = measureMasterFile(join(ctx.cwd, masterRel));
+        if (!measured.ok) {
+          return {
+            content: [{ type: "text", text: measured.reason }],
+            details: { result: "NOT_EVALUABLE", reason: measured.reason },
+            isError: true,
+          };
+        }
+        const sheetFull = join(ctx.cwd, sheetRel);
+        const sheet = existsSync(sheetFull)
+          ? (JSON.parse(readFileSync(sheetFull, "utf8")) as AcceptanceSheet)
+          : null;
+        const report = evaluateMasterAcceptance(measured.metrics, sheet);
         return {
           content: [{ type: "text", text: JSON.stringify(report, null, 2) }],
           details: report,
@@ -450,6 +558,13 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
           activeWorkPhases,
           nowIso,
         );
+        if (!check.ok) {
+          return { block: true, reason: check.reason };
+        }
+      }
+
+      if (cap.validationMethod === "filmcraft_command_guard") {
+        const check = verifyFilmcraftCall(toolName, event.input ?? {});
         if (!check.ok) {
           return { block: true, reason: check.reason };
         }
