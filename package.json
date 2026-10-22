@@ -9,6 +9,15 @@
     "node": ">=22.18.0"
   },
   "scripts": {
-    "test": "node --test --disable-warning=ExperimentalWarning 'test/**/*.test.ts'"
+    "test": "node --test --disable-warning=ExperimentalWarning 'test/**/*.test.ts'",
+    "upstreams:check": "node scripts/check-upstreams.mjs"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": ">=1.3.0"
+  },
+  "peerDependenciesMeta": {
+    "@earendil-works/pi-coding-agent": {
+      "optional": true
+    }
   }
 }

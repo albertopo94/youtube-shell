@@ -1,0 +1,96 @@
+{
+  "schema": "youtube-shell.upstream-lock/v1",
+  "upstreams": {
+    "youtube": {
+      "repo": "https://github.com/albertopo94/youtube",
+      "role": "Domain knowledge (layer 3): phases, templates, contract checker, pilot measurement",
+      "reviewed": {
+        "ref": "main",
+        "commit": "0cf9080c0ddb631a577690cac57ee24e54ffb132",
+        "committed_at": "2026-10-21T20:51:08Z",
+        "reviewed_on": "2026-10-22"
+      },
+      "affects_us": [
+        "_framework/plantillas/pipeline-video-template/",
+        "_framework/scripts/check-contrato.sh",
+        "_framework/scripts/test-check-contrato.sh",
+        "_framework/referencias/evidencia-piloto/medicion-master-piloto.md",
+        "_framework/herramientas-y-apis.md",
+        "_framework/contingencia-y-politicas-sensibles.md",
+        "_framework/roles/",
+        "AGENTS.md"
+      ],
+      "ignore": [
+        "mis-canales/",
+        "canales-en-estudio/"
+      ],
+      "mirrored": {
+        "templates/pipeline-video/00-estado-produccion.md": {
+          "source": "_framework/plantillas/pipeline-video-template/00-estado-produccion.md",
+          "sha256": "f8814f68dd044999291de85b3f3007c67689f1f31cf8762f6360f7fd5030d36f"
+        },
+        "templates/pipeline-video/01-packaging.md": {
+          "source": "_framework/plantillas/pipeline-video-template/01-packaging.md",
+          "sha256": "6821a1c481881ec4f73493ae1cdcae44f22b750653294ec8d5c7edc739f5ed93"
+        },
+        "templates/pipeline-video/02-guion.md": {
+          "source": "_framework/plantillas/pipeline-video-template/02-guion.md",
+          "sha256": "b6eb00794dea5db4a9986a92ed39c61f750731896d55fb63df309740d61ffd8c"
+        },
+        "templates/pipeline-video/03-storyboard-y-edicion.md": {
+          "source": "_framework/plantillas/pipeline-video-template/03-storyboard-y-edicion.md",
+          "sha256": "e194471b5bb982e6f95831bbef796abf27ee6cccdae55c6d7dd1c90b529df56b"
+        },
+        "templates/pipeline-video/04-registro-recursos.md": {
+          "source": "_framework/plantillas/pipeline-video-template/04-registro-recursos.md",
+          "sha256": "e9c9d57137d7c154bfd3adfcc5bc6fe1b0811b450c96187191cc8d641b93f987"
+        },
+        "templates/pipeline-video/05-metricas-retencion.md": {
+          "source": "_framework/plantillas/pipeline-video-template/05-metricas-retencion.md",
+          "sha256": "a7e6646fdd20932e68c6a79d92100869603666c6f0a2f5adea013138ea6c7602"
+        },
+        "templates/pipeline-video/06-fuentes-y-verificacion.md": {
+          "source": "_framework/plantillas/pipeline-video-template/06-fuentes-y-verificacion.md",
+          "sha256": "7aa4f46d1829160ef7b41213b4129b0e5ee7dd904f46b6f742eebe85f18ef062"
+        }
+      }
+    },
+    "pi": {
+      "repo": "https://github.com/earendil-works/pi",
+      "package": "@earendil-works/pi-coding-agent",
+      "role": "Runtime (layer 1): extension hooks, tools, commands, UI dialogs",
+      "reviewed": {
+        "version": "1.3.0",
+        "tag": "v1.3.0",
+        "commit": "71023aec1546d6d677a65669c5665c0927ce0dd0",
+        "reviewed_on": "2026-10-22",
+        "evidence": "dist/core/extensions/types.d.ts and docs/extensions.md of the installed 1.3.0 package"
+      },
+      "latest_seen": {
+        "version": "1.4.0",
+        "tag": "v1.4.0",
+        "commit": "4a080252f06caf63a525d7873c5d94d3c23887e0",
+        "seen_on": "2026-10-22",
+        "reviewed": false,
+        "note": "packages/coding-agent/docs/extensions.md changed between v1.3.0 and v1.4.0; not reviewed yet"
+      },
+      "affects_us": [
+        "packages/coding-agent/src/core/extensions/types.ts",
+        "packages/coding-agent/docs/extensions.md",
+        "packages/coding-agent/docs/packages.md"
+      ],
+      "api_used": [
+        "pi.on:before_agent_start",
+        "pi.on:tool_call",
+        "pi.registerTool",
+        "pi.registerCommand",
+        "pi.getAllTools",
+        "pi.setActiveTools",
+        "ctx.cwd",
+        "ctx.hasUI",
+        "ctx.ui.confirm",
+        "ctx.ui.notify"
+      ]
+    }
+  }
+}

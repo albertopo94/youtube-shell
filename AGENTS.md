@@ -34,7 +34,7 @@ report the assumption you made. Never substitute a value remembered from another
 | Stability contract | unstable |
 | Public surface (what consumers depend on) | Phase contract (`docs/contrato-fases-v1.md`), registry schema (`.youtube-shell/registro.json`), and, once packaged, the pi tools and commands |
 | Style reference file | `src/core/machine.ts` |
-| Supporting docs to load | `docs/brief-lector.md`, `docs/diseno-controles-v01.md`, `docs/prd.md`, `docs/contrato-fases-v1.md`, `docs/progreso.md` |
+| Supporting docs to load | `docs/brief-lector.md`, `docs/diseno-controles-v01.md`, `docs/prd.md`, `docs/contrato-fases-v1.md`, `docs/progreso.md`, `docs/upstreams.md`, `upstream-lock.json` |
 
 ---
 
