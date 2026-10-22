@@ -10,4 +10,4 @@ Orden de trabajo de [brief-lector.md §12.5](brief-lector.md). Se actualiza en c
 - [x] **Portar el verificador de contrato con sus fixtures** — `src/checks/contract-checker.ts`, `yts_check_contract` y fixtures `f0`..`f5` (`test/contract-checker.test.ts`, 10 tests)
 - [x] **Medir el master contra una hoja de aceptación** — `src/checks/media-measurement.ts`, `yts_measure_master`, `ffprobe`/`ffmpeg` (`PASS/FAIL/WARN/NOT_EVALUABLE`, `test/media-measurement.test.ts`, 6 tests)
 - [x] **Probar el caso negativo del piloto e inventariar FilmCraft MCP** — fixture negativo `PILOT_ARCHIVED_METRICS` y 17 herramientas MCP de FilmCraft 0.9.0 catalogadas y acotadas por fase/ruta (`src/gate/capabilities.ts`, `test/pi-gate.test.ts`)
-- [-] **Empaquetar como paquete de pi** — persona, gobernanza, skills de los 4 roles
+- [x] **Empaquetar como paquete de pi** — manifiesto `pi` en `package.json`, persona/gobernanza en `before_agent_start` y las 4 skills de rol (`skills/yts-*/SKILL.md`, `test/package-manifest.test.ts`)

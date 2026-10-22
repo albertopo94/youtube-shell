@@ -482,9 +482,23 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
       pi.setActiveTools?.(allowedTools);
 
       const phaseLines = ev.phases.map((p) => `- ${p.id}: ${p.effective}`).join("\n");
-      const statusBlock = `\n\n[youtube-shell runtime]\nFases:\n${phaseLines}\nSiguiente acción permitida: ${ev.nextAction}`;
+      const governanceBlock = [
+        "[youtube-shell — Gobernanza y Persona]",
+        "Rol: Director Creativo y de Producción Audiovisual.",
+        "Comunicación ejecutiva: hablar en términos de entregables tangibles, ritmo narrativo y experiencia de escucha/visión; evitar jerga de terminal o fontanería interna salvo pedido explícito.",
+        "Reglas estructurales:",
+        "- La autoridad de estado vive en .youtube-shell/registro.json; 00-estado-produccion.md es una vista legible.",
+        "- Ninguna fase comienza sin las fases previas en APROBADO con huellas SHA-256 vigentes.",
+        "- Solo el creador aprueba fases mediante /yts-approve; el agente solicita revisión con yts_transition(submit).",
+        "- Prohibido usar voces mecánicas del sistema (/usr/bin/say) o dejar afirmaciones fácticas en PENDIENTE.",
+        "",
+        "[youtube-shell runtime]",
+        "Fases:",
+        phaseLines,
+        `Siguiente acción permitida: ${ev.nextAction}`,
+      ].join("\n");
       return {
-        systemPrompt: `${String(event.systemPrompt ?? "")}${statusBlock}`,
+        systemPrompt: `${String(event.systemPrompt ?? "")}\n\n${governanceBlock}`,
       };
     });
 
