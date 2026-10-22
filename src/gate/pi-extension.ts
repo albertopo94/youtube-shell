@@ -15,7 +15,7 @@ import {
 import { getPhase, PHASE_IDS } from "../core/phases.ts";
 import { extractSection } from "../core/sections.ts";
 import type { CheckRun, Context, DeclaredEvidence, PhaseId, Result } from "../core/types.ts";
-import { createFsReader, loadRegistry, saveRegistry } from "../store/fs-store.ts";
+import { createFsReader, loadRegistry, saveRegistry, scaffoldVideoDir } from "../store/fs-store.ts";
 import { CANONICAL_FILES, checkVideoContract } from "../checks/contract-checker.ts";
 import {
   evaluateMasterAcceptance,
@@ -383,6 +383,18 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
           content: [{ type: "text", text: `Fase ${String(params.phase)} actualizada. Siguiente: ${ev.nextAction}` }],
           details: ev,
         };
+      },
+    });
+
+    pi.registerCommand("yts-init", {
+      description: "Inicializa las 7 plantillas canónicas (00..06) y el registro de producción en la carpeta actual.",
+      handler: async (_args: string, ctx: any) => {
+        const { createdFiles } = scaffoldVideoDir(ctx.cwd, { now: nowFn() });
+        const summary =
+          createdFiles.length > 0
+            ? `Creados: ${createdFiles.join(", ")}`
+            : "Plantillas ya presentes; registro sincronizado.";
+        ctx.ui.notify(`Video inicializado en ${basename(ctx.cwd)}. ${summary}`, "info");
       },
     });
 

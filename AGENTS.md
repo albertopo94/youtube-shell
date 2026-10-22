@@ -28,9 +28,9 @@ report the assumption you made. Never substitute a value remembered from another
 | Canonical test command | `npm test` |
 | Focused test command (one file or case) | `node --test --disable-warning=ExperimentalWarning test/<file>.test.ts` |
 | Static checks (type / lint / format) | |
-| Run or smoke-test command | |
+| Run or smoke-test command | `npm run smoke` |
 | Version source (the one file that owns the version) | `package.json` |
-| Bump timing | |
+| Bump timing | Once per work unit, in the last commit |
 | Stability contract | unstable |
 | Public surface (what consumers depend on) | Phase contract (`docs/contrato-fases-v1.md`), registry schema (`.youtube-shell/registro.json`), and, once packaged, the pi tools and commands |
 | Style reference file | `src/core/machine.ts` |

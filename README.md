@@ -8,5 +8,41 @@ pipeline y evidencia: las fases de producción se controlan en el runtime, las a
 solo del creador y quedan atadas a huellas SHA-256 de lo aprobado, y el master se mide contra
 una hoja de aceptación escrita antes del render.
 
-Estado: en construcción (pre-MVP). Contexto completo en [docs/brief-lector.md](docs/brief-lector.md),
-alcance en [docs/prd.md](docs/prd.md). Tests: `npm test` (Node ≥ 22.18, sin dependencias).
+## Instalación y uso sobre `pi`
+
+Distribución privada por repositorio Git o ruta local (`"private": true`, no listado en `pi.dev/packages`):
+
+```bash
+# Instalar desde GitHub
+pi install git:github.com/albertopo94/youtube-shell
+
+# O probar directamente desde un clon local en una carpeta de video
+pi -e /ruta/a/youtube-shell
+```
+
+### Comandos exclusivos del creador (UI de `pi`)
+- `/yts-init`: inicializa las 7 plantillas canónicas (`00`..`06`) y `.youtube-shell/registro.json` en la carpeta actual.
+- `/yts-approve <FASE> [--ack-warn] [nota]`: aprueba una fase en `PENDIENTE_APROBACION`, sellando las huellas SHA-256 de sus artefactos y sincronizando la vista `00-estado-produccion.md`.
+- `/yts-reject <FASE> <nota>`: devuelve una fase pendiente a `EN_CURSO` con observaciones.
+
+### Herramientas expuestas al modelo
+- `yts_status`: estado determinista de las 7 fases (`P01_PACKAGING`..`P07_CLOSE`) y siguiente acción permitida.
+- `yts_transition`: solicita transiciones operativas (`start`, `submit`, `block`, `unblock`, `reopen`) verificando automáticamente el contrato sobre disco.
+- `yts_check_contract`: verificador determinista del contrato de archivos, estados normalizados, bloques `[Bxx]`, timecodes y fact-checking.
+- `yts_measure_master`: mide el archivo master con `ffprobe`/`ffmpeg` (`loudnorm`, `blackdetect`, `silencedetect`, cortes de escena) contra una hoja de aceptación fechada antes del render (`PASS | FAIL | WARN | NOT_EVALUABLE`).
+
+### Skills incluidas
+- `yts-investigacion-ideas` (`P02_RESEARCH`)
+- `yts-packaging-miniaturas` (`P01_PACKAGING`)
+- `yts-guion-narrativa` (`P03_SCRIPT`, `P04_FACTCHECK`)
+- `yts-direccion-edicion` (`P05_ANIMATIC`, `P06_ASSEMBLY`, `P07_CLOSE`)
+
+## Verificación y seguimiento de upstreams
+
+```bash
+npm test              # Suite completa (73 tests, 0 dependencias)
+npm run smoke         # Smoke test de punta a punta (P01 -> P07 + medición ffmpeg)
+npm run upstreams:check  # Verifica si albertopo94/youtube o earendil-works/pi avanzaron
+```
+
+Contexto en [docs/brief-lector.md](docs/brief-lector.md), diseño de controles en [docs/diseno-controles-v01.md](docs/diseno-controles-v01.md), contrato de fases en [docs/contrato-fases-v1.md](docs/contrato-fases-v1.md) y procedencia de upstreams en [docs/upstreams.md](docs/upstreams.md).

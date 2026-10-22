@@ -1,10 +1,12 @@
 import { createHash } from "node:crypto";
 import {
   closeSync,
+  copyFileSync,
   existsSync,
   fsyncSync,
   mkdirSync,
   openSync,
+  readdirSync,
   readFileSync,
   realpathSync,
   renameSync,
@@ -12,11 +14,18 @@ import {
   unlinkSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join, sep } from "node:path";
-import { createRegistry, isSafeEvidencePath } from "../core/machine.ts";
+import { basename, dirname, join, sep } from "node:path";
+import { createRegistry, evaluate, isSafeEvidencePath } from "../core/machine.ts";
 import { CONTRACT_VERSION, PHASE_IDS } from "../core/phases.ts";
 import { extractSection } from "../core/sections.ts";
-import type { ArtifactReader, ArtifactRef, FingerprintResult, Registry, StoredStatus } from "../core/types.ts";
+import type {
+  ArtifactReader,
+  ArtifactRef,
+  FingerprintResult,
+  PhaseId,
+  Registry,
+  StoredStatus,
+} from "../core/types.ts";
 
 const VALID_STATUSES = new Set<StoredStatus>([
   "NO_INICIADO",
@@ -184,4 +193,93 @@ export function saveRegistry(videoDir: string, reg: Registry): void {
     }
     throw err;
   }
+
+  syncStatusView(videoDir, reg);
+}
+
+const PHASE_ROW_LABELS: Record<PhaseId, string> = {
+  P01_PACKAGING: "**01. Packaging**",
+  P02_RESEARCH: "**02. Investigación Previa**",
+  P03_SCRIPT: "**03. Guion & Originalidad**",
+  P04_FACTCHECK: "**04. Fact-Checking Borrador**",
+  P05_ANIMATIC: "**05. Animatic & Scratch**",
+  P06_ASSEMBLY: "**06. Montaje & Licencias**",
+  P07_CLOSE: "**07. Publicación & Cierre**",
+};
+
+export function syncStatusView(videoDir: string, reg: Registry): void {
+  const statusFile = join(videoDir, "00-estado-produccion.md");
+  if (!existsSync(statusFile)) return;
+
+  const ev = evaluate(reg, createFsReader(videoDir));
+  const states = ev.phases.map((p) => p.effective);
+
+  let overall: StoredStatus = "NO_INICIADO";
+  if (states.every((s) => s === "APROBADO")) {
+    overall = "APROBADO";
+  } else if (states.some((s) => s === "BLOQUEADO" || s === "OBSOLETO")) {
+    overall = "BLOQUEADO";
+  } else if (states.some((s) => s === "PENDIENTE_APROBACION")) {
+    overall = "PENDIENTE_APROBACION";
+  } else if (states.some((s) => s === "EN_CURSO" || s === "APROBADO")) {
+    overall = "EN_CURSO";
+  }
+
+  let content = readFileSync(statusFile, "utf8");
+  content = content.replace(
+    /(\*\*Estado actual:\*\*\s*)`[^`]+`/,
+    `$1\`${overall}\``,
+  );
+
+  for (const pe of ev.phases) {
+    const label = PHASE_ROW_LABELS[pe.id];
+    const normalizedCell: StoredStatus =
+      pe.effective === "OBSOLETO" ? "BLOQUEADO" : pe.effective;
+    const isApproved = pe.effective === "APROBADO";
+    const latestApproval = reg.phases[pe.id].approvals.at(-1);
+    const closedDate = isApproved && latestApproval ? latestApproval.approvedAt.slice(0, 10) : "";
+
+    const lines = content.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      if (!lines[i].includes(label)) continue;
+      const cells = lines[i].split("|");
+      if (cells.length < 6) continue;
+      cells[2] = ` \`${normalizedCell}\` `;
+      cells[4] = cells[4].replace(/\[[ xX]\]/, isApproved ? "[x]" : "[ ]");
+      cells[5] = closedDate ? ` ${closedDate} ` : " ";
+      lines[i] = cells.join("|");
+    }
+    content = lines.join("\n");
+  }
+
+  content = content.replace(
+    /(-\s*\*\*Acción inmediata:\*\*\s*).+/,
+    `$1${ev.nextAction}`,
+  );
+
+  writeFileSync(statusFile, content, "utf8");
+}
+
+export function scaffoldVideoDir(
+  videoDir: string,
+  options: { now?: string; templatesDir?: string } = {},
+): { createdFiles: string[]; registry: Registry } {
+  const templatesDir =
+    options.templatesDir ?? join(import.meta.dirname, "..", "..", "templates", "pipeline-video");
+  mkdirSync(videoDir, { recursive: true });
+
+  const createdFiles: string[] = [];
+  for (const name of readdirSync(templatesDir).sort()) {
+    if (!name.endsWith(".md")) continue;
+    const dest = join(videoDir, name);
+    if (!existsSync(dest)) {
+      copyFileSync(join(templatesDir, name), dest);
+      createdFiles.push(name);
+    }
+  }
+
+  const nowIso = options.now ?? new Date().toISOString();
+  const reg = loadRegistry(videoDir, { videoId: basename(videoDir), now: nowIso });
+  saveRegistry(videoDir, reg);
+  return { createdFiles, registry: reg };
 }
