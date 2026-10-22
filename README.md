@@ -45,4 +45,14 @@ npm run smoke         # Smoke test de punta a punta (P01 -> P07 + medición ffmp
 npm run upstreams:check  # Verifica si albertopo94/youtube o earendil-works/pi avanzaron
 ```
 
-Contexto en [docs/brief-lector.md](docs/brief-lector.md), diseño de controles en [docs/diseno-controles-v01.md](docs/diseno-controles-v01.md), contrato de fases en [docs/contrato-fases-v1.md](docs/contrato-fases-v1.md) y procedencia de upstreams en [docs/upstreams.md](docs/upstreams.md).
+## Estado actual y próximos pasos (Roadmap)
+
+**Dónde estamos (`v0.4.1`):** los 8 hitos del MVP están implementados y verificados con 73 tests (`npm test` y `npm run smoke`), con las versiones de referencia fijadas en [`upstream-lock.json`](upstream-lock.json) (`albertopo94/youtube` en `0cf9080` y `earendil-works/pi` en `v1.3.0`).
+
+**Qué sigue en la próxima sesión (detalle en [docs/progreso.md](docs/progreso.md)):**
+1. Hacer `git push origin main` de los commits locales (`v0.2.0 → v0.4.1`).
+2. Probar una sesión interactiva en vivo con `pi -e .` sobre una carpeta de video de prueba (`/yts-init` → `yts_transition` → `/yts-approve`).
+3. Revisar el diff de `earendil-works/pi` `v1.3.0 → v1.4.0` detectado por `npm run upstreams:check`.
+4. Inventariar e integrar `effectcraft-cli` y `soundcraft-cli` MCP en el catálogo de capacidades de `P06_ASSEMBLY`.
+
+Contexto en [docs/brief-lector.md](docs/brief-lector.md), diseño de controles en [docs/diseno-controles-v01.md](docs/diseno-controles-v01.md), contrato de fases en [docs/contrato-fases-v1.md](docs/contrato-fases-v1.md), progreso y roadmap en [docs/progreso.md](docs/progreso.md) y procedencia de upstreams en [docs/upstreams.md](docs/upstreams.md).
