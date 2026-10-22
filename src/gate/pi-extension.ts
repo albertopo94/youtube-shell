@@ -16,6 +16,7 @@ import { getPhase, PHASE_IDS } from "../core/phases.ts";
 import { extractSection } from "../core/sections.ts";
 import type { CheckRun, Context, DeclaredEvidence, PhaseId, Result } from "../core/types.ts";
 import { createFsReader, loadRegistry, saveRegistry } from "../store/fs-store.ts";
+import { checkVideoContract } from "../checks/contract-checker.ts";
 import { buildCapabilityCatalog, type ToolCapabilityEntry } from "./capabilities.ts";
 
 export interface YoutubeShellExtensionOptions {
@@ -60,7 +61,13 @@ function executeAgentTransition(
     return startPhase(reg, phase, ctx);
   }
   if (action === "submit") {
-    const checks = Array.isArray(input.checks) ? (input.checks as CheckRun[]) : [];
+    const explicitChecks = Array.isArray(input.checks) ? (input.checks as CheckRun[]) : [];
+    const explicitIds = new Set(explicitChecks.map((c) => c.id));
+    const phaseCheckIds = new Set(getPhase(phase).checks);
+    const autoChecks: CheckRun[] = checkVideoContract(videoDir)
+      .checks.filter((c) => phaseCheckIds.has(c.id) && !explicitIds.has(c.id))
+      .map((c) => ({ id: c.id, result: c.result, details: c.details }));
+    const checks = [...explicitChecks, ...autoChecks];
     const evidence = Array.isArray(input.evidence) ? (input.evidence as DeclaredEvidence[]) : [];
     return submitPhase(reg, phase, { checks, evidence }, ctx);
   }
@@ -208,6 +215,24 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         return {
           content: [{ type: "text", text: JSON.stringify(ev, null, 2) }],
           details: ev,
+        };
+      },
+    });
+
+    pi.registerTool({
+      name: "yts_check_contract",
+      label: "Verificador de Contrato YouTube-Shell",
+      description:
+        "Ejecuta las verificaciones deterministas del contrato de producción sobre la carpeta activa del video.",
+      parameters: {
+        type: "object",
+        properties: {},
+      },
+      async execute(_toolCallId: string, _params: Record<string, unknown>, _signal: unknown, _onUpdate: unknown, ctx: any) {
+        const report = checkVideoContract(ctx.cwd);
+        return {
+          content: [{ type: "text", text: JSON.stringify(report, null, 2) }],
+          details: report,
         };
       },
     });

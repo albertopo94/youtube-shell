@@ -6,8 +6,8 @@ Orden de trabajo de [brief-lector.md §12.5](brief-lector.md). Se actualiza en c
 - [x] **Fijar qué fases existen y qué aprueba cada una** — [contrato-fases-v1.md](contrato-fases-v1.md); los 4 supuestos están pendientes de validación
 - [x] **Hacer que una fase no pueda empezar sin sus prerrequisitos aprobados** — motor de estados puro, sin pi, con tests (`src/core/`, 29 tests)
 - [x] **Hacer que solo el creador apruebe y que editar lo aprobado lo invalide** — registro con huellas SHA-256 y escritura atómica (`src/store/fs-store.ts`, 7 tests)
-- [x] **Bloquear dentro de pi las operaciones que la fase no permite** — hooks `tool_call`, comando humano de aprobación y tests de que lo denegado no tocó nada (`src/gate/`, 10 tests)
-- [ ] **Portar el verificador de contrato con sus fixtures**
-- [ ] **Medir el master contra una hoja de aceptación** — ffprobe/ffmpeg, `PASS/FAIL/WARN/NOT_EVALUABLE`
+- [x] **Bloquear dentro de pi las operaciones que la fase no permite** — hooks `tool_call`, comando humano de aprobación y tests de que lo denegado no tocó nada (`src/gate/`, 11 tests)
+- [x] **Portar el verificador de contrato con sus fixtures** — `src/checks/contract-checker.ts`, `yts_check_contract` y fixtures `f0`..`f5` (`test/contract-checker.test.ts`, 10 tests)
+- [-] **Medir el master contra una hoja de aceptación** — ffprobe/ffmpeg, `PASS/FAIL/WARN/NOT_EVALUABLE`
 - [ ] **Probar el caso negativo del piloto e inventariar FilmCraft MCP**
 - [ ] **Empaquetar como paquete de pi** — persona, gobernanza, skills de los 4 roles

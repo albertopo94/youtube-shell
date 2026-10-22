@@ -465,3 +465,35 @@ test("corrupt registry fails closed and blocks all tool calls", async (t) => {
   assert.equal(readRes.blocked, true);
   assert.match(readRes.reason, /registro|corrupto/i);
 });
+
+test("yts_check_contract is exposed and yts_transition(submit) auto-verifies contract checks on disk", async (t) => {
+  const { videoDir } = setupTempVideo(t);
+  const h = createPiHarness({ videoDir });
+
+  // 1. yts_check_contract is registered and callable in any phase
+  const contractRes = await h.invokeTool("yts_check_contract", {});
+  assert.equal(contractRes.blocked, false);
+  assert.ok(Array.isArray(contractRes.result.details.checks));
+
+  // 2. Advance P01 -> P02 -> P03 -> P04
+  await h.invokeTool("yts_transition", { action: "start", phase: "P01_PACKAGING" });
+  await h.invokeTool("yts_transition", { action: "submit", phase: "P01_PACKAGING" });
+  await h.invokeCommand("yts-approve", "P01_PACKAGING");
+
+  await h.invokeTool("yts_transition", { action: "start", phase: "P02_RESEARCH" });
+  await h.invokeTool("yts_transition", { action: "submit", phase: "P02_RESEARCH" });
+  await h.invokeCommand("yts-approve", "P02_RESEARCH");
+
+  await h.invokeTool("yts_transition", { action: "start", phase: "P03_SCRIPT" });
+  // P03_SCRIPT auto-runs script_block_ids from 02-guion.md on disk without explicit checks param
+  const scriptSubmit = await h.invokeTool("yts_transition", { action: "submit", phase: "P03_SCRIPT" });
+  assert.equal(scriptSubmit.blocked, false);
+  await h.invokeCommand("yts-approve", "P03_SCRIPT");
+
+  await h.invokeTool("yts_transition", { action: "start", phase: "P04_FACTCHECK" });
+  // Submitting P04_FACTCHECK while 06-fuentes Parte 2 still has PENDIENTE fails auto-check
+  const badFactcheckSubmit = await h.invokeTool("yts_transition", { action: "submit", phase: "P04_FACTCHECK" });
+  assert.equal(badFactcheckSubmit.blocked, true);
+  assert.match(badFactcheckSubmit.reason, /factcheck_resolved/);
+});
+

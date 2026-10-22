@@ -52,6 +52,14 @@ export const DEFAULT_CAPABILITIES: readonly ToolCapabilityEntry[] = [
     evidenceStatus: "probada",
   },
   {
+    id: "yts_check_contract",
+    capability: "read",
+    allowedPhases: "ALL",
+    requiresHumanConfirmation: false,
+    evidenceStatus: "probada",
+    validationMethod: "contract_checker",
+  },
+  {
     id: "yts_transition",
     capability: "state_control",
     allowedPhases: "ALL",
