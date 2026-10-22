@@ -32,5 +32,5 @@ license: MIT
 
 ### 3. `P07_CLOSE` (`04-registro-recursos.md` y `05-metricas-retencion.md`)
 - Registrar origen, autor, licencia y texto de atribución de cada imagen, clip, pista musical, SFX y locución en `04-registro-recursos.md`.
-- Preparar la línea base de retención y experimento A/B en `05-metricas-retencion.md`.
+- Preparar la línea base de retención, experimento A/B y protocolo de diagnóstico post-publicación en `05-metricas-retencion.md` (aplicando la `Tabla de Interpretación Prudente` §7.2: no re-empacar precipitadamente si suben las impresiones y baja el CTR o con muestra insuficiente; revisar congruencia promesa/apertura si el CTR es alto pero cae la retención temprana).
 - Cualquier acción de publicación externa requiere confirmación humana explícita en interfaz interactiva.

@@ -47,10 +47,10 @@ npm run upstreams:check  # Verifica si albertopo94/youtube o earendil-works/pi a
 
 ## Estado actual y próximos pasos (Roadmap)
 
-**Dónde estamos (`v0.4.1`):** los 8 hitos del MVP están implementados y verificados con 73 tests (`npm test` y `npm run smoke`), con las versiones de referencia fijadas en [`upstream-lock.json`](upstream-lock.json) (`albertopo94/youtube` en `0cf9080` y `earendil-works/pi` en `v1.3.0`).
+**Dónde estamos (`v0.4.2`):** los 8 hitos del MVP están implementados y verificados con 73 tests (`npm test` y `npm run smoke`), con las versiones de referencia fijadas en [`upstream-lock.json`](upstream-lock.json) (`albertopo94/youtube` en `f552339` / `v0.3.0-tercera-revision-externa` y `earendil-works/pi` en `v1.3.0`).
 
 **Qué sigue en la próxima sesión (detalle en [docs/progreso.md](docs/progreso.md)):**
-1. Hacer `git push origin main` de los commits locales (`v0.2.0 → v0.4.1`).
+1. Hacer `git push origin main` de los commits locales (`v0.2.0 → v0.4.2`).
 2. Probar una sesión interactiva en vivo con `pi -e .` sobre una carpeta de video de prueba (`/yts-init` → `yts_transition` → `/yts-approve`).
 3. Revisar el diff de `earendil-works/pi` `v1.3.0 → v1.4.0` detectado por `npm run upstreams:check`.
 4. Inventariar e integrar `effectcraft-cli` y `soundcraft-cli` MCP en el catálogo de capacidades de `P06_ASSEMBLY`.

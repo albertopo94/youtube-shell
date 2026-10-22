@@ -6,8 +6,8 @@
       "role": "Domain knowledge (layer 3): phases, templates, contract checker, pilot measurement",
       "reviewed": {
         "ref": "main",
-        "commit": "0cf9080c0ddb631a577690cac57ee24e54ffb132",
-        "committed_at": "2026-10-21T20:51:08Z",
+        "commit": "f552339344ff7072bf1624d781156e16518e778c",
+        "committed_at": "2026-10-22T10:52:46Z",
         "reviewed_on": "2026-10-22"
       },
       "affects_us": [
@@ -47,7 +47,7 @@
         },
         "templates/pipeline-video/05-metricas-retencion.md": {
           "source": "_framework/plantillas/pipeline-video-template/05-metricas-retencion.md",
-          "sha256": "a7e6646fdd20932e68c6a79d92100869603666c6f0a2f5adea013138ea6c7602"
+          "sha256": "0c5ce4c0e5fc43dee2e84cecad8b5a88a1db7bee6c68cf01be9ae87f68a5960f"
         },
         "templates/pipeline-video/06-fuentes-y-verificacion.md": {
           "source": "_framework/plantillas/pipeline-video-template/06-fuentes-y-verificacion.md",

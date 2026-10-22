@@ -97,3 +97,16 @@
 | Fecha del cambio | Título viejo ➜ nuevo | Motivo (dato observado) | Efecto medido (CTR/impresiones antes ➜ después) |
 | :-- | :-- | :-- | :-- |
 | | | | |
+
+### 7.2 Tabla de Interpretación Prudente (Evitar Decisiones Precipitadas) `[Hipótesis Editorial]`
+
+> **Origen:** Se destiló del análisis de `_framework/referencias/auditorias/revision-externa-3-2026-10-22.md` sobre los apuntes del segundo amigo. La documentación oficial de YouTube explica que el CTR puede disminuir al crecer las impresiones porque el contenido empieza a mostrarse a una audiencia más amplia, menos familiarizada con el canal, y que el CTR varía significativamente según la fuente de tráfico y el contexto. La tabla siguiente traduce esa advertencia en un protocolo de diagnóstico: **no reaccionar ante una métrica aislada**.
+
+| Situación observada | Interpretación prudente | Acción del agente |
+| :--- | :--- | :--- |
+| **Impresiones suben y el CTR baja.** | Podría estar llegando a una audiencia más amplia; también puede variar la mezcla de fuentes. No demuestra que el vídeo esté atravesando cohortes fijas «primaria, secundaria y amplia» (esa secuencia se usa como hipótesis ilustrativa, no como descripción confirmada del proceso interno). | **No cambiar automáticamente.** Comparar fuentes, volumen de datos, visualizaciones y tiempo de visualización antes de cualquier intervención. |
+| **CTR bajo con pocas impresiones.** | La muestra puede ser insuficiente para diagnosticar el packaging. | **Esperar evidencia suficiente** y contextualizar con resultados comparables del canal. No re-empacar por una fluctuación temprana. |
+| **CTR alto y retención temprana débil.** | El empaquetado podría generar una expectativa que el inicio no cumple. | **Revisar la promesa y la apertura** (congruencia título/miniatura/guion, ver rol 03 §1). No concluir que el título sea necesariamente la única causa. |
+| **Prueba nativa con resultado concluyente.** | Hay evidencia directa para comparar las variantes evaluadas. | **Registrar el resultado** y la variante ganadora en el `banco-de-titulos.md` del canal. |
+
+**Regla de no precipitación:** YouTube aconseja evitar decisiones con datos insuficientes y cambios por pequeñas variaciones del CTR. Un título nuevo puede tardar una semana o más en mostrar impacto; esperar la evidencia antes de volver a tocar.

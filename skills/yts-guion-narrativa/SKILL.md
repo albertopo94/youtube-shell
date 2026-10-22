@@ -19,6 +19,14 @@ license: MIT
 3. **Puerta de Originalidad y Credibilidad:**
    - Prohibido inventar credenciales, biografías o experiencias personales ficticias para el narrador.
    - Cumplir la promesa editorial de `01-packaging.md` desde el primer bloque.
+4. **Puerta de Congruencia Promesa ➜ Contenido (Linter de Alineación) `[Puerta Obligatoria]`:**
+   - Antes de dar por listo `02-guion.md`, responder afirmativamente a las 5 preguntas:
+     1. ¿Qué promete explícitamente el título aprobado en `01-packaging.md`?
+     2. ¿Qué expectativa y brecha de curiosidad genera la miniatura?
+     3. ¿El video entrega realmente lo prometido sin afirmaciones visuales o textuales injustificadas?
+     4. ¿La apertura valida esa expectativa en los primeros 5–30 segundos según el formato, sin spoiler prematuro?
+     5. ¿Está libre de afirmaciones sin respaldo (resultados garantizados, mecanismos internos no demostrados o métricas ocultas)?
+   - Si alguna respuesta es **NO**, el guion no avanza: corregir `02-guion.md` antes de enviar `P03_SCRIPT` (o registrar la incongruencia en `06-fuentes-y-verificacion.md` durante `P04_FACTCHECK` y reabrir `P03_SCRIPT` antes de la locución definitiva).
 
 ## Reglas obligatorias en `P04_FACTCHECK` (`06-fuentes-y-verificacion.md` — Parte 2)
 1. **Inmutabilidad de `Parte 1`:** Durante `P04_FACTCHECK`, el gate de `youtube-shell` bloquea cualquier edición que altere el Preámbulo o la `Parte 1` ya aprobados en `P02_RESEARCH`. Editar únicamente `## 🔍 Parte 2` y `## 🛡️ Checkpoints de Rigor`.
