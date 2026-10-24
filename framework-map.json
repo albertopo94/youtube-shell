@@ -1,0 +1,290 @@
+{
+  "schema": "youtube-shell.framework-map/v1",
+  "upstream_commit": "13d06b2cc39b2c414b74dc7198119f320cb33f8c",
+  "rules": [
+    {
+      "id": "ORQ-01",
+      "title": "Autoridad de estado en .youtube-shell/registro.json y sincronización de 00-estado-produccion.md",
+      "source": {
+        "file": "AGENTS.md",
+        "section": "§01 Protocolo Universal de Inicio y Continuidad"
+      },
+      "classification": "deterministic_gate",
+      "phases": ["GLOBAL"],
+      "skill": "yts-orquestador",
+      "consumer": "src/store/fs-store.ts",
+      "enforcement": "loadRegistry / saveRegistry / syncStatusView / approval_authority / normalized_state",
+      "tests": ["test/store.test.ts", "test/contract-checker.test.ts"]
+    },
+    {
+      "id": "ORQ-02",
+      "title": "Prerrequisitos lineales de las 7 fases e invalidación en cascada por huella SHA-256",
+      "source": {
+        "file": "AGENTS.md",
+        "section": "§02.2 Aprobación Creativa y §05 Criterios de Salida Verificables"
+      },
+      "classification": "deterministic_gate",
+      "phases": [
+        "GLOBAL",
+        "P01_PACKAGING",
+        "P02_RESEARCH",
+        "P03_SCRIPT",
+        "P04_FACTCHECK",
+        "P05_ANIMATIC",
+        "P06_ASSEMBLY",
+        "P07_CLOSE"
+      ],
+      "skill": "yts-orquestador",
+      "consumer": "src/core/machine.ts",
+      "enforcement": "evaluate / startPhase / submitPhase",
+      "tests": ["test/machine.test.ts", "test/pi-gate.test.ts"]
+    },
+    {
+      "id": "ORQ-03",
+      "title": "Aprobación de fases reservada exclusivamente al creador en interfaz interactiva",
+      "source": {
+        "file": "AGENTS.md",
+        "section": "§02.2 Aprobación Creativa (Puntos de Control / Checkpoints)"
+      },
+      "classification": "human_approval",
+      "phases": [
+        "GLOBAL",
+        "P01_PACKAGING",
+        "P02_RESEARCH",
+        "P03_SCRIPT",
+        "P04_FACTCHECK",
+        "P05_ANIMATIC",
+        "P06_ASSEMBLY",
+        "P07_CLOSE"
+      ],
+      "skill": "yts-orquestador",
+      "consumer": "src/gate/pi-extension.ts",
+      "enforcement": "/yts-approve / approvePhase",
+      "tests": ["test/machine.test.ts", "test/pi-gate.test.ts"]
+    },
+    {
+      "id": "ORQ-04",
+      "title": "Vínculo con la oficina y el canal para ideas vetadas, referentes y banco visual",
+      "source": {
+        "file": "AGENTS.md",
+        "section": "§01.5 Linter Obligatorio de Ideas Vetadas y §01.6 Archivos de Notas"
+      },
+      "classification": "context_reference",
+      "phases": ["GLOBAL", "P01_PACKAGING", "P02_RESEARCH"],
+      "skill": "yts-orquestador",
+      "consumer": "skills/yts-orquestador/SKILL.md",
+      "enforcement": "detectWorkspaceLink / /yts-link / resolveLayer3References",
+      "tests": ["test/store.test.ts", "test/package-manifest.test.ts"]
+    },
+    {
+      "id": "ORQ-05",
+      "title": "Filtro de comunicación ejecutiva y persona de Director Creativo",
+      "source": {
+        "file": "AGENTS.md",
+        "section": "§02.5 Filtro de Comunicación Ejecutiva"
+      },
+      "classification": "editorial_check",
+      "phases": ["GLOBAL"],
+      "skill": "yts-orquestador",
+      "consumer": "src/gate/pi-extension.ts",
+      "enforcement": "before_agent_start (Capa 1 — Orquestador Permanente)",
+      "tests": ["test/package-manifest.test.ts", "test/pi-gate.test.ts"]
+    },
+    {
+      "id": "PKG-01",
+      "title": "Cinco opciones de título con ángulos distintos y tres conceptos de miniatura diferenciados",
+      "source": {
+        "file": "_framework/roles/02-packaging-miniaturas.md",
+        "section": "§3 Arquitectura de Títulos y §4 Miniaturas"
+      },
+      "classification": "deterministic_gate",
+      "phases": ["P01_PACKAGING"],
+      "skill": "yts-packaging-miniaturas",
+      "consumer": "src/checks/contract-checker.ts",
+      "enforcement": "packaging_structure (01-packaging.md §§2, 3, 4)",
+      "tests": ["test/contract-checker.test.ts", "test/smoke.test.ts"]
+    },
+    {
+      "id": "PKG-02",
+      "title": "Calibración de nivel de conciencia de Schwartz, puente de demanda y veracidad de la promesa",
+      "source": {
+        "file": "_framework/roles/02-packaging-miniaturas.md",
+        "section": "§1 Niveles de Conciencia y §3.3 Proporción de la Promesa"
+      },
+      "classification": "editorial_check",
+      "phases": ["P01_PACKAGING"],
+      "skill": "yts-packaging-miniaturas",
+      "consumer": "skills/yts-packaging-miniaturas/SKILL.md",
+      "enforcement": "Reglas obligatorias del dominio §§1-3",
+      "tests": ["test/package-manifest.test.ts"]
+    },
+    {
+      "id": "RES-01",
+      "title": "Declaración de riesgo factual y registro de fuentes de partida en Parte 1",
+      "source": {
+        "file": "_framework/roles/01-investigacion-ideas.md",
+        "section": "§5 Entregable de Investigación Previa"
+      },
+      "classification": "deterministic_gate",
+      "phases": ["P02_RESEARCH"],
+      "skill": "yts-investigacion-ideas",
+      "consumer": "src/checks/contract-checker.ts",
+      "enforcement": "research_sources_structure (06-fuentes-y-verificacion.md Preámbulo y Parte 1)",
+      "tests": ["test/contract-checker.test.ts", "test/pi-gate.test.ts"]
+    },
+    {
+      "id": "RES-02",
+      "title": "Barrido DFS híbrido, evidencia negativa y estrategia por superficie de descubrimiento",
+      "source": {
+        "file": "_framework/roles/01-investigacion-ideas.md",
+        "section": "§2-§4 Mapeo DFS, Outliers y Superficies"
+      },
+      "classification": "editorial_check",
+      "phases": ["P02_RESEARCH"],
+      "skill": "yts-investigacion-ideas",
+      "consumer": "skills/yts-investigacion-ideas/SKILL.md",
+      "enforcement": "Reglas obligatorias del dominio §§1-4",
+      "tests": ["test/package-manifest.test.ts"]
+    },
+    {
+      "id": "SCR-01",
+      "title": "Bloques atómicos [Bxx] con timecodes válidos y Puerta de Control Editorial en 02-guion.md",
+      "source": {
+        "file": "_framework/roles/03-guion-y-narrativa.md",
+        "section": "§1 Puertas Editoriales y §2 Bloques Atómicos"
+      },
+      "classification": "deterministic_gate",
+      "phases": ["P03_SCRIPT"],
+      "skill": "yts-guion-narrativa",
+      "consumer": "src/checks/contract-checker.ts",
+      "enforcement": "script_block_ids (02-guion.md §§1-2)",
+      "tests": ["test/contract-checker.test.ts", "test/pi-gate.test.ts"]
+    },
+    {
+      "id": "SCR-02",
+      "title": "Puerta de Correspondencia del Arranque, Congruencia Promesa-Contenido y Anti-Spoiler por formato",
+      "source": {
+        "file": "_framework/roles/03-guion-y-narrativa.md",
+        "section": "§1 Correspondencia del Arranque y §3 Progresión Dramática"
+      },
+      "classification": "editorial_check",
+      "phases": ["P03_SCRIPT"],
+      "skill": "yts-guion-narrativa",
+      "consumer": "skills/yts-guion-narrativa/SKILL.md",
+      "enforcement": "Reglas obligatorias en P03_SCRIPT §§2-5",
+      "tests": ["test/package-manifest.test.ts", "test/phases.test.ts"]
+    },
+    {
+      "id": "FCT-01",
+      "title": "Resolución completa de afirmaciones sin PENDIENTE ni marcadores de plantilla en Parte 2",
+      "source": {
+        "file": "_framework/contingencia-y-politicas-sensibles.md",
+        "section": "§1 Evaluación de Factualidad y Riesgo YMYL"
+      },
+      "classification": "deterministic_gate",
+      "phases": ["P04_FACTCHECK"],
+      "skill": "yts-guion-narrativa",
+      "consumer": "src/checks/contract-checker.ts",
+      "enforcement": "factcheck_resolved (06-fuentes-y-verificacion.md#Parte 2)",
+      "tests": ["test/contract-checker.test.ts", "test/pi-gate.test.ts"]
+    },
+    {
+      "id": "POL-01",
+      "title": "Linter de léxico prohibido YMYL, matización de modelos animales y protocolo de contingencia",
+      "source": {
+        "file": "_framework/contingencia-y-politicas-sensibles.md",
+        "section": "§2 Linter de Léxico Prohibido y §6 Plan de Contingencia"
+      },
+      "classification": "context_reference",
+      "phases": ["P03_SCRIPT", "P04_FACTCHECK", "P07_CLOSE"],
+      "skill": "yts-orquestador",
+      "consumer": "skills/yts-orquestador/references/contingencia-y-politicas-sensibles.md",
+      "enforcement": "resolveLayer3References (contingencia-y-politicas-sensibles.md)",
+      "tests": ["test/upstream-lock.test.ts", "test/framework-map.test.ts"]
+    },
+    {
+      "id": "ANI-01",
+      "title": "Evidencia obligatoria de locución provisional (scratch_track) y protección de secciones de animatic",
+      "source": {
+        "file": "_framework/roles/04-direccion-y-edicion.md",
+        "section": "§1 Fase 1: Animatic y Locución Provisional"
+      },
+      "classification": "deterministic_gate",
+      "phases": ["P05_ANIMATIC"],
+      "skill": "yts-direccion-edicion",
+      "consumer": "src/core/phases.ts",
+      "enforcement": "P05_ANIMATIC.evidence(scratch_track) + verifyWriteTargetAndSharedSections",
+      "tests": ["test/machine.test.ts", "test/smoke.test.ts"]
+    },
+    {
+      "id": "ASM-01",
+      "title": "Correspondencia exacta de bloques [Bxx] y timecodes entre guion y storyboard",
+      "source": {
+        "file": "_framework/roles/04-direccion-y-edicion.md",
+        "section": "§2 Fase 2: Tabla de Escenas y Trazabilidad"
+      },
+      "classification": "deterministic_gate",
+      "phases": ["P06_ASSEMBLY"],
+      "skill": "yts-direccion-edicion",
+      "consumer": "src/checks/contract-checker.ts",
+      "enforcement": "script_storyboard_ids",
+      "tests": ["test/contract-checker.test.ts", "test/pi-gate.test.ts"]
+    },
+    {
+      "id": "ASM-02",
+      "title": "Medición técnica real del master con ffprobe/ffmpeg contra hoja de aceptación aprobada por el creador",
+      "source": {
+        "file": "_framework/roles/04-direccion-y-edicion.md",
+        "section": "§3 Las 4 Capas de Pulido y Medición del Master"
+      },
+      "classification": "deterministic_gate",
+      "phases": ["P06_ASSEMBLY"],
+      "skill": "yts-direccion-edicion",
+      "consumer": "src/checks/media-measurement.ts",
+      "enforcement": "master_measurement + /yts-approve-sheet",
+      "tests": ["test/media-measurement.test.ts", "test/pi-gate.test.ts", "test/smoke.test.ts"]
+    },
+    {
+      "id": "ASM-03",
+      "title": "Integridad estructural y ausencia de licencias rechazadas en 04-registro-recursos.md",
+      "source": {
+        "file": "_framework/contingencia-y-politicas-sensibles.md",
+        "section": "§3 Copyright vs. Permiso vs. Monetización"
+      },
+      "classification": "deterministic_gate",
+      "phases": ["P06_ASSEMBLY"],
+      "skill": "yts-direccion-edicion",
+      "consumer": "src/checks/contract-checker.ts",
+      "enforcement": "resource_license_log (04-registro-recursos.md)",
+      "tests": ["test/contract-checker.test.ts", "test/smoke.test.ts"]
+    },
+    {
+      "id": "API-01",
+      "title": "Coherencia del catálogo de herramientas y compuerta de capacidades MCP por fase",
+      "source": {
+        "file": "_framework/herramientas-y-apis.md",
+        "section": "§1 Matriz de Capacidades y Niveles de Validación"
+      },
+      "classification": "deterministic_gate",
+      "phases": ["GLOBAL", "P05_ANIMATIC", "P06_ASSEMBLY"],
+      "skill": "yts-orquestador",
+      "consumer": "src/gate/capabilities.ts",
+      "enforcement": "catalog_coherence / buildCapabilityCatalog / verifyFilmcraftCall",
+      "tests": ["test/contract-checker.test.ts", "test/pi-gate.test.ts"]
+    },
+    {
+      "id": "CLS-01",
+      "title": "Estructura de métricas de retención, entregable final y validación contextual de PUBLICADO",
+      "source": {
+        "file": "AGENTS.md",
+        "section": "§07.3 Tras la Publicación en YouTube"
+      },
+      "classification": "deterministic_gate",
+      "phases": ["P07_CLOSE"],
+      "skill": "yts-orquestador",
+      "consumer": "src/checks/contract-checker.ts",
+      "enforcement": "close_deliverables + normalized_state (videos-publicados)",
+      "tests": ["test/contract-checker.test.ts", "test/store.test.ts", "test/smoke.test.ts"]
+    }
+  ]
+}

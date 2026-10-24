@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = join(import.meta.dirname, "..");
@@ -24,6 +24,39 @@ test("the lock pins both upstreams to an exact reviewed commit", () => {
 test("every mirrored file still matches the reviewed upstream bytes", () => {
   for (const [local, entry] of Object.entries<{ source: string; sha256: string }>(lock.upstreams.youtube.mirrored)) {
     assert.equal(sha256(local), entry.sha256, `${local} drifted from ${entry.source}; re-sync it or update the lock`);
+  }
+});
+
+test("normative_sources tracks all non-template framework sources with SHA-256 and existing local targets", () => {
+  const sources = lock.upstreams.youtube.normative_sources;
+  assert.ok(Array.isArray(sources) && sources.length >= 7, "normative_sources must list AGENTS.md, 4 roles, policies, and tools");
+  const expectedUpstreamPaths = [
+    "AGENTS.md",
+    "_framework/roles/01-investigacion-ideas.md",
+    "_framework/roles/02-packaging-miniaturas.md",
+    "_framework/roles/03-guion-y-narrativa.md",
+    "_framework/roles/04-direccion-y-edicion.md",
+    "_framework/contingencia-y-politicas-sensibles.md",
+    "_framework/herramientas-y-apis.md",
+  ];
+  const seenUpstream = new Set<string>();
+  for (const entry of sources) {
+    assert.equal(typeof entry.upstream_path, "string");
+    assert.match(entry.upstream_sha256, /^[0-9a-f]{64}$/, `invalid sha256 for ${entry.upstream_path}`);
+    assert.equal(typeof entry.local_target, "string");
+    assert.equal(typeof entry.role, "string");
+    assert.equal(existsSync(join(ROOT, entry.local_target)), true, `missing local_target: ${entry.local_target}`);
+    if (entry.local_target.includes("/references/")) {
+      assert.equal(
+        sha256(entry.local_target),
+        entry.upstream_sha256,
+        `mirrored reference ${entry.local_target} drifted from ${entry.upstream_path}`,
+      );
+    }
+    seenUpstream.add(entry.upstream_path);
+  }
+  for (const req of expectedUpstreamPaths) {
+    assert.equal(seenUpstream.has(req), true, `missing normative source ${req} in upstream-lock.json`);
   }
 });
 

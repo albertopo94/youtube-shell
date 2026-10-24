@@ -58,7 +58,51 @@
           "source": "_framework/plantillas/entregable-final-template.md",
           "sha256": "3bc7c64079fe7948e52f6fa53759a14889f083f366420a3d722b8016926c1162"
         }
-      }
+      },
+      "normative_sources": [
+        {
+          "upstream_path": "AGENTS.md",
+          "upstream_sha256": "995631e726cfba1a49237610a83967d2c13648fd42f6ec6022bc459aa7d6f308",
+          "local_target": "skills/yts-orquestador/SKILL.md",
+          "role": "orchestrator_skill"
+        },
+        {
+          "upstream_path": "_framework/roles/01-investigacion-ideas.md",
+          "upstream_sha256": "92e0b2ebfa93934248bc2c6c7b3cd3f7eb04f76648d72ebbe1bd5821ba329bd7",
+          "local_target": "skills/yts-investigacion-ideas/SKILL.md",
+          "role": "role_skill"
+        },
+        {
+          "upstream_path": "_framework/roles/02-packaging-miniaturas.md",
+          "upstream_sha256": "262fa149ec1b3c553af3e9866d192438efeaa1f8939344b991a888d8b24f8c14",
+          "local_target": "skills/yts-packaging-miniaturas/SKILL.md",
+          "role": "role_skill"
+        },
+        {
+          "upstream_path": "_framework/roles/03-guion-y-narrativa.md",
+          "upstream_sha256": "1996979335131855d6e1aa2d3ec2d8dcdb8265f1301c66549bd7374f78d461d3",
+          "local_target": "skills/yts-guion-narrativa/SKILL.md",
+          "role": "role_skill"
+        },
+        {
+          "upstream_path": "_framework/roles/04-direccion-y-edicion.md",
+          "upstream_sha256": "e66ab1d6c0ad27d01df2cb9dd9ff808d8f53a16d401f71a5d4a38d28eddcd7aa",
+          "local_target": "skills/yts-direccion-edicion/SKILL.md",
+          "role": "role_skill"
+        },
+        {
+          "upstream_path": "_framework/contingencia-y-politicas-sensibles.md",
+          "upstream_sha256": "ebeb95d038516013ffe74f78fccee95ffde33a02686df1f7eadf24cc8426430b",
+          "local_target": "skills/yts-orquestador/references/contingencia-y-politicas-sensibles.md",
+          "role": "mirrored_reference"
+        },
+        {
+          "upstream_path": "_framework/herramientas-y-apis.md",
+          "upstream_sha256": "4ccaa41aa0cac0841fe6cbfe0837728eb198cf387ebab3f1d20bb6a639742135",
+          "local_target": "skills/yts-orquestador/references/herramientas-y-apis.md",
+          "role": "mirrored_reference"
+        }
+      ]
     },
     "pi": {
       "repo": "https://github.com/earendil-works/pi",

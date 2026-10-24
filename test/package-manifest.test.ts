@@ -8,6 +8,7 @@ import { createYoutubeShellExtension } from "../src/gate/pi-extension.ts";
 const ROOT = join(import.meta.dirname, "..");
 
 const EXPECTED_SKILLS = [
+  "yts-orquestador",
   "yts-investigacion-ideas",
   "yts-packaging-miniaturas",
   "yts-guion-narrativa",
