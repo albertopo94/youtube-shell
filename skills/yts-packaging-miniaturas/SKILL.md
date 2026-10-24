@@ -18,6 +18,8 @@ license: MIT
    - Priorizar legibilidad inmediata en móvil (lo decisivo al inicio; ~55 caracteres como heurística orientativa, nunca camisa de fuerza).
    - **Proporción y veracidad de la promesa (`[Heurística a evaluar]`):** comprobar que el título promete algo que el video realmente entrega y no presenta como trivial un desarrollo extenso (ni viceversa), respetando el criterio creativo sobre cómo expresar la profundidad.
 3. **Tres conceptos de miniatura diferenciados:**
-   - Diseñar 3 conceptos visualmente distintos (no meros cambios de color): composición, punto focal (máximo 3 elementos), texto en imagen (0 a 4 palabras que complementen, nunca repitan, el título) y contraste frente al feed.
+   - Diseñar 3 conceptos visualmente distintos (`Miniatura A`, `Miniatura B`, `Miniatura C`, no meros cambios de color): composición, punto focal (máximo 3 elementos), texto en imagen (0 a 4 palabras que complementen, nunca repitan, el título) y contraste frente al feed para elevar el **CTR** y el **Watch Time Share** en *Prueba y Compara* (*Test & Compare*).
    - Entregar cada prompt visual con **Ficha Técnica Inequívoca** (agnóstica de proveedor, adaptada a la herramienta disponible del creador): tipo de recurso (🖼️ Imagen estática), herramienta y método de ejecución (pestaña o módulo concreto solo si la herramienta lo tiene, ej. Google Flow ➔ Pestaña *"Imagen"*), modo operativo (`--ar 16:9`) y prompt listo para copiar.
-4. **Checkpoint humano:** Tras completar `01-packaging.md`, invocar `yts_transition` con `action: "submit"` para `P01_PACKAGING` y esperar la aprobación del creador mediante `/yts-approve P01_PACKAGING`.
+4. **Calibración de conciencia de Eugene Schwartz y Puente de Demanda:**
+   - Ajustar el ángulo del título y la miniatura al nivel de conciencia real (*Problem Aware*, *Solution Aware*, *Mechanism Aware*) y verificar el **Control de Calidad Pre-Guion** antes de solicitar revisión.
+5. **Checkpoint humano:** Tras completar `01-packaging.md`, invocar `yts_transition` con `action: "submit"` para `P01_PACKAGING` y esperar la aprobación del creador mediante `/yts-approve P01_PACKAGING`.

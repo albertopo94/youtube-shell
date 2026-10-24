@@ -37,6 +37,24 @@ test("PHASE_PLAYBOOKS maps all 7 phases to their primary skill and specialized r
     assert.ok(pb, `missing playbook for ${id}`);
     assert.ok(pb.skill.startsWith("yts-"), `${id}: invalid skill ${pb.skill}`);
     assert.ok(pb.role.length > 5, `${id}: role must be descriptive`);
+    assert.ok(
+      Array.isArray(pb.mandatoryReferences) && pb.mandatoryReferences.length > 0,
+      `${id}: must declare mandatoryReferences`,
+    );
+    assert.ok(
+      Array.isArray(pb.conditionalReferences) && pb.conditionalReferences.length > 0,
+      `${id}: must declare conditionalReferences`,
+    );
+    assert.ok(
+      typeof pb.requiredDeliverableEvidence === "string" && pb.requiredDeliverableEvidence.length >= 15,
+      `${id}: must declare requiredDeliverableEvidence`,
+    );
+    assert.ok(
+      pb.verificationBoundary &&
+        pb.verificationBoundary.runtimeDeterministic.length >= 10 &&
+        pb.verificationBoundary.humanEditorial.length >= 10,
+      `${id}: must declare verificationBoundary (runtimeDeterministic + humanEditorial)`,
+    );
   }
   assert.equal(PHASE_PLAYBOOKS.P01_PACKAGING.skill, "yts-packaging-miniaturas");
   assert.equal(PHASE_PLAYBOOKS.P02_RESEARCH.skill, "yts-investigacion-ideas");
@@ -115,6 +133,10 @@ test("buildThreeLayerPrompt renders Layer 1 (Orchestrator), Layer 2 (Active Phas
   assert.match(prompt, /\[Capa 2 — Playbook de Fase Activa\]/);
   assert.match(prompt, /yts-packaging-miniaturas/);
   assert.match(prompt, /01-packaging\.md/);
+  assert.match(prompt, /Referencias obligatorias de la fase:/);
+  assert.match(prompt, /Referencias condicionales:/);
+  assert.match(prompt, /Constancia de aplicación exigida en el entregable:/);
+  assert.match(prompt, /Frontera de verificación \(Runtime vs\. Editorial humano\):/);
   assert.match(prompt, /\[Capa 3 — Referencias Bajo Demanda y Vínculo de Oficina\/Canal\]/);
   assert.match(prompt, /\/yts-link/);
 });

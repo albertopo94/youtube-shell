@@ -14,11 +14,20 @@ export type SkillId =
   | "yts-guion-narrativa"
   | "yts-direccion-edicion";
 
+export interface PhaseVerificationBoundary {
+  runtimeDeterministic: string;
+  humanEditorial: string;
+}
+
 export interface PhasePlaybook {
   phase: PhaseId;
   skill: SkillId;
   role: string;
   summary: string;
+  mandatoryReferences: string[];
+  conditionalReferences: string[];
+  requiredDeliverableEvidence: string;
+  verificationBoundary: PhaseVerificationBoundary;
 }
 
 export const PHASE_PLAYBOOKS: Record<PhaseId, PhasePlaybook> = {
@@ -28,6 +37,22 @@ export const PHASE_PLAYBOOKS: Record<PhaseId, PhasePlaybook> = {
     role: "Estratega de Packaging y Miniaturas",
     summary:
       "5 títulos con ángulos distintos, 3 conceptos de miniatura diferenciados y promesa de trama en 01-packaging.md.",
+    mandatoryReferences: [
+      "01-packaging.md",
+      "skills/yts-packaging-miniaturas/SKILL.md",
+    ],
+    conditionalReferences: [
+      "ideas.md y backlog-ideas.md (si hay vínculo de oficina/canal, para verificar territorios vetados)",
+      "banco-de-titulos.md y referentes.md (si existen en el canal/oficina, para alinear ángulos y estilo visual)",
+    ],
+    requiredDeliverableEvidence:
+      "Secciones §1 (Estrategia Psicológica y Promesa de Trama), §2 (5 opciones de título numeradas y justificación), §3 (Miniatura A, B y C con ficha técnica) y §4 (Control de Calidad Pre-Guion) completas en 01-packaging.md.",
+    verificationBoundary: {
+      runtimeDeterministic:
+        "packaging_structure valida 5 títulos numerados, encabezados de Miniatura A/B/C y sección §4 sin marcadores de plantilla vacíos.",
+      humanEditorial:
+        "El creador evalúa que los 5 ángulos sean genuinamente distintos y que las 3 miniaturas funcionen visualmente en el feed antes de /yts-approve P01_PACKAGING.",
+    },
   },
   P02_RESEARCH: {
     phase: "P02_RESEARCH",
@@ -35,6 +60,23 @@ export const PHASE_PLAYBOOKS: Record<PhaseId, PhasePlaybook> = {
     role: "Investigador y Arquitecto de Ideas",
     summary:
       "Calibración de demanda, barrido DFS, declaración de riesgo factual y fuentes primarias de partida en 06-fuentes-y-verificacion.md (Preámbulo y Parte 1).",
+    mandatoryReferences: [
+      "01-packaging.md (aprobado en P01_PACKAGING)",
+      "06-fuentes-y-verificacion.md (Preámbulo y Parte 1)",
+      "skills/yts-investigacion-ideas/SKILL.md",
+    ],
+    conditionalReferences: [
+      "skills/yts-orquestador/references/contingencia-y-politicas-sensibles.md (obligatorio si el contenido toca salud, finanzas, ciencia o Zona Roja YMYL)",
+      "ideas.md y backlog-ideas.md (para linter de enfoques vetados y estrategia de mercados lingüísticos)",
+    ],
+    requiredDeliverableEvidence:
+      "Declaración explícita del Régimen de Verificación (riesgo factual separado del formato) en el Preámbulo y tabla/lista de Fuentes de Partida con URL/DOI y limitaciones metodológicas en la Parte 1 de 06-fuentes-y-verificacion.md.",
+    verificationBoundary: {
+      runtimeDeterministic:
+        "research_sources_structure comprueba la declaración de riesgo factual y la presencia de fuentes estructuradas o exención justificada en Parte 1.",
+      humanEditorial:
+        "El creador verifica que los enlaces existan, sean fuentes primarias pertinentes y respalden la tesis antes de /yts-approve P02_RESEARCH.",
+    },
   },
   P03_SCRIPT: {
     phase: "P03_SCRIPT",
@@ -42,6 +84,23 @@ export const PHASE_PLAYBOOKS: Record<PhaseId, PhasePlaybook> = {
     role: "Guionista Narrativo",
     summary:
       "Puerta de Correspondencia del Arranque (§0), Puerta de Control Editorial (§1) y bloques atómicos [Bxx] con timecodes en 02-guion.md.",
+    mandatoryReferences: [
+      "01-packaging.md (promesa de título y miniatura aprobada)",
+      "06-fuentes-y-verificacion.md#Parte 1 (fuentes primarias aprobadas en P02_RESEARCH)",
+      "02-guion.md",
+      "skills/yts-guion-narrativa/SKILL.md",
+    ],
+    conditionalReferences: [
+      "skills/yts-orquestador/references/contingencia-y-politicas-sensibles.md (para léxico blindado YMYL y matización de estudios en modelos animales)",
+    ],
+    requiredDeliverableEvidence:
+      "Modo de progresión declarado en cabecera, tabla §0 (Puerta de Correspondencia del Arranque), §1 (Puerta de Control Editorial y Congruencia Promesa-Contenido) y bloques ### [Bxx] con timecodes MM:SS - MM:SS en 02-guion.md.",
+    verificationBoundary: {
+      runtimeDeterministic:
+        "script_block_ids exige la sección Puerta de Control Editorial, identificadores únicos [Bxx] y timecodes MM:SS válidos sin marcadores vacíos.",
+      humanEditorial:
+        "El creador juzga la fuerza del arranque, el cumplimiento real de la promesa y la calidad dramática de la voz antes de /yts-approve P03_SCRIPT.",
+    },
   },
   P04_FACTCHECK: {
     phase: "P04_FACTCHECK",
@@ -49,6 +108,22 @@ export const PHASE_PLAYBOOKS: Record<PhaseId, PhasePlaybook> = {
     role: "Auditor de Verificación Factual y Derechos",
     summary:
       "Verificación línea por línea sin PENDIENTE ni marcadores de plantilla en 06-fuentes-y-verificacion.md (Parte 2 y Checkpoints de Rigor).",
+    mandatoryReferences: [
+      "02-guion.md (aprobado en P03_SCRIPT)",
+      "06-fuentes-y-verificacion.md (Parte 2 y Checkpoints de Rigor)",
+      "skills/yts-orquestador/references/contingencia-y-politicas-sensibles.md",
+    ],
+    conditionalReferences: [
+      "01-packaging.md (si una matización factual obliga a revisar la congruencia con la promesa de entrada)",
+    ],
+    requiredDeliverableEvidence:
+      "Tabla de Parte 2 (Verificación de Afirmaciones del Borrador) con cada bloque [Bxx] resuelto en VERIFICADO/MODIFICADO/ELIMINADO con DOI/URL real y Checkpoints de Rigor marcados en 06-fuentes-y-verificacion.md, manteniendo intacta la Parte 1.",
+    verificationBoundary: {
+      runtimeDeterministic:
+        "factcheck_resolved bloquea cualquier fila en PENDIENTE o marcador de plantilla y el gate SHA-256 impide alterar el Preámbulo o la Parte 1 aprobados en P02_RESEARCH.",
+      humanEditorial:
+        "El creador confirma que la evidencia citada sostiene cada afirmación concreta del guion antes de /yts-approve P04_FACTCHECK.",
+    },
   },
   P05_ANIMATIC: {
     phase: "P05_ANIMATIC",
@@ -56,6 +131,23 @@ export const PHASE_PLAYBOOKS: Record<PhaseId, PhasePlaybook> = {
     role: "Director Audiovisual — Animática",
     summary:
       "Anclajes de consistencia visual, montaje preliminar en 03-storyboard-y-edicion.md (§§1-2) y locución provisional neuronal (scratch_track).",
+    mandatoryReferences: [
+      "02-guion.md (aprobado en P03_SCRIPT)",
+      "03-storyboard-y-edicion.md (secciones §1 Consistencia Visual y §2 Montaje Preliminar)",
+      "skills/yts-direccion-edicion/SKILL.md",
+    ],
+    conditionalReferences: [
+      "skills/yts-orquestador/references/herramientas-y-apis.md (para seleccionar motor TTS neuronal y herramientas visuales según estado PROBADA/DOCUMENTADA)",
+      "banco-visual.md e identidad-visual.md (si existen en la oficina/canal)",
+    ],
+    requiredDeliverableEvidence:
+      "Secciones §1 Consistencia Visual (anclajes y referencias de continuidad) y §2 Fase 1: Montaje Preliminar completas en 03-storyboard-y-edicion.md más archivo de audio declarado en evidence(scratch_track).",
+    verificationBoundary: {
+      runtimeDeterministic:
+        "El runtime exige que exista el archivo de audio scratch_track no vacío dentro de la carpeta del video y sella las huellas SHA-256 de §§1-2 de 03-storyboard-y-edicion.md.",
+      humanEditorial:
+        "El creador escucha el Radio Edit / Animatic para validar cadencia, pausas e intención expresiva antes de /yts-approve P05_ANIMATIC.",
+    },
   },
   P06_ASSEMBLY: {
     phase: "P06_ASSEMBLY",
@@ -63,6 +155,25 @@ export const PHASE_PLAYBOOKS: Record<PhaseId, PhasePlaybook> = {
     role: "Director Audiovisual — Montaje y Master",
     summary:
       "Tabla de escenas sincronizada con bloques [Bxx], las 4 capas de pulido, registro de licencias (04-registro-recursos.md), hoja de aceptación aprobada (/yts-approve-sheet) y medición ffprobe/ffmpeg.",
+    mandatoryReferences: [
+      "02-guion.md (bloques [Bxx] aprobados)",
+      "03-storyboard-y-edicion.md (secciones §3 Tabla de Escenas y §4 Las 4 Capas Obligatorias)",
+      "04-registro-recursos.md",
+      "aceptacion.json (aprobado antes del render mediante /yts-approve-sheet)",
+      "skills/yts-direccion-edicion/SKILL.md",
+    ],
+    conditionalReferences: [
+      "skills/yts-orquestador/references/herramientas-y-apis.md (capacidades FilmCraft MCP y límites de proveedores)",
+      "skills/yts-orquestador/references/contingencia-y-politicas-sensibles.md (§3 Copyright vs. Permiso vs. Monetización)",
+    ],
+    requiredDeliverableEvidence:
+      "Tabla de Escenas (§3) con todos los [Bxx] y timecodes sin '← derivar', §4 Capas Obligatorias, 04-registro-recursos.md con licencias y costos verificados, aceptacion.json sellado con /yts-approve-sheet y archivo master medido por ffprobe/ffmpeg.",
+    verificationBoundary: {
+      runtimeDeterministic:
+        "script_storyboard_ids, resource_license_log y master_measurement (con verificación SHA-256 de /yts-approve-sheet) validan trazabilidad de bloques, licencias y parámetros técnicos del master.",
+      humanEditorial:
+        "El creador inspecciona la narrativa visual, el diseño sonoro y la vigencia real de las licencias antes de /yts-approve P06_ASSEMBLY.",
+    },
   },
   P07_CLOSE: {
     phase: "P07_CLOSE",
@@ -70,6 +181,25 @@ export const PHASE_PLAYBOOKS: Record<PhaseId, PhasePlaybook> = {
     role: "Orquestador de Entrega y Retención",
     summary:
       "Cierre de métricas y retrospectiva en 05-metricas-retencion.md, ficha de publicación en entregable-final.md y archivo en videos-publicados/.",
+    mandatoryReferences: [
+      "01-packaging.md (título y miniaturas A/B/C para Prueba y Compara)",
+      "04-registro-recursos.md (atribuciones y licencias verificadas)",
+      "05-metricas-retencion.md",
+      "entregable-final.md",
+      "skills/yts-orquestador/SKILL.md",
+    ],
+    conditionalReferences: [
+      "skills/yts-orquestador/references/contingencia-y-politicas-sensibles.md (§6 Plan de Contingencia ante avisos en YouTube Studio)",
+      "ideas.md, backlog-ideas.md y banco-de-titulos.md (para volcar aprendizajes al siguiente ciclo)",
+    ],
+    requiredDeliverableEvidence:
+      "05-metricas-retencion.md completo (incluyendo §5 Mejora Única Nombrada y §8 Protocolo de no republicar archivos idénticos) y entregable-final.md con ficha de publicación y especificaciones técnicas verificadas.",
+    verificationBoundary: {
+      runtimeDeterministic:
+        "close_deliverables valida la estructura de 05-metricas-retencion.md y entregable-final.md, y normalized_state solo admite PUBLICADO bajo mis-canales/<canal>/videos-publicados/<video>/ con las 7 fases aprobadas.",
+      humanEditorial:
+        "El creador ejecuta la subida y Prueba y Compara en YouTube Studio, interpreta las curvas reales de retención y aprueba el cierre con /yts-approve P07_CLOSE.",
+    },
   },
 };
 
@@ -350,9 +480,13 @@ export function buildThreeLayerPrompt(resolved: ResolvedWorkflowContext): string
     `Fase objetivo: ${resolved.targetPhase} — ${resolved.phaseDefinition.name}`,
     `Skill asignada: ${resolved.playbook.skill} (${resolved.playbook.role})`,
     `Foco de la fase: ${resolved.playbook.summary}`,
-    ` Superficie editable permitida: ${resolved.editableTargets.join("; ")}`,
+    `Superficie editable permitida: ${resolved.editableTargets.join("; ")}`,
+    `Referencias obligatorias de la fase: ${resolved.playbook.mandatoryReferences.join("; ")}`,
+    `Referencias condicionales: ${resolved.playbook.conditionalReferences.join("; ")}`,
+    `Constancia de aplicación exigida en el entregable: ${resolved.playbook.requiredDeliverableEvidence}`,
     `Evidencia requerida al enviar: ${evidenceLabel}`,
     `Verificadores deterministas de salida: ${checksLabel}`,
+    `Frontera de verificación (Runtime vs. Editorial humano): Runtime=${resolved.playbook.verificationBoundary.runtimeDeterministic} | Editorial=${resolved.playbook.verificationBoundary.humanEditorial}`,
     "",
     "[Capa 3 — Referencias Bajo Demanda y Vínculo de Oficina/Canal]",
     ...linkLines,

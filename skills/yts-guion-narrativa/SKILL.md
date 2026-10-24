@@ -11,12 +11,13 @@ license: MIT
 - En `P04_FACTCHECK` para auditar cada afirmación fáctica del borrador en la `Parte 2` y `Checkpoints de Rigor` de `06-fuentes-y-verificacion.md`.
 
 ## Reglas obligatorias en `P03_SCRIPT` (`02-guion.md`)
-1. **Estructura por bloques atómicos `[Bxx]`:**
-   - Todo bloque de locución debe declararse como encabezado de nivel 3 (`### [B01_...] — Título`) con su ventana temporal estimada (`MM:SS - MM:SS`). El verificador `script_block_ids` rechaza el envío si faltan bloques identificables.
-2. **Modo de Progresión y Anti-Spoiler Condicionado por Formato:**
+1. **Estructura por bloques atómicos `[Bxx]` y Puerta de Control Editorial:**
+   - Todo bloque de locución debe declararse como encabezado de nivel 3 (`### [B01_...] — Título`) con su ventana temporal estimada (`MM:SS - MM:SS`) y superar la **Puerta de Control Editorial** (`## 1. Puerta de Control Editorial`). El verificador `script_block_ids` rechaza el envío si faltan bloques identificables.
+2. **Modo de Progresión, Anti-Spoiler Condicionado por Formato y Arco en Bucle (`sintesis-casos-shorts.md`):**
    - Declarar en el encabezado de `02-guion.md` (con una línea de justificación) cuál modo aplica:
      - **El descubrimiento es parte de la experiencia** (misterio, transformación, reto, divulgación con revelación): en `[B01]` y `[B02]` está **prohibido nombrar el mecanismo central o adelantar la conclusión**; la revelación se reserva para `[B04]`.
      - **La respuesta temprana es el valor** (tutoriales, explicación directa, consultas de búsqueda): **prohibido retrasar artificialmente la respuesta**; se confirma la solución pronto y la tensión pasa al *cómo*, el *por qué* o la *aplicación* (`[B04]` actúa como demostración o procedimiento).
+   - En Shorts y formatos dinámicos, aplicar la **Estructura del Arco en Bucle (*Looped Arc*)** (`Bucle Abierto ➔ Acción ➔ Conflicto / Error Inesperado ➔ Recuperación / Reintento ➔ Payoff`), priorizar **Relatibilidad Universal** sobre volumen bruto de nicho y respetar que citar un canal no equivale a licencia de copyright ni eludir políticas de **contenido reutilizado**.
    - En cualquier formato queda prohibido cerrar con listicles vagos de autoayuda en el payoff (`[B06]`).
 3. **Puerta de Correspondencia del Arranque (`## 0` de `02-guion.md`) `[Puerta Obligatoria]`:**
    - Responder **por escrito** en la tabla `## 0. Puerta de Correspondencia del Arranque` de `02-guion.md` las 4 comprobaciones antes de cerrar guion y storyboard:

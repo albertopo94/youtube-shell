@@ -16,8 +16,15 @@
         "_framework/scripts/check-contrato.sh",
         "_framework/scripts/test-check-contrato.sh",
         "_framework/referencias/evidencia-piloto/medicion-master-piloto.md",
+        "_framework/referencias/sintesis-casos-shorts.md",
+        "_framework/referencias/estudio-mrbeast-transcripcion.md",
         "_framework/herramientas-y-apis.md",
         "_framework/contingencia-y-politicas-sensibles.md",
+        "_framework/reglas-sistema.md",
+        "_framework/ciclo-produccion.md",
+        "_framework/estrategia-idiomas.md",
+        "_framework/agent-operating-standard.md",
+        "_framework/compatibilidad-consumidores.md",
         "_framework/roles/",
         "AGENTS.md"
       ],
@@ -101,6 +108,48 @@
           "upstream_sha256": "4ccaa41aa0cac0841fe6cbfe0837728eb198cf387ebab3f1d20bb6a639742135",
           "local_target": "skills/yts-orquestador/references/herramientas-y-apis.md",
           "role": "mirrored_reference"
+        },
+        {
+          "upstream_path": "_framework/reglas-sistema.md",
+          "upstream_sha256": "a1604f1d15aa8eea290f90e095d8f70dce67027712fb8df3fc7189a3fb7c6c38",
+          "local_target": "skills/yts-orquestador/SKILL.md",
+          "role": "consolidated_into_skill"
+        },
+        {
+          "upstream_path": "_framework/ciclo-produccion.md",
+          "upstream_sha256": "7b8b21f51c0d9e9ce937347cd4158f65a760b2978b3ad146c2dfff4617e064bc",
+          "local_target": "skills/yts-orquestador/SKILL.md",
+          "role": "consolidated_into_skill"
+        },
+        {
+          "upstream_path": "_framework/estrategia-idiomas.md",
+          "upstream_sha256": "d44ad9cde1128e9b32ba265afb8615e80f0bfa54aa8f2f40a2f6bdb1cd7e8064",
+          "local_target": "skills/yts-investigacion-ideas/SKILL.md",
+          "role": "consolidated_into_skill"
+        },
+        {
+          "upstream_path": "_framework/referencias/sintesis-casos-shorts.md",
+          "upstream_sha256": "0d5f80397348b778516b190aa40a2d76bcf97227c68f2d1e466313c3fda9f78c",
+          "local_target": "skills/yts-guion-narrativa/SKILL.md",
+          "role": "consolidated_into_skill"
+        },
+        {
+          "upstream_path": "_framework/referencias/estudio-mrbeast-transcripcion.md",
+          "upstream_sha256": "c7c5b71ad7f793b9b989324e2225d8047d1deb5076348d3dac1b55252a1944de",
+          "local_target": "skills/yts-packaging-miniaturas/SKILL.md",
+          "role": "consolidated_into_skill"
+        },
+        {
+          "upstream_path": "_framework/agent-operating-standard.md",
+          "upstream_sha256": "39507ff84b06d67de7e36d8ae48b2a26b1aa7129ad595567b189744977158ccd",
+          "local_target": "AGENTS.md",
+          "role": "operating_standard"
+        },
+        {
+          "upstream_path": "_framework/compatibilidad-consumidores.md",
+          "upstream_sha256": "21f7c8ed2c717ccf762ad4a64774c1fdaa536374d324439a6871e1fba17b9321",
+          "local_target": "upstream-lock.json",
+          "role": "consumer_contract"
         }
       ]
     },

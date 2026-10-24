@@ -23,6 +23,38 @@ const VALID_SKILLS = new Set([
 
 const VALID_PHASE_TARGETS = new Set<string>([...PHASE_IDS, "GLOBAL"]);
 
+interface ReferencePolicy {
+  level: "mandatory" | "conditional";
+  when: string;
+  references: string[];
+  required_evidence: string;
+}
+
+interface VerificationScope {
+  deterministic_in_runtime: string;
+  editorial_or_human_review: string;
+}
+
+interface SourceInventoryEntry {
+  upstream_path: string;
+  disposition:
+    | "enforced_in_runtime"
+    | "consumed_in_skill"
+    | "bundled_reference"
+    | "mirrored_template"
+    | "deliberately_external_office_or_channel_data";
+  consumed_what: string;
+  excluded_what: string;
+}
+
+interface ConsolidatedSourceEntry {
+  upstream_path: string;
+  upstream_sha256: string;
+  target_rule_ids: string[];
+  target_skills: string[];
+  disposition_summary: string;
+}
+
 interface FrameworkRule {
   id: string;
   title: string;
@@ -33,11 +65,16 @@ interface FrameworkRule {
   consumer: string;
   enforcement: string;
   tests: string[];
+  required_skill_terms: string[];
+  reference_policy: ReferencePolicy;
+  verification_scope: VerificationScope;
 }
 
 interface FrameworkMap {
   schema: string;
   upstream_commit: string;
+  source_inventory: SourceInventoryEntry[];
+  consolidated_or_legacy_sources: ConsolidatedSourceEntry[];
   rules: FrameworkRule[];
 }
 
@@ -101,3 +138,93 @@ test("every deterministic check in src/core/phases.ts is represented in framewor
     assert.equal(found, true, `deterministic check "${checkId}" from PHASES is missing in framework-map.json`);
   }
 });
+
+test("source_inventory and consolidated_or_legacy_sources cover all upstream sources including reglas-sistema, ciclo-produccion, estrategia-idiomas, and case studies", () => {
+  const map = loadFrameworkMap();
+  const lock = JSON.parse(readFileSync(join(ROOT, "upstream-lock.json"), "utf8"));
+
+  assert.ok(Array.isArray(map.source_inventory) && map.source_inventory.length >= 12);
+  const inventoriedPaths = new Set(map.source_inventory.map((e) => e.upstream_path));
+
+  for (const src of lock.upstreams.youtube.normative_sources) {
+    assert.equal(
+      inventoriedPaths.has(src.upstream_path),
+      true,
+      `normative source ${src.upstream_path} must be documented in framework-map.json source_inventory`,
+    );
+  }
+
+  for (const entry of map.source_inventory) {
+    assert.ok(entry.consumed_what && entry.consumed_what.length >= 10, `${entry.upstream_path}: missing consumed_what`);
+    assert.ok(entry.excluded_what && entry.excluded_what.length >= 10, `${entry.upstream_path}: missing excluded_what`);
+  }
+
+  assert.ok(
+    map.source_inventory.some((e) => e.disposition === "deliberately_external_office_or_channel_data"),
+    "source_inventory must explicitly declare deliberately external office/channel data",
+  );
+
+  assert.ok(Array.isArray(map.consolidated_or_legacy_sources) && map.consolidated_or_legacy_sources.length >= 4);
+  const consolidatedPaths = new Set(map.consolidated_or_legacy_sources.map((c) => c.upstream_path));
+  for (const requiredDoc of [
+    "_framework/reglas-sistema.md",
+    "_framework/ciclo-produccion.md",
+    "_framework/estrategia-idiomas.md",
+    "_framework/referencias/sintesis-casos-shorts.md",
+  ]) {
+    assert.equal(
+      consolidatedPaths.has(requiredDoc),
+      true,
+      `consolidated_or_legacy_sources must document ${requiredDoc}`,
+    );
+    assert.equal(
+      map.rules.some((r) => r.source.file === requiredDoc),
+      true,
+      `rules must include at least one traced rule from ${requiredDoc}`,
+    );
+  }
+});
+
+test("every rule in framework-map.json verifies semantic fidelity in its target skill, reference policy, and runtime vs editorial verification scope", () => {
+  const map = loadFrameworkMap();
+  for (const r of map.rules) {
+    assert.ok(
+      Array.isArray(r.required_skill_terms) && r.required_skill_terms.length >= 3,
+      `${r.id}: must declare at least 3 required_skill_terms for semantic verification`,
+    );
+    const skillText = readFileSync(join(ROOT, "skills", r.skill, "SKILL.md"), "utf8").toLowerCase();
+    for (const term of r.required_skill_terms) {
+      assert.equal(
+        skillText.includes(term.toLowerCase()),
+        true,
+        `${r.id}: skill ${r.skill}/SKILL.md is missing required semantic term "${term}"`,
+      );
+    }
+
+    assert.ok(r.reference_policy, `${r.id}: missing reference_policy`);
+    assert.ok(
+      r.reference_policy.level === "mandatory" || r.reference_policy.level === "conditional",
+      `${r.id}: invalid reference_policy.level`,
+    );
+    assert.ok(r.reference_policy.when.length >= 10, `${r.id}: reference_policy.when must be descriptive`);
+    assert.ok(
+      Array.isArray(r.reference_policy.references) && r.reference_policy.references.length > 0,
+      `${r.id}: reference_policy.references must be non-empty`,
+    );
+    assert.ok(
+      r.reference_policy.required_evidence.length >= 10,
+      `${r.id}: reference_policy.required_evidence must specify deliverable evidence`,
+    );
+
+    assert.ok(r.verification_scope, `${r.id}: missing verification_scope`);
+    assert.ok(
+      r.verification_scope.deterministic_in_runtime.length >= 10,
+      `${r.id}: missing verification_scope.deterministic_in_runtime`,
+    );
+    assert.ok(
+      r.verification_scope.editorial_or_human_review.length >= 10,
+      `${r.id}: missing verification_scope.editorial_or_human_review`,
+    );
+  }
+});
+

@@ -28,6 +28,8 @@ license: MIT
 4. **Experimentación Ágil y Registro de Inspiración:**
    - En las primeras publicaciones de un canal, priorizar cadencia sostenible y una hipótesis concreta por video (sin bajar el estándar de congruencia ni correspondencia del arranque).
    - Complementar el barrido DFS con el *Registro de Inspiración y Conexiones entre Temas* (hallazgo inesperado, fuente, pregunta creativa, conexión con el dolor de la audiencia e idea original resultante; trasplantar estructuras, nunca copiar el empaque literal).
-5. **Entregable de `P02_RESEARCH` (`06-fuentes-y-verificacion.md` — Preámbulo y Parte 1):**
-   - Separar **Formato / género** de **Riesgo factual del contenido**: `[ ] Sin afirmaciones sobre la realidad (N/A permitido)` / `[ ] Afirmaciones factuales verificables` / `[ ] Zona Roja YMYL`. La ficción, el relax o los formatos híbridos no quedan exentos si mencionan hechos históricos, ciencia, salud, finanzas o personas reales.
-   - Asentar las fuentes primarias de partida con DOI/URL, hallazgo real y limitaciones metodológicas (ej. modelo animal vs. humano) antes de pasar a `P03_SCRIPT`.
+5. **Estrategia de Idiomas y Mercados Lingüísticos (`estrategia-idiomas.md`):**
+   - Evaluar el alcance por **mercados lingüísticos** agrupados (no por países aislados): **Español** (Hispanoamérica, España y EE. UU.), **Inglés** (audiencia global) y **Hindi**, definiendo cuándo compensa producir pistas de audio multiidioma o subtítulos localizados.
+6. **Entregable de `P02_RESEARCH` (`06-fuentes-y-verificacion.md` — Preámbulo y Parte 1):**
+   - Separar **Formato / género** de **Riesgo factual del contenido** en el **Régimen de Verificación**: `[ ] Sin afirmaciones sobre la realidad (N/A permitido)` / `[ ] Afirmaciones factuales verificables` / `[ ] Zona Roja YMYL`. La ficción, el relax o los formatos híbridos no quedan exentos si mencionan hechos históricos, ciencia, salud, finanzas o personas reales.
+   - Asentar las **Fuentes de Partida** primarias con DOI/URL, hallazgo real y limitaciones metodológicas (ej. modelo animal vs. humano) antes de pasar a `P03_SCRIPT`.
