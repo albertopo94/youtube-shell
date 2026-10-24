@@ -18,11 +18,11 @@ Orden de trabajo de [brief-lector.md §12.5](brief-lector.md). Se actualiza en c
 
 ## 2. Dónde nos quedamos (Handoff para la próxima sesión)
 
-- **Versión actual:** `0.6.2` (`86/86` tests en verde con `npm test` y `npm run smoke`).
+- **Versión actual:** `0.7.0` (`102/102` tests en verde con `npm test` y `npm run smoke`).
 - **Upstreams fijados en [`upstream-lock.json`](../upstream-lock.json):**
-  - `albertopo94/youtube`: commit `13d06b2cc39b2c414b74dc7198119f320cb33f8c` (`2026-10-23T22:52:58Z`, `v0.5.14-consumer-compatibility-record` + disposición final, con las 8 plantillas `00..06` + `entregable-final.md` espejadas).
+  - `albertopo94/youtube`: commit `13d06b2cc39b2c414b74dc7198119f320cb33f8c` (`2026-10-23T22:52:58Z`, `v0.5.14-consumer-compatibility-record` + disposición final, con las 8 plantillas `00..06` + `entregable-final.md` espejadas en `mirrored` y las 7 fuentes normativas `AGENTS.md`, roles `01..04`, políticas y herramientas bloqueadas con SHA-256 en `normative_sources`).
   - `earendil-works/pi`: versión revisada `v1.3.0` (`71023aec1546d6d677a65669c5665c0927ce0dd0`); detectada en remoto `v1.4.0` (`4a080252f06caf63a525d7873c5d94d3c23887e0`, aún con `reviewed: false`).
-- **Estado de Git:** `main` local en `v0.6.2`; comando `youtube-shell` enlazado globalmente en `/Users/albertmac11/.local/bin/youtube-shell` mediante `npm link`.
+- **Estado de Git:** `main` local en `v0.7.0`; comando `youtube-shell` enlazado globalmente en `/Users/albertmac11/.local/bin/youtube-shell` mediante `npm link`.
 
 ---
 
@@ -30,6 +30,9 @@ Orden de trabajo de [brief-lector.md §12.5](brief-lector.md). Se actualiza en c
 
 - [x] **Sincronizar con `albertopo94/youtube` `13d06b2` (`v0.5.14-consumer-compatibility-record`):** espejar las 6 plantillas actualizadas (`00`, `02`, `03`, `04`, `05`, `06`), portar la validación exacta de estado y `PUBLICADO` contextual con los 10 fixtures (`f0..f9`) a `contract-checker.ts` y `syncStatusView`, y actualizar las 4 skills.
 - [x] **Lanzador CLI `youtube-shell` y panel visual TUI de 7 fases:** crear `bin/youtube-shell.mjs` + `src/cli/launcher.ts` (con home aislado en `~/.youtube-shell/agent` que hereda credenciales/modelos sin arrastrar extensiones ni skills ajenas) y el panel de inicio `renderStartupPanel` + `/yts-status` en `src/gate/pi-extension.ts`.
+- [x] **Matriz de trazabilidad del conocimiento (`framework-map.json`) y bloqueo de fuentes normativas:** mapear todas las reglas de `AGENTS.md`, roles `01..04`, `contingencia-y-politicas-sensibles.md` y `herramientas-y-apis.md` hacia sus skills, verificadores y tests; espejar las referencias normativas bajo `skills/yts-orquestador/references/`.
+- [x] **Resolvedor de contexto en 3 capas (`src/core/context-resolver.ts`) y vínculo de oficina/canal (`/yts-link`):** clasificar turnos en `read_only` vs `production`, enrutar el playbook de la fase activa y vincular `officeRoot` y `channelDir` en `.youtube-shell/registro.json`.
+- [x] **Puertas de salida deterministas por fase y aprobación criptográfica pre-render (`/yts-approve-sheet`):** añadir `packaging_structure`, `research_sources_structure`, `resource_license_log` y `close_deliverables`, reforzar `script_block_ids`, exigir `/yts-approve-sheet` con huella SHA-256 antes de validar `master_measurement`, y activar `.github/workflows/ci.yml`.
 - [ ] **Dogfooding interactivo en la TUI con `youtube-shell`:** abrir una carpeta vacía de prueba ejecutando `youtube-shell`, correr `/yts-init`, comprobar en vivo la restricción de herramientas por fase y aprobar con `/yts-approve`.
 - [ ] **Revisar cambios de `earendil-works/pi` `v1.3.0 → v1.4.0`:** correr `npm run upstreams:check`, inspeccionar el diff de `packages/coding-agent/docs/extensions.md` y `types.ts` entre `71023ae` y `4a08025` y, tras validarlo, promover `upstreams.pi.reviewed` a `1.4.0` en `upstream-lock.json`.
 - [ ] **Catalogar `effectcraft-cli` (`0.11.1`) y `soundcraft-cli` MCP:** inventariar sus herramientas MCP igual que se hizo con `filmcraft-cli 0.9.0` e incorporarlas con guardas de fase (`P06_ASSEMBLY`) y ruta en `src/gate/capabilities.ts`.

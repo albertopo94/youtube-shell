@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install ffmpeg and ffprobe
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.18.0"
+
+      - name: Run unit and integration test suite
+        run: npm test
+
+      - name: Run end-to-end smoke test
+        run: npm run smoke

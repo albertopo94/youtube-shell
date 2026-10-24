@@ -194,12 +194,13 @@ export function renderStartupPanel(
     `${ANSI_RED}▌  ▶▶     ▐${ANSI_RESET}  ${ANSI_AMBER}VIDEO:${ANSI_RESET}  ${videoName}`,
     `${ANSI_RED}▙▄▄▄▄▄▄▄▄▄▟${ANSI_RESET}  ${ANSI_AMBER}PATH:${ANSI_RESET}   ${videoDir}`,
     `             ${ANSI_AMBER}STATUS:${ANSI_RESET} ${overall}`,
-    `             ${ANSI_AMBER}SKILLS:${ANSI_RESET} 4 loaded (yts-*)`,
+    `             ${ANSI_AMBER}SKILLS:${ANSI_RESET} 5 loaded (yts-*)`,
     `             ${ANSI_AMBER}TOOLS:${ANSI_RESET}  4 custom + gate`,
     "",
     `${ANSI_CYAN}[Commands]${ANSI_RESET}`,
     `  • /yts-init                  • /yts-status`,
     `  • /yts-approve <FASE>        • /yts-reject <FASE> <nota>`,
+    `  • /yts-approve-sheet         • /yts-link <oficina> [canal]`,
   ];
 
   if (safeWidth >= 88) {
