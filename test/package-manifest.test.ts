@@ -73,3 +73,32 @@ test("before_agent_start injects Director Creativo persona, governance rules, an
   assert.match(res.systemPrompt, /P01_PACKAGING: NO_INICIADO/);
 });
 
+test("package.json version is synchronized with README.md and docs/progreso.md, and scheduled upstream check workflow exists", () => {
+  const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
+  const readme = readFileSync(join(ROOT, "README.md"), "utf8");
+  const progreso = readFileSync(join(ROOT, "docs", "progreso.md"), "utf8");
+
+  assert.equal(
+    readme.includes(`Dónde estamos (\`v${pkg.version}\`):`),
+    true,
+    `README.md must declare Dónde estamos (\`v${pkg.version}\`):`,
+  );
+  assert.equal(
+    progreso.includes(`**Versión actual:** \`${pkg.version}\``),
+    true,
+    `docs/progreso.md must declare **Versión actual:** \`${pkg.version}\``,
+  );
+
+  const upstreamsWorkflowPath = join(ROOT, ".github", "workflows", "upstreams.yml");
+  assert.equal(
+    existsSync(upstreamsWorkflowPath),
+    true,
+    "missing .github/workflows/upstreams.yml for scheduled upstream drift detection",
+  );
+  const upstreamsWorkflow = readFileSync(upstreamsWorkflowPath, "utf8");
+  assert.match(upstreamsWorkflow, /schedule:/);
+  assert.match(upstreamsWorkflow, /workflow_dispatch:/);
+  assert.match(upstreamsWorkflow, /npm run upstreams:check/);
+});
+
+

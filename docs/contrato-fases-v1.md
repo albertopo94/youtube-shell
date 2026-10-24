@@ -76,13 +76,21 @@ existe) bloquea el envío: "no pude comprobarlo" nunca se convierte en "permitid
    antes de enviar la fase. El runtime registra `acceptanceSheetApproval` (`path`, `sha256`,
    `approvedAt`, `actor: creator`) en `.youtube-shell/registro.json` y rechaza `submit` si la hoja
    no fue aprobada por el creador o si cambió en disco tras su aprobación.
-6. **Enrutamiento en 3 capas y vínculo de oficina/canal (`src/core/context-resolver.ts` y `/yts-link`):**
+6. **Enrutamiento en 3 capas, prohibición operativa en `read_only` y vínculo de oficina/canal (`src/core/context-resolver.ts`, `src/gate/pi-extension.ts` y `/yts-link`):**
    `before_agent_start` clasifica cada turno en modo `read_only` (consulta/auditoría) o
-   `production` e inyecta el prompt estructurado en 3 capas: Capa 1 (Orquestador Permanente),
-   Capa 2 (Playbook de la Fase Activa y superficie editable) y Capa 3 (Referencias bajo demanda y
-   vínculo con la oficina/canal en `reg.workspaceLink`).
+   `production` **antes** de seleccionar las herramientas activas. En modo `read_only`, el runtime
+   retira `write`, `edit`, `yts_transition` y cualquier capacidad mutadora del catálogo activo y
+   vuelve a bloquearlas en `tool_call` y `yts_transition.execute` sin efectos laterales sobre el
+   disco ni `.youtube-shell/registro.json`. Además, inyecta el prompt estructurado en 3 capas:
+   Capa 1 (Orquestador Permanente), Capa 2 (Playbook de la Fase Activa con referencias obligatorias,
+   referencias condicionales, evidencia exigida en el entregable y frontera Runtime vs. Editorial
+   humano) y Capa 3 (Referencias bajo demanda y vínculo con la oficina/canal en `reg.workspaceLink`).
 7. **Matriz de trazabilidad del conocimiento (`framework-map.json` y `normative_sources`):**
-   cada regla del framework upstream (`AGENTS.md`, roles `01..04`,
-   `contingencia-y-politicas-sensibles.md` y `herramientas-y-apis.md`) queda registrada en
-   `framework-map.json` con su clasificación, fase, skill consumidora, verificador del runtime y
-   tests asociados.
+   el archivo `framework-map.json` documenta el inventario completo de fuentes de
+   `albertopo94/youtube` (`source_inventory` y `consolidated_or_legacy_sources`, incluyendo
+   `AGENTS.md`, roles `01..04`, `contingencia-y-politicas-sensibles.md`, `herramientas-y-apis.md`,
+   `reglas-sistema.md`, `ciclo-produccion.md`, `estrategia-idiomas.md` y síntesis de casos de
+   estudio), qué partes se consumen, qué datos de oficina/canal quedan deliberadamente fuera del
+   paquete, y verifica semánticamente que cada una de las 23 reglas conserve sus términos y
+   procedimientos clave en su skill correspondiente (`required_skill_terms`), su política de
+   referencias (`reference_policy`) y su frontera de verificación (`verification_scope`).

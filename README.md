@@ -82,23 +82,23 @@ flowchart TD
 
 | Etapa del flujo | Implementación en `youtube-shell` |
 |---|---|
-| **¿Qué tipo de trabajo es?** | `classifyWorkMode()` en [`src/core/context-resolver.ts`](src/core/context-resolver.ts) separa consultas/auditorías (`read_only`) de producción (`production`). |
+| **¿Qué tipo de trabajo es?** | `classifyWorkMode()` en [`src/core/context-resolver.ts`](src/core/context-resolver.ts) separa consultas/auditorías (`read_only`) de producción (`production`), y [`src/gate/pi-extension.ts`](src/gate/pi-extension.ts) bloquea estructuralmente `write`, `edit` y `yts_transition` durante turnos `read_only`. |
 | **Vincular oficina, canal y vídeo** | `detectWorkspaceLink()` en `/yts-init` o explícitamente con `/yts-link <oficina> [canal]`. |
-| **Resolver fase, skill y reglas** | `buildThreeLayerPrompt()` inyecta Capa 1 (Orquestador), Capa 2 (`PHASE_PLAYBOOKS` + secciones editables) y Capa 3 (referencias bajo demanda). |
+| **Resolver fase, skill y reglas** | `buildThreeLayerPrompt()` inyecta Capa 1 (Orquestador), Capa 2 (`PHASE_PLAYBOOKS` con referencias obligatorias/condicionales, evidencia en el entregable y frontera Runtime vs. Editorial) y Capa 3 (referencias bajo demanda). |
 | **Verificadores deterministas** | `yts_transition(submit)` ejecuta automáticamente `checkVideoContract()` y, en `P06_ASSEMBLY`, `measureMasterFile()` + verificación SHA-256 de `/yts-approve-sheet`. |
 | **Creador inspecciona y decide** | Solo los comandos humanos `/yts-approve`, `/yts-reject` y `/yts-approve-sheet` con confirmación en UI pueden sellar aprobaciones. |
 
 ## Verificación y seguimiento de upstreams
 
 ```bash
-npm test              # Suite completa (102 tests, 0 dependencias)
+npm test              # Suite completa (107 tests, 0 dependencias)
 npm run smoke         # Smoke test de punta a punta (P01 -> P07 + medición ffmpeg)
-npm run upstreams:check  # Verifica si albertopo94/youtube o earendil-works/pi avanzaron
+npm run upstreams:check  # Verifica si albertopo94/youtube o earendil-works/pi avanzaron (también en .github/workflows/upstreams.yml)
 ```
 
 ## Estado actual y próximos pasos (Roadmap)
 
-**Dónde estamos (`v0.7.1`):** los hitos del MVP más el lanzador CLI `youtube-shell` (`bin/youtube-shell.mjs`), el panel visual TUI de las 7 fases, la matriz de trazabilidad del conocimiento ([`framework-map.json`](framework-map.json)), el resolvedor de contexto en 3 capas (`src/core/context-resolver.ts`), el comando `/yts-link`, las puertas de salida por fase (`packaging_structure`, `research_sources_structure`, `script_block_ids`, `factcheck_resolved`, `script_storyboard_ids`, `resource_license_log`, `close_deliverables`) y la aprobación criptográfica de la hoja pre-render (`/yts-approve-sheet`) están implementados y verificados con 102 tests (`npm test` y `npm run smoke`), con las versiones de referencia fijadas en [`upstream-lock.json`](upstream-lock.json):
+**Dónde estamos (`v0.8.0`):** los hitos del MVP más el lanzador CLI `youtube-shell` (`bin/youtube-shell.mjs`), el panel visual TUI de las 7 fases, el bloqueo operativo real en modo `read_only`, la matriz de trazabilidad del conocimiento con inventario completo y verificación semántica de skills ([`framework-map.json`](framework-map.json)), el resolvedor de contexto en 3 capas con políticas de referencia por fase (`src/core/context-resolver.ts`), el comando `/yts-link`, las puertas de salida por fase (`packaging_structure`, `research_sources_structure`, `script_block_ids`, `factcheck_resolved`, `script_storyboard_ids`, `resource_license_log`, `close_deliverables`), la aprobación criptográfica de la hoja pre-render (`/yts-approve-sheet`) y los workflows de CI (`.github/workflows/ci.yml` y `.github/workflows/upstreams.yml`) están implementados y verificados con 107 tests (`npm test` y `npm run smoke`), con las versiones de referencia fijadas en [`upstream-lock.json`](upstream-lock.json):
 - `albertopo94/youtube` en `13d06b2` (`v0.5.14-consumer-compatibility-record`: las 8 plantillas canónicas espejadas sin deriva incluyendo `entregable-final.md`, verificador de contrato endurecido con 10 fixtures y validación contextual de `PUBLICADO` en `videos-publicados/`, separación de formato vs. riesgo factual, audio adaptable al formato con sonoridad en el master, método agnóstico de proveedores y *Puerta de Correspondencia del Arranque*).
 - `earendil-works/pi` en `v1.3.0` (`71023ae`, con `v1.4.0` registrado en `latest_seen` pendiente de revisión).
 
