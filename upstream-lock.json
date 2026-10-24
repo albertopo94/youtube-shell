@@ -80,6 +80,7 @@
         "packages/coding-agent/docs/packages.md"
       ],
       "api_used": [
+        "pi.on:session_start",
         "pi.on:before_agent_start",
         "pi.on:tool_call",
         "pi.registerTool",
@@ -89,7 +90,10 @@
         "ctx.cwd",
         "ctx.hasUI",
         "ctx.ui.confirm",
-        "ctx.ui.notify"
+        "ctx.ui.notify",
+        "ctx.ui.setHeader",
+        "ctx.ui.setStatus",
+        "ctx.ui.setTitle"
       ]
     }
   }

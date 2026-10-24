@@ -11,10 +11,11 @@ import {
   startPhase,
   submitPhase,
   unblockPhase,
+  type Evaluation,
 } from "../core/machine.ts";
 import { getPhase, PHASE_IDS } from "../core/phases.ts";
 import { extractSection } from "../core/sections.ts";
-import type { CheckRun, Context, DeclaredEvidence, PhaseId, Result } from "../core/types.ts";
+import type { CheckRun, Context, DeclaredEvidence, EffectiveStatus, PhaseId, Result } from "../core/types.ts";
 import { createFsReader, loadRegistry, saveRegistry, scaffoldVideoDir } from "../store/fs-store.ts";
 import { CANONICAL_FILES, checkVideoContract } from "../checks/contract-checker.ts";
 import {
@@ -24,9 +25,204 @@ import {
 } from "../checks/media-measurement.ts";
 import { buildCapabilityCatalog, type ToolCapabilityEntry } from "./capabilities.ts";
 
+export type EvaluationResult = Evaluation;
+
 export interface YoutubeShellExtensionOptions {
   extraCapabilities?: readonly ToolCapabilityEntry[];
   now?: () => string;
+}
+
+const DEFAULT_PKG_VERSION = (() => {
+  try {
+    const pkgPath = join(import.meta.dirname, "..", "..", "package.json");
+    const parsed = JSON.parse(readFileSync(pkgPath, "utf8")) as { version?: string };
+    return parsed.version ?? "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+})();
+
+const ANSI_RESET = "\x1b[0m";
+const ANSI_RED = "\x1b[1;38;2;255;75;75m";
+const ANSI_AMBER = "\x1b[1;38;2;245;166;35m";
+const ANSI_CYAN = "\x1b[1;38;2;86;182;194m";
+const ANSI_GREEN = "\x1b[1;38;2;152;195;121m";
+const ANSI_MUTED = "\x1b[38;2;140;148;163m";
+const ANSI_WHITE = "\x1b[1;38;2;235;239;245m";
+
+function stripAnsi(text: string): string {
+  return text.replace(/\x1b\[[0-9;]*m/g, "");
+}
+
+function visibleLength(text: string): number {
+  return stripAnsi(text).length;
+}
+
+function truncateAnsi(text: string, maxCols: number): string {
+  if (maxCols <= 0) return "";
+  if (visibleLength(text) <= maxCols) return text;
+  const plain = stripAnsi(text);
+  if (maxCols <= 1) return plain.slice(0, maxCols);
+  return `${plain.slice(0, maxCols - 1)}…`;
+}
+
+function padRightAnsi(text: string, targetCols: number): string {
+  const truncated = truncateAnsi(text, targetCols);
+  const pad = Math.max(0, targetCols - visibleLength(truncated));
+  return `${truncated}${" ".repeat(pad)}`;
+}
+
+function wrapPlain(text: string, maxCols: number): string[] {
+  const width = Math.max(10, maxCols);
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [""];
+  const lines: string[] = [];
+  let current = "";
+  for (const w of words) {
+    if (!current) {
+      current = w.length > width ? `${w.slice(0, width - 1)}…` : w;
+    } else if (current.length + 1 + w.length <= width) {
+      current = `${current} ${w}`;
+    } else {
+      lines.push(current);
+      current = w.length > width ? `${w.slice(0, width - 1)}…` : w;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+function formatEffectiveBadge(status: EffectiveStatus): string {
+  switch (status) {
+    case "APROBADO":
+      return `${ANSI_GREEN}✓ APROBADO${ANSI_RESET}`;
+    case "EN_CURSO":
+      return `${ANSI_AMBER}● EN_CURSO${ANSI_RESET}`;
+    case "PENDIENTE_APROBACION":
+      return `${ANSI_CYAN}◐ PENDIENTE_APROBACION${ANSI_RESET}`;
+    case "OBSOLETO":
+      return `${ANSI_AMBER}⚠ OBSOLETO${ANSI_RESET}`;
+    case "BLOQUEADO":
+      return `${ANSI_RED}✖ BLOQUEADO${ANSI_RESET}`;
+    default:
+      return `${ANSI_MUTED}○ NO_INICIADO${ANSI_RESET}`;
+  }
+}
+
+const PUBLISHED_VIDEO_PATH_RE = /(?:^|\/)mis-canales\/[^/]+\/videos-publicados\/[^/]+\/?$/;
+
+function computeOverallStatus(videoDir: string, ev: Evaluation): string {
+  const normalizedDir = videoDir.replace(/\\/g, "/");
+  if (ev.phases.every((p) => p.effective === "APROBADO")) {
+    return PUBLISHED_VIDEO_PATH_RE.test(normalizedDir) ? "PUBLICADO" : "APROBADO";
+  }
+  if (ev.phases.some((p) => p.effective === "PENDIENTE_APROBACION")) return "EN_REVISION";
+  if (ev.phases.some((p) => p.effective === "EN_CURSO")) return "EN_CURSO";
+  if (ev.phases.some((p) => p.effective === "APROBADO")) return "APROBADO";
+  return "EN_CURSO";
+}
+
+function selectActivePhaseSummary(ev: Evaluation): string {
+  const active =
+    ev.phases.find(
+      (p) =>
+        p.effective === "EN_CURSO" ||
+        p.effective === "PENDIENTE_APROBACION" ||
+        p.effective === "BLOQUEADO" ||
+        p.effective === "OBSOLETO",
+    ) ??
+    ev.phases.find((p) => p.effective === "NO_INICIADO") ??
+    ev.phases.at(-1);
+  return active ? `${active.id} (${active.effective})` : "COMPLETADO";
+}
+
+function buildPhaseCard(ev: Evaluation, cardWidth: number): string[] {
+  const w = Math.max(28, cardWidth);
+  const inner = w - 4;
+  const title = " ▶ Pipeline 7 Fases ";
+  const topDashes = Math.max(0, w - 2 - title.length);
+  const lines: string[] = [];
+
+  lines.push(
+    truncateAnsi(
+      `${ANSI_MUTED}╭─${ANSI_WHITE}${title}${ANSI_MUTED}${"─".repeat(Math.max(0, topDashes - 1))}╮${ANSI_RESET}`,
+      w,
+    ),
+  );
+
+  for (const p of ev.phases) {
+    const idCol = p.id.padEnd(14, " ");
+    const row = `${ANSI_WHITE}${idCol}${ANSI_RESET} ${formatEffectiveBadge(p.effective)}`;
+    lines.push(`${ANSI_MUTED}│${ANSI_RESET} ${padRightAnsi(row, inner)} ${ANSI_MUTED}│${ANSI_RESET}`);
+  }
+
+  lines.push(`${ANSI_MUTED}├${"─".repeat(w - 2)}┤${ANSI_RESET}`);
+  for (const wrapped of wrapPlain(`Siguiente: ${ev.nextAction}`, inner)) {
+    lines.push(
+      `${ANSI_MUTED}│${ANSI_RESET} ${padRightAnsi(`${ANSI_CYAN}${wrapped}${ANSI_RESET}`, inner)} ${ANSI_MUTED}│${ANSI_RESET}`,
+    );
+  }
+  lines.push(`${ANSI_MUTED}╰${"─".repeat(w - 2)}╯${ANSI_RESET}`);
+  return lines.map((l) => truncateAnsi(l, w));
+}
+
+export function renderStartupPanel(
+  videoDir: string,
+  ev: Evaluation,
+  width: number,
+  version: string = DEFAULT_PKG_VERSION,
+): string[] {
+  const safeWidth = Math.max(40, width);
+  const videoName = basename(videoDir) || "video";
+  const overall = computeOverallStatus(videoDir, ev);
+  const activeSummary = selectActivePhaseSummary(ev);
+
+  const topBar = truncateAnsi(
+    `${ANSI_RED}▶ YouTube Shell${ANSI_RESET} ${ANSI_MUTED}│${ANSI_RESET} ${ANSI_WHITE}${videoName}${ANSI_RESET} ${ANSI_MUTED}│${ANSI_RESET} ${ANSI_AMBER}${activeSummary}${ANSI_RESET}`,
+    safeWidth,
+  );
+  const divider = `${ANSI_MUTED}${"─".repeat(safeWidth)}${ANSI_RESET}`;
+
+  const leftRows = [
+    `${ANSI_RED}▛▀▀▀▀▀▀▀▀▀▜${ANSI_RESET}  ${ANSI_RED}YOUTUBE${ANSI_RESET} ${ANSI_WHITE}SHELL${ANSI_RESET} ${ANSI_MUTED}v${version}${ANSI_RESET}`,
+    `${ANSI_RED}▌  ▶▶     ▐${ANSI_RESET}  ${ANSI_AMBER}VIDEO:${ANSI_RESET}  ${videoName}`,
+    `${ANSI_RED}▙▄▄▄▄▄▄▄▄▄▟${ANSI_RESET}  ${ANSI_AMBER}PATH:${ANSI_RESET}   ${videoDir}`,
+    `             ${ANSI_AMBER}STATUS:${ANSI_RESET} ${overall}`,
+    `             ${ANSI_AMBER}SKILLS:${ANSI_RESET} 4 loaded (yts-*)`,
+    `             ${ANSI_AMBER}TOOLS:${ANSI_RESET}  4 custom + gate`,
+    "",
+    `${ANSI_CYAN}[Skills]${ANSI_RESET}`,
+    `  • yts-investigacion-ideas    • yts-packaging-miniaturas`,
+    `  • yts-guion-narrativa        • yts-direccion-edicion`,
+    `${ANSI_CYAN}[Commands]${ANSI_RESET}`,
+    `  • /yts-init                  • /yts-status`,
+    `  • /yts-approve <FASE>        • /yts-reject <FASE> <nota>`,
+  ];
+
+  if (safeWidth >= 88) {
+    const gap = 2;
+    const leftWidth = Math.max(42, Math.floor(safeWidth * 0.52));
+    const rightWidth = safeWidth - leftWidth - gap;
+    const cardLines = buildPhaseCard(ev, rightWidth);
+    const totalRows = Math.max(leftRows.length, cardLines.length);
+    const combined: string[] = [topBar, divider];
+
+    for (let i = 0; i < totalRows; i++) {
+      const l = padRightAnsi(leftRows[i] ?? "", leftWidth);
+      const r = cardLines[i] ? truncateAnsi(cardLines[i], rightWidth) : "";
+      combined.push(truncateAnsi(r ? `${l}${" ".repeat(gap)}${r}` : l.trimEnd(), safeWidth));
+    }
+    return combined;
+  }
+
+  const cardLines = buildPhaseCard(ev, safeWidth);
+  return [
+    topBar,
+    divider,
+    ...leftRows.map((l) => truncateAnsi(l, safeWidth)),
+    "",
+    ...cardLines,
+  ];
 }
 
 const AGENT_ACTIONS = new Set(["start", "submit", "block", "unblock", "reopen"]);
@@ -263,7 +459,33 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
   const catalog = buildCapabilityCatalog(options.extraCapabilities);
   const nowFn = options.now ?? (() => new Date().toISOString());
 
+  function refreshUi(ctx: any): void {
+    if (!ctx || !ctx.hasUI) return;
+    try {
+      const reader = createFsReader(ctx.cwd);
+      const reg = loadRegistry(ctx.cwd, { videoId: basename(ctx.cwd), now: nowFn() });
+      const ev = evaluate(reg, reader);
+      const activeSummary = selectActivePhaseSummary(ev);
+      ctx.ui.setTitle?.(`YouTube Shell · ${basename(ctx.cwd)}`);
+      ctx.ui.setStatus?.("youtube-shell", `▶ ${activeSummary} · ${ev.nextAction}`);
+      ctx.ui.setHeader?.((_tui: any, _theme: any) => ({
+        render: (w: number) => {
+          const currentReg = loadRegistry(ctx.cwd, { videoId: basename(ctx.cwd), now: nowFn() });
+          const currentEv = evaluate(currentReg, createFsReader(ctx.cwd));
+          return renderStartupPanel(ctx.cwd, currentEv, w, DEFAULT_PKG_VERSION);
+        },
+        invalidate() {},
+      }));
+    } catch {
+      // Ignore UI refresh errors when registry is temporarily unreadable.
+    }
+  }
+
   return function youtubeShellExtension(pi: any) {
+    pi.on("session_start", async (_event: any, ctx: any) => {
+      refreshUi(ctx);
+    });
+
     pi.registerTool({
       name: "yts_status",
       label: "Estado de Producción YouTube-Shell",
@@ -379,6 +601,7 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         }
         saveRegistry(ctx.cwd, res.registry);
         const ev = evaluate(res.registry, createFsReader(ctx.cwd));
+        refreshUi(ctx);
         return {
           content: [{ type: "text", text: `Fase ${String(params.phase)} actualizada. Siguiente: ${ev.nextAction}` }],
           details: ev,
@@ -394,7 +617,20 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
           createdFiles.length > 0
             ? `Creados: ${createdFiles.join(", ")}`
             : "Plantillas ya presentes; registro sincronizado.";
+        refreshUi(ctx);
         ctx.ui.notify(`Video inicializado en ${basename(ctx.cwd)}. ${summary}`, "info");
+      },
+    });
+
+    pi.registerCommand("yts-status", {
+      description: "Muestra el estado determinista de las 7 fases y refresca el panel visual de producción.",
+      handler: async (_args: string, ctx: any) => {
+        refreshUi(ctx);
+        const reader = createFsReader(ctx.cwd);
+        const reg = loadRegistry(ctx.cwd, { videoId: basename(ctx.cwd), now: nowFn() });
+        const ev = evaluate(reg, reader);
+        const summary = ev.phases.map((p) => `${p.id}: ${p.effective}`).join(" · ");
+        ctx.ui.notify(`${basename(ctx.cwd)} — ${summary} | Siguiente: ${ev.nextAction}`, "info");
       },
     });
 
@@ -443,6 +679,7 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
           return;
         }
         saveRegistry(ctx.cwd, res.registry);
+        refreshUi(ctx);
         ctx.ui.notify(`Fase ${phase} APROBADA por el creador.`, "info");
       },
     });
@@ -472,6 +709,7 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
           return;
         }
         saveRegistry(ctx.cwd, res.registry);
+        refreshUi(ctx);
         ctx.ui.notify(`Fase ${phase} devuelta a EN_CURSO.`, "info");
       },
     });

@@ -13,15 +13,19 @@ una hoja de aceptación escrita antes del render.
 Distribución privada por repositorio Git o ruta local (`"private": true`, no listado en `pi.dev/packages`):
 
 ```bash
-# Instalar desde GitHub
-pi install git:github.com/albertopo94/youtube-shell
+# Enlazar el comando `youtube-shell` globalmente en tu máquina (crea symlink en ~/.local/bin/youtube-shell)
+npm link
 
-# O probar directamente desde un clon local en una carpeta de video
-pi -e /ruta/a/youtube-shell
+# Lanzar directamente en cualquier carpeta de video (home aislado en ~/.youtube-shell/agent)
+youtube-shell
+
+# O instalar como paquete desde GitHub sobre pi
+pi install git:github.com/albertopo94/youtube-shell
 ```
 
 ### Comandos exclusivos del creador (UI de `pi`)
 - `/yts-init`: inicializa las 7 plantillas canónicas (`00`..`06`) y `.youtube-shell/registro.json` en la carpeta actual.
+- `/yts-status`: muestra y refresca el resumen de las 7 fases y la siguiente acción permitida.
 - `/yts-approve <FASE> [--ack-warn] [nota]`: aprueba una fase en `PENDIENTE_APROBACION`, sellando las huellas SHA-256 de sus artefactos y sincronizando la vista `00-estado-produccion.md`.
 - `/yts-reject <FASE> <nota>`: devuelve una fase pendiente a `EN_CURSO` con observaciones.
 
@@ -40,19 +44,19 @@ pi -e /ruta/a/youtube-shell
 ## Verificación y seguimiento de upstreams
 
 ```bash
-npm test              # Suite completa (77 tests, 0 dependencias)
+npm test              # Suite completa (84 tests, 0 dependencias)
 npm run smoke         # Smoke test de punta a punta (P01 -> P07 + medición ffmpeg)
 npm run upstreams:check  # Verifica si albertopo94/youtube o earendil-works/pi avanzaron
 ```
 
 ## Estado actual y próximos pasos (Roadmap)
 
-**Dónde estamos (`v0.5.0`):** los 8 hitos del MVP están implementados y verificados con 77 tests (`npm test` y `npm run smoke`), con las versiones de referencia fijadas en [`upstream-lock.json`](upstream-lock.json):
+**Dónde estamos (`v0.6.0`):** los hitos del MVP más el lanzador CLI `youtube-shell` (`bin/youtube-shell.mjs`) y el panel visual TUI de las 7 fases están implementados y verificados con 84 tests (`npm test` y `npm run smoke`), con las versiones de referencia fijadas en [`upstream-lock.json`](upstream-lock.json):
 - `albertopo94/youtube` en `13d06b2` (`v0.5.14-consumer-compatibility-record`: las 7 plantillas canónicas espejadas sin deriva, verificador de contrato endurecido con 10 fixtures y validación contextual de `PUBLICADO` en `videos-publicados/`, separación de formato vs. riesgo factual, audio adaptable al formato con sonoridad en el master, método agnóstico de proveedores y *Puerta de Correspondencia del Arranque*).
 - `earendil-works/pi` en `v1.3.0` (`71023ae`, con `v1.4.0` registrado en `latest_seen` pendiente de revisión).
 
 **Qué sigue en la próxima sesión (detalle en [docs/progreso.md](docs/progreso.md)):**
-1. Probar una sesión interactiva en vivo con `pi -e .` sobre una carpeta de video de prueba (`/yts-init` → `yts_transition` → `/yts-approve`).
+1. Probar una sesión interactiva en vivo ejecutando `youtube-shell` sobre una carpeta de video de prueba (`/yts-init` → `yts_transition` → `/yts-approve`).
 2. Revisar el diff de `earendil-works/pi` `v1.3.0 → v1.4.0` detectado por `npm run upstreams:check` y promover `upstreams.pi.reviewed` en `upstream-lock.json`.
 3. Inventariar e integrar `effectcraft-cli` y `soundcraft-cli` MCP en el catálogo de capacidades de `P06_ASSEMBLY`.
 4. Ejecutar la primera producción real con hoja de aceptación pre-render cuando se reactive un canal o video en `albertopo94/youtube`.

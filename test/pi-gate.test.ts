@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createYoutubeShellExtension } from "../src/gate/pi-extension.ts";
+import { createYoutubeShellExtension, renderStartupPanel } from "../src/gate/pi-extension.ts";
 import { DEFAULT_CAPABILITIES, type ToolCapabilityEntry } from "../src/gate/capabilities.ts";
 import { createFsReader, loadRegistry, registryPath } from "../src/store/fs-store.ts";
 import { evaluate } from "../src/core/machine.ts";
@@ -29,6 +29,9 @@ function createPiHarness(opts: HarnessOptions) {
   let activeTools = ["read", "write", "edit", "bash", "mcp_unknown_mutate"];
   const notifications: Array<{ message: string; level: string }> = [];
   const confirmations: Array<{ title: string; message: string }> = [];
+  const statusUpdates: Array<{ key: string; text: string | undefined }> = [];
+  const titles: string[] = [];
+  let headerFactory: ((tui: any, theme: any) => { render: (w: number) => string[]; invalidate: () => void }) | undefined;
   let backendSideEffects = 0;
 
   const pi = {
@@ -76,6 +79,15 @@ function createPiHarness(opts: HarnessOptions) {
         async confirm(title: string, message: string) {
           confirmations.push({ title, message });
           return confirmResult;
+        },
+        setStatus(key: string, text: string | undefined) {
+          statusUpdates.push({ key, text });
+        },
+        setTitle(title: string) {
+          titles.push(title);
+        },
+        setHeader(factory: any) {
+          headerFactory = factory;
         },
       },
     };
@@ -156,13 +168,24 @@ function createPiHarness(opts: HarnessOptions) {
     await cmd.handler(args, ctx);
   }
 
+  async function runSessionStart() {
+    const ctx = makeCtx();
+    for (const handler of hooks.get("session_start") ?? []) {
+      await handler({ type: "session_start" }, ctx);
+    }
+  }
+
   return {
     pi,
     tools,
     commands,
     notifications,
     confirmations,
+    statusUpdates,
+    titles,
+    getHeaderFactory: () => headerFactory,
     getBackendSideEffects: () => backendSideEffects,
+    runSessionStart,
     runBeforeAgentStart,
     invokeTool,
     invokeCommand,
@@ -554,5 +577,48 @@ test("FilmCraft MCP inventory is gated by phase and blocks unsafe engine command
   });
   assert.equal(badBatchEscape.blocked, true);
 });
+
+test("renderStartupPanel renders wide and narrow studio panels and session_start + /yts-status refresh UI", async (t) => {
+  const { videoDir } = setupTempVideo(t);
+  const h = createPiHarness({ videoDir });
+
+  await h.runSessionStart();
+  assert.ok(h.titles.some((title) => title.includes("YouTube Shell") && title.includes("01-video")));
+  assert.ok(h.statusUpdates.some((s) => s.key === "youtube-shell" && s.text?.includes("P01_PACKAGING")));
+
+  const factory = h.getHeaderFactory();
+  assert.ok(factory, "session_start must register a TUI header factory via ctx.ui.setHeader");
+
+  const reg = loadRegistry(videoDir, { videoId: "01-video", now: "2026-10-24T12:00:00Z" });
+  const ev = evaluate(reg, createFsReader(videoDir));
+
+  const stripAnsi = (s: string) => s.replace(/\x1b\[[0-9;]*m/g, "");
+
+  const wideLines = renderStartupPanel(videoDir, ev, 110, "0.5.0");
+  for (const line of wideLines) {
+    assert.ok(stripAnsi(line).length <= 110, `wide line exceeded 110 cols: ${stripAnsi(line).length}`);
+  }
+  const widePlain = wideLines.map(stripAnsi).join("\n");
+  assert.match(widePlain, /YouTube Shell/);
+  assert.match(widePlain, /01-video/);
+  assert.match(widePlain, /Pipeline 7 Fases/);
+  assert.match(widePlain, /P01_PACKAGING/);
+  assert.match(widePlain, /P07_CLOSE/);
+  assert.match(widePlain, /yts-investigacion-ideas/);
+  assert.match(widePlain, /\/yts-approve/);
+
+  const narrowLines = renderStartupPanel(videoDir, ev, 70, "0.5.0");
+  for (const line of narrowLines) {
+    assert.ok(stripAnsi(line).length <= 70, `narrow line exceeded 70 cols: ${stripAnsi(line).length}`);
+  }
+  const narrowPlain = narrowLines.map(stripAnsi).join("\n");
+  assert.match(narrowPlain, /Pipeline 7 Fases/);
+  assert.match(narrowPlain, /P01_PACKAGING/);
+
+  // /yts-status command notifies with a compact 7-phase summary and refreshes status bar
+  await h.invokeCommand("yts-status");
+  assert.ok(h.notifications.some((n) => n.message.includes("P01_PACKAGING") && n.message.includes("P07_CLOSE")));
+});
+
 
 

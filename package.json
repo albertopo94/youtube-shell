@@ -5,6 +5,9 @@
   "description": "Video production agent packaged for pi: runtime-enforced phases, creator-only approvals bound to SHA-256 fingerprints, measured masters.",
   "license": "MIT",
   "type": "module",
+  "bin": {
+    "youtube-shell": "bin/youtube-shell.mjs"
+  },
   "engines": {
     "node": ">=22.18.0"
   },
