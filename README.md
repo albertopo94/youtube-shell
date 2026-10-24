@@ -47,12 +47,14 @@ npm run upstreams:check  # Verifica si albertopo94/youtube o earendil-works/pi a
 
 ## Estado actual y próximos pasos (Roadmap)
 
-**Dónde estamos (`v0.4.2`):** los 8 hitos del MVP están implementados y verificados con 73 tests (`npm test` y `npm run smoke`), con las versiones de referencia fijadas en [`upstream-lock.json`](upstream-lock.json) (`albertopo94/youtube` en `f552339` / `v0.3.0-tercera-revision-externa` y `earendil-works/pi` en `v1.3.0`).
+**Dónde estamos (`v0.4.3`):** los 8 hitos del MVP están implementados y verificados con 73 tests (`npm test` y `npm run smoke`), con las versiones de referencia fijadas en [`upstream-lock.json`](upstream-lock.json):
+- `albertopo94/youtube` en `f552339` (`v0.3.0-tercera-revision-externa`: plantilla `05-metricas-retencion.md` §7.2 espejada, *Puerta de Congruencia Promesa ➜ Contenido* en `yts-guion-narrativa` y *Superficies de Descubrimiento* en `yts-investigacion-ideas`).
+- `earendil-works/pi` en `v1.3.0` (`71023ae`, con `v1.4.0` registrado en `latest_seen` pendiente de revisión).
 
 **Qué sigue en la próxima sesión (detalle en [docs/progreso.md](docs/progreso.md)):**
-1. Hacer `git push origin main` de los commits locales (`v0.2.0 → v0.4.2`).
-2. Probar una sesión interactiva en vivo con `pi -e .` sobre una carpeta de video de prueba (`/yts-init` → `yts_transition` → `/yts-approve`).
-3. Revisar el diff de `earendil-works/pi` `v1.3.0 → v1.4.0` detectado por `npm run upstreams:check`.
-4. Inventariar e integrar `effectcraft-cli` y `soundcraft-cli` MCP en el catálogo de capacidades de `P06_ASSEMBLY`.
+1. Probar una sesión interactiva en vivo con `pi -e .` sobre una carpeta de video de prueba (`/yts-init` → `yts_transition` → `/yts-approve`).
+2. Revisar el diff de `earendil-works/pi` `v1.3.0 → v1.4.0` detectado por `npm run upstreams:check` y promover `upstreams.pi.reviewed` en `upstream-lock.json`.
+3. Inventariar e integrar `effectcraft-cli` y `soundcraft-cli` MCP en el catálogo de capacidades de `P06_ASSEMBLY`.
+4. Ejecutar la primera producción real con hoja de aceptación pre-render cuando se reactive un canal o video en `albertopo94/youtube`.
 
 Contexto en [docs/brief-lector.md](docs/brief-lector.md), diseño de controles en [docs/diseno-controles-v01.md](docs/diseno-controles-v01.md), contrato de fases en [docs/contrato-fases-v1.md](docs/contrato-fases-v1.md), progreso y roadmap en [docs/progreso.md](docs/progreso.md) y procedencia de upstreams en [docs/upstreams.md](docs/upstreams.md).
