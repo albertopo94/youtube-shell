@@ -68,10 +68,7 @@ if (!piBin) {
 if (home.mode === "isolated" || home.mode === "custom") {
   prepareIsolatedHome({
     targetDir: home.dir,
-    candidateSourceDirs: [
-      join(homedir, ".gentle-shell", "agent"),
-      join(homedir, ".pi", "agent"),
-    ],
+    candidateSourceDirs: [join(homedir, ".pi", "agent")],
   });
 }
 

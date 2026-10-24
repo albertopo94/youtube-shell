@@ -604,7 +604,7 @@ test("renderStartupPanel renders wide and narrow studio panels and session_start
   assert.match(widePlain, /Pipeline 7 Fases/);
   assert.match(widePlain, /P01_PACKAGING/);
   assert.match(widePlain, /P07_CLOSE/);
-  assert.match(widePlain, /yts-investigacion-ideas/);
+  assert.equal(widePlain.includes("[Skills]"), false);
   assert.match(widePlain, /\/yts-approve/);
 
   const narrowLines = renderStartupPanel(videoDir, ev, 70, "0.5.0");

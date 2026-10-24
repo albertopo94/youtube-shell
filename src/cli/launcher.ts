@@ -29,7 +29,7 @@ export interface AgentHomeResolution {
 }
 
 const SHARED_CREDENTIAL_FILES = ["auth.json", "models.json", "models-store.json", "mcp.json"] as const;
-const SAFE_SETTINGS_KEYS = ["defaultProvider", "defaultModel", "defaultThinkingLevel", "theme"] as const;
+const SAFE_SETTINGS_KEYS = ["defaultProvider", "defaultModel", "defaultThinkingLevel"] as const;
 
 function isPiSubcommand(token: string): token is PiSubcommand {
   return (PI_SUBCOMMANDS as readonly string[]).includes(token);

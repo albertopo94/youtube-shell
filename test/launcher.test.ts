@@ -94,7 +94,7 @@ test("prepareIsolatedHome seeds credentials and sanitizes settings.json to exclu
   mkdirSync(emptyCandidate, { recursive: true });
   writeFileSync(join(emptyCandidate, "auth.json"), "{}", "utf8"); // <= 10 bytes
 
-  const richCandidate = join(tmp, "gentle-pi");
+  const richCandidate = join(tmp, "user-pi");
   mkdirSync(richCandidate, { recursive: true });
   writeFileSync(join(richCandidate, "auth.json"), JSON.stringify({ provider: "configured-token-placeholder" }), "utf8");
   writeFileSync(join(richCandidate, "models.json"), JSON.stringify({ models: ["m1"] }), "utf8");
@@ -105,8 +105,8 @@ test("prepareIsolatedHome seeds credentials and sanitizes settings.json to exclu
       defaultProvider: "google-antigravity",
       defaultModel: "claude-opus-4-6-thinking",
       defaultThinkingLevel: "high",
-      theme: "dark",
-      packages: ["npm:gentle-pi"],
+      theme: "external-custom-theme",
+      packages: ["npm:external-pkg"],
       extensions: ["/some/coding/ext.ts"],
       skills: ["/some/coding/skills"],
     }),
@@ -131,11 +131,14 @@ test("prepareIsolatedHome seeds credentials and sanitizes settings.json to exclu
     defaultProvider: "google-antigravity",
     defaultModel: "claude-opus-4-6-thinking",
     defaultThinkingLevel: "high",
-    theme: "dark",
   });
+  assert.equal("theme" in cleanSettings, false);
   assert.equal("packages" in cleanSettings, false);
   assert.equal("extensions" in cleanSettings, false);
   assert.equal("skills" in cleanSettings, false);
+
+  const binSource = readFileSync(join(ROOT, "bin", "youtube-shell.mjs"), "utf8");
+  assert.equal(binSource.includes("gentle-shell"), false);
 });
 
 test("buildPiInvocation isolates extensions and skills for interactive runs and passes subcommands cleanly", () => {

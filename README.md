@@ -51,7 +51,7 @@ npm run upstreams:check  # Verifica si albertopo94/youtube o earendil-works/pi a
 
 ## Estado actual y próximos pasos (Roadmap)
 
-**Dónde estamos (`v0.6.0`):** los hitos del MVP más el lanzador CLI `youtube-shell` (`bin/youtube-shell.mjs`) y el panel visual TUI de las 7 fases están implementados y verificados con 84 tests (`npm test` y `npm run smoke`), con las versiones de referencia fijadas en [`upstream-lock.json`](upstream-lock.json):
+**Dónde estamos (`v0.6.1`):** los hitos del MVP más el lanzador CLI `youtube-shell` (`bin/youtube-shell.mjs`) y el panel visual TUI de las 7 fases están implementados y verificados con 84 tests (`npm test` y `npm run smoke`), con las versiones de referencia fijadas en [`upstream-lock.json`](upstream-lock.json):
 - `albertopo94/youtube` en `13d06b2` (`v0.5.14-consumer-compatibility-record`: las 7 plantillas canónicas espejadas sin deriva, verificador de contrato endurecido con 10 fixtures y validación contextual de `PUBLICADO` en `videos-publicados/`, separación de formato vs. riesgo factual, audio adaptable al formato con sonoridad en el master, método agnóstico de proveedores y *Puerta de Correspondencia del Arranque*).
 - `earendil-works/pi` en `v1.3.0` (`71023ae`, con `v1.4.0` registrado en `latest_seen` pendiente de revisión).
 
