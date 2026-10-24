@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { CONTRACT_VERSION } from "../core/phases.ts";
-import { extractSection } from "../core/sections.ts";
+import { extractSection, PREAMBLE } from "../core/sections.ts";
 import type { CheckVerdict } from "../core/types.ts";
 import { loadRegistry, registryPath } from "../store/fs-store.ts";
 
@@ -146,6 +146,119 @@ function parseScriptBlocks(guionText: string): ScriptBlock[] {
   return blocks;
 }
 
+function checkPackagingStructure(videoDir: string): ContractCheckItem {
+  const pkgPath = join(videoDir, "01-packaging.md");
+  if (!existsSync(pkgPath)) {
+    return {
+      id: "packaging_structure",
+      result: "NOT_EVALUABLE",
+      details: "No existe 01-packaging.md.",
+    };
+  }
+  const text = readFileSync(pkgPath, "utf8");
+  const titlesSec = extractSection(text, "Opciones de Títulos");
+  const thumbsSec = extractSection(text, "Miniatura");
+  const qualitySec =
+    extractSection(text, "4.").ok
+      ? extractSection(text, "4.")
+      : extractSection(text, "Selección Final");
+
+  const problems: string[] = [];
+  if (!titlesSec.ok) {
+    problems.push("falta la sección '## 2. Opciones de Títulos'");
+  } else {
+    const numberedItems = titlesSec.text
+      .split(/\r?\n/)
+      .filter((line) => /^\s*[1-9]\d*\.\s+\S+/.test(line));
+    if (numberedItems.length < 5) {
+      problems.push(
+        `se requieren al menos 5 opciones de títulos numeradas (encontradas: ${numberedItems.length})`,
+      );
+    }
+  }
+
+  if (!thumbsSec.ok) {
+    problems.push("falta la sección de conceptos/variantes de miniatura");
+  } else {
+    for (const label of ["### Miniatura A", "### Miniatura B", "### Miniatura C"]) {
+      if (!thumbsSec.text.includes(label)) {
+        problems.push(`falta el concepto '${label}'`);
+      }
+    }
+  }
+
+  if (!qualitySec.ok) {
+    problems.push("falta la sección '## 4.' de control de calidad o selección final");
+  }
+
+  if (problems.length > 0) {
+    return {
+      id: "packaging_structure",
+      result: "FAIL",
+      details: `01-packaging.md incompleto: ${problems.join("; ")}.`,
+    };
+  }
+
+  return {
+    id: "packaging_structure",
+    result: "PASS",
+    evidence: ["01-packaging.md"],
+  };
+}
+
+function checkResearchSourcesStructure(videoDir: string): ContractCheckItem {
+  const fuentesPath = join(videoDir, "06-fuentes-y-verificacion.md");
+  if (!existsSync(fuentesPath)) {
+    return {
+      id: "research_sources_structure",
+      result: "NOT_EVALUABLE",
+      details: "No existe 06-fuentes-y-verificacion.md.",
+    };
+  }
+  const text = readFileSync(fuentesPath, "utf8");
+  const preamble = extractSection(text, PREAMBLE);
+  const parte1 = extractSection(text, "Parte 1");
+
+  const problems: string[] = [];
+  if (
+    !preamble.ok ||
+    !/Riesgo factual|R[ée]gimen de Verificaci[óo]n|Nivel de Riesgo Factual/i.test(preamble.text)
+  ) {
+    problems.push(
+      "el preámbulo debe declarar el régimen/riesgo factual del contenido",
+    );
+  }
+
+  if (!parte1.ok) {
+    problems.push("falta la sección 'Parte 1' de investigación previa");
+  } else {
+    const hasSourceItems = parte1.text
+      .split(/\r?\n/)
+      .some(
+        (line) =>
+          /^\s*[1-9]\d*\.\s+\S+/.test(line) ||
+          (line.trim().startsWith("|") && !line.includes("---")),
+      );
+    if (!hasSourceItems) {
+      problems.push("Parte 1 no registra ninguna fuente primaria o elemento numerado/tabla");
+    }
+  }
+
+  if (problems.length > 0) {
+    return {
+      id: "research_sources_structure",
+      result: "FAIL",
+      details: `06-fuentes-y-verificacion.md (P02_RESEARCH): ${problems.join("; ")}.`,
+    };
+  }
+
+  return {
+    id: "research_sources_structure",
+    result: "PASS",
+    evidence: ["06-fuentes-y-verificacion.md#Parte 1"],
+  };
+}
+
 function checkScriptAndStoryboard(videoDir: string): {
   scriptIds: ContractCheckItem;
   crossCheck: ContractCheckItem;
@@ -165,7 +278,23 @@ function checkScriptAndStoryboard(videoDir: string): {
     };
   }
 
-  const blocks = parseScriptBlocks(readFileSync(guionPath, "utf8"));
+  const guionText = readFileSync(guionPath, "utf8");
+  const editorialGate = extractSection(guionText, "Puerta de Control Editorial");
+  const blocks = parseScriptBlocks(guionText);
+  if (!editorialGate.ok) {
+    return {
+      scriptIds: {
+        id: "script_block_ids",
+        result: "FAIL",
+        details: "02-guion.md debe incluir la sección 'Puerta de Control Editorial'.",
+      },
+      crossCheck: {
+        id: "script_storyboard_ids",
+        result: "NOT_EVALUABLE",
+        details: "02-guion.md no supera la validación estructural de guion.",
+      },
+    };
+  }
   if (blocks.length === 0 || blocks.some((b) => !b.timecode)) {
     return {
       scriptIds: {
@@ -372,6 +501,118 @@ function checkApprovalAuthority(videoDir: string): ContractCheckItem {
   }
 }
 
+function checkResourceLicenseLog(videoDir: string): ContractCheckItem {
+  const recursosPath = join(videoDir, "04-registro-recursos.md");
+  if (!existsSync(recursosPath)) {
+    return {
+      id: "resource_license_log",
+      result: "NOT_EVALUABLE",
+      details: "No existe 04-registro-recursos.md.",
+    };
+  }
+  const text = readFileSync(recursosPath, "utf8");
+  const sec1 = extractSection(text, "1.");
+  const sec2 = extractSection(text, "2.");
+  const sec3 = extractSection(text, "3.");
+
+  const problems: string[] = [];
+  if (!sec1.ok || !sec2.ok || !sec3.ok) {
+    problems.push(
+      "faltan secciones obligatorias de registro de recursos y licencias (## 1, ## 2, ## 3)",
+    );
+  }
+
+  const tableRows = text
+    .split(/\r?\n/)
+    .filter((line) => line.trim().startsWith("|") && !line.includes("---"));
+  if (tableRows.length === 0) {
+    problems.push("no existen tablas de trazabilidad de recursos en 04-registro-recursos.md");
+  }
+
+  const forbiddenRow = tableRows.find((row) =>
+    /\b(CC-BY-NC|SIN\s+LICENCIA|ILEGAL|RECHAZAD[OA])\b/i.test(row),
+  );
+  if (forbiddenRow) {
+    problems.push(
+      `recurso con licencia incompatible o prohibida para monetización: ${forbiddenRow.slice(0, 90)}`,
+    );
+  }
+
+  if (problems.length > 0) {
+    return {
+      id: "resource_license_log",
+      result: "FAIL",
+      details: `04-registro-recursos.md: ${problems.join("; ")}.`,
+    };
+  }
+
+  return {
+    id: "resource_license_log",
+    result: "PASS",
+    evidence: ["04-registro-recursos.md"],
+  };
+}
+
+function checkCloseDeliverables(videoDir: string): ContractCheckItem {
+  const metricasPath = join(videoDir, "05-metricas-retencion.md");
+  if (!existsSync(metricasPath)) {
+    return {
+      id: "close_deliverables",
+      result: "NOT_EVALUABLE",
+      details: "No existe 05-metricas-retencion.md.",
+    };
+  }
+
+  const problems: string[] = [];
+  const metricasText = readFileSync(metricasPath, "utf8");
+  const intervalsSec =
+    extractSection(metricasText, "Intervalos de Consulta").ok
+      ? extractSection(metricasText, "Intervalos de Consulta")
+      : extractSection(metricasText, "Expectativas vs. Realidad");
+  const retroSec =
+    extractSection(metricasText, "Retrospectiva").ok
+      ? extractSection(metricasText, "Retrospectiva")
+      : extractSection(metricasText, "Diagnóstico");
+
+  if (!intervalsSec.ok || !retroSec.ok) {
+    problems.push(
+      "05-metricas-retencion.md debe conservar las secciones de intervalos de consulta y retrospectiva/diagnóstico",
+    );
+  }
+
+  const entregablePath = join(videoDir, "entregable-final.md");
+  if (existsSync(entregablePath)) {
+    const entText = readFileSync(entregablePath, "utf8");
+    const hasMeta =
+      extractSection(entText, "Metadata").ok || extractSection(entText, "Ficha del Video").ok;
+    const hasAssetsOrChecklist =
+      extractSection(entText, "Archivo Master").ok ||
+      extractSection(entText, "Créditos").ok ||
+      extractSection(entText, "Checklist").ok;
+    if (!hasMeta || !hasAssetsOrChecklist) {
+      problems.push(
+        "entregable-final.md debe incluir la metadata/ficha publicada y la sección de master/créditos/checklist",
+      );
+    }
+  }
+
+  if (problems.length > 0) {
+    return {
+      id: "close_deliverables",
+      result: "FAIL",
+      details: problems.join("; "),
+    };
+  }
+
+  return {
+    id: "close_deliverables",
+    result: "PASS",
+    evidence: existsSync(entregablePath)
+      ? ["05-metricas-retencion.md", "entregable-final.md"]
+      : ["05-metricas-retencion.md"],
+  };
+}
+
 export function checkVideoContract(
   videoDir: string,
   options: ContractCheckOptions = {},
@@ -380,9 +621,13 @@ export function checkVideoContract(
   const checks: ContractCheckItem[] = [
     checkCanonicalFiles(videoDir),
     checkNormalizedState(videoDir),
+    checkPackagingStructure(videoDir),
+    checkResearchSourcesStructure(videoDir),
     scriptIds,
     crossCheck,
     checkFactcheckResolved(videoDir),
+    checkResourceLicenseLog(videoDir),
+    checkCloseDeliverables(videoDir),
     checkApprovalAuthority(videoDir),
   ];
 

@@ -40,7 +40,7 @@ export const PHASES: PhaseDefinition[] = [
     requires: [],
     documents: [{ file: "01-packaging.md" }],
     evidence: [],
-    checks: [],
+    checks: ["packaging_structure"],
     checkpointLabel: "Aprobado por creador",
   },
   {
@@ -54,7 +54,7 @@ export const PHASES: PhaseDefinition[] = [
       },
     ],
     evidence: [],
-    checks: [],
+    checks: ["research_sources_structure"],
     checkpointLabel: "Verificado",
   },
   {
@@ -109,7 +109,7 @@ export const PHASES: PhaseDefinition[] = [
       { role: "master", description: "Render master candidato" },
       { role: "acceptance_sheet", description: "Hoja de aceptación previa al render" },
     ],
-    checks: ["script_storyboard_ids", "master_measurement"],
+    checks: ["script_storyboard_ids", "resource_license_log", "master_measurement"],
     checkpointLabel: "Inspeccionado",
   },
   {
@@ -121,7 +121,7 @@ export const PHASES: PhaseDefinition[] = [
       { file: "entregable-final.md" },
     ],
     evidence: [],
-    checks: [],
+    checks: ["close_deliverables"],
     checkpointLabel: "Publicado en Studio",
   },
 ];

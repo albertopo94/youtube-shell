@@ -220,9 +220,13 @@ test("end-to-end smoke test: /yts-init scaffolds a blank folder and 7 phases run
 
   // P07_CLOSE
   await callTool("yts_transition", { action: "start", phase: "P07_CLOSE" });
+  const origEntregable = readFileSync(join(videoDir, "entregable-final.md"), "utf8");
   await callTool("write", {
     path: "entregable-final.md",
-    content: "# Entregable Final\n- URL: https://youtube.com/watch?v=demo\n",
+    content: origEntregable.replace(
+      "- **Video ID / URL en YouTube:**",
+      "- **Video ID / URL en YouTube:** https://youtube.com/watch?v=demo",
+    ),
   });
   await callTool("yts_transition", { action: "submit", phase: "P07_CLOSE" });
   await approve("P07_CLOSE");

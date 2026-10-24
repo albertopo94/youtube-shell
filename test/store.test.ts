@@ -94,7 +94,14 @@ test("end to end on disk: approve packaging from the template, then an edit make
   const agent = { actor: { kind: "agent" as const }, reader, now: "2026-10-21T10:00:00Z" };
   let reg = loadRegistry(video, { videoId: "01-video", now: agent.now });
   reg = ok(startPhase(reg, "P01_PACKAGING", agent));
-  reg = ok(submitPhase(reg, "P01_PACKAGING", { checks: [], evidence: [] }, agent));
+  reg = ok(
+    submitPhase(
+      reg,
+      "P01_PACKAGING",
+      { checks: [{ id: "packaging_structure", result: "PASS", verifiedBy: "runtime" }], evidence: [] },
+      agent,
+    ),
+  );
   reg = ok(approvePhase(reg, "P01_PACKAGING", {}, { ...agent, actor: { kind: "creator", channel: "test" } }));
   saveRegistry(video, reg);
 

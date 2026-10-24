@@ -160,7 +160,7 @@ test("the agent cannot approve a phase, and nothing is recorded", () => {
   const project = new FakeProject();
   project.fill("P01_PACKAGING");
   let reg = ok(startPhase(createRegistry("vid", "x"), "P01_PACKAGING", ctx(project)));
-  reg = ok(submitPhase(reg, "P01_PACKAGING", { checks: [], evidence: [] }, ctx(project)));
+  reg = ok(submitPhase(reg, "P01_PACKAGING", { checks: passingChecks("P01_PACKAGING"), evidence: [] }, ctx(project)));
   const before = structuredClone(reg);
   denied(approvePhase(reg, "P01_PACKAGING", {}, ctx(project, AGENT)), /Solo el creador/);
   assert.deepEqual(reg, before);
@@ -171,10 +171,10 @@ test("approval is denied if an artifact changed after submission", () => {
   const project = new FakeProject();
   project.fill("P01_PACKAGING");
   let reg = ok(startPhase(createRegistry("vid", "x"), "P01_PACKAGING", ctx(project)));
-  reg = ok(submitPhase(reg, "P01_PACKAGING", { checks: [], evidence: [] }, ctx(project)));
+  reg = ok(submitPhase(reg, "P01_PACKAGING", { checks: passingChecks("P01_PACKAGING"), evidence: [] }, ctx(project)));
   project.fill("P01_PACKAGING", "edited");
   denied(approvePhase(reg, "P01_PACKAGING", {}, ctx(project, CREATOR)), /01-packaging\.md cambió/);
-  reg = ok(submitPhase(reg, "P01_PACKAGING", { checks: [], evidence: [] }, ctx(project)));
+  reg = ok(submitPhase(reg, "P01_PACKAGING", { checks: passingChecks("P01_PACKAGING"), evidence: [] }, ctx(project)));
   ok(approvePhase(reg, "P01_PACKAGING", {}, ctx(project, CREATOR)));
 });
 
@@ -235,7 +235,7 @@ test("the creator can request changes on a pending phase, with a note", () => {
   const project = new FakeProject();
   project.fill("P01_PACKAGING");
   let reg = ok(startPhase(createRegistry("vid", "x"), "P01_PACKAGING", ctx(project)));
-  reg = ok(submitPhase(reg, "P01_PACKAGING", { checks: [], evidence: [] }, ctx(project)));
+  reg = ok(submitPhase(reg, "P01_PACKAGING", { checks: passingChecks("P01_PACKAGING"), evidence: [] }, ctx(project)));
   denied(requestChanges(reg, "P01_PACKAGING", "más contraste", ctx(project, AGENT)), /Solo el creador/);
   denied(requestChanges(reg, "P01_PACKAGING", " ", ctx(project, CREATOR)), /nota/);
   reg = ok(requestChanges(reg, "P01_PACKAGING", "miniatura B con más contraste", ctx(project, CREATOR)));

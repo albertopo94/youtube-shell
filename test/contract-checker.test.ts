@@ -19,11 +19,35 @@ function makeValidFixture(
     "**Estado actual:** `EN_CURSO`\n",
     "utf8",
   );
-  writeFileSync(join(videoDir, "01-packaging.md"), "# 01 Packaging\n", "utf8");
+  writeFileSync(
+    join(videoDir, "01-packaging.md"),
+    [
+      "# 01 Packaging",
+      "## 2. Opciones de Títulos (Mínimo 5 Alternativas Creativas)",
+      "1. Título 1",
+      "2. Título 2",
+      "3. Título 3",
+      "4. Título 4",
+      "5. Título 5",
+      "## 3. Variantes de Miniatura (Thumbnails)",
+      "### Miniatura A (Principal)",
+      "- Hero A",
+      "### Miniatura B (Variante de Contraste)",
+      "- Hero B",
+      "### Miniatura C (Variante Radical)",
+      "- Hero C",
+      "## 4. Checklist de Control de Calidad",
+      "- [x] Clarity Test",
+    ].join("\n"),
+    "utf8",
+  );
   writeFileSync(
     join(videoDir, "02-guion.md"),
     [
       "# 02 Guion",
+      "## 1. Puerta de Control Editorial y Monetización (Obligatorio)",
+      "- [x] Aportación Original",
+      "## 2. Guion Maestro Estructurado por Bloques Atómicos (IDs Estables)",
       "### [B01_Gancho] — Bloque uno",
       "- **Tiempo estimado:** `00:00 - 00:15`",
       "### [B02_Cuerpo] — Bloque dos",
@@ -40,12 +64,42 @@ function makeValidFixture(
     ].join("\n"),
     "utf8",
   );
-  writeFileSync(join(videoDir, "04-registro-recursos.md"), "# 04 Recursos\n", "utf8");
-  writeFileSync(join(videoDir, "05-metricas-retencion.md"), "# 05 Métricas\n", "utf8");
+  writeFileSync(
+    join(videoDir, "04-registro-recursos.md"),
+    [
+      "# 04 Recursos",
+      "## 1. Material de Stock y Archivo Externo (Video y Fotos)",
+      "| Archivo Local | Plataforma | URL | Autor | Licencia |",
+      "| :--- | :--- | :--- | :--- | :--- |",
+      "| `clips/intro.mp4` | Coverr | https://coverr.co/1 | Autor X | Comercial verificada |",
+      "## 2. Activos Visuales Generados por IA",
+      "| `thumb_v1.png` | Imagen 3 | — | Pro | $0.04 | Comercial |",
+      "## 3. Locución y Voz Sintética / TTS",
+      "| `audio/voz.wav` | AI Studio | Gemini TTS | Biblioteca | Comercial |",
+      "## 4. Música y Efectos Sonoros (SFX)",
+      "| `audio/track1.mp3` | YouTube Audio Library | Track A | Libre |",
+    ].join("\n"),
+    "utf8",
+  );
+  writeFileSync(
+    join(videoDir, "05-metricas-retencion.md"),
+    [
+      "# 05 Métricas",
+      "## 1. Registro de Intervalos de Consulta (Datos Comparables)",
+      "| **Primeras 24 Horas** | `22/10/2026` | 1000 | 8.5% |",
+      "## 5. Retrospectiva Editorial: Evaluación de Satisfacción e Hipótesis",
+      "- **Mejora Única Nombrada para el Siguiente Video:** Acortar B01.",
+      "## 6. Diagnóstico de Cuellos de Botella del Embudo (*Bottleneck Analysis*)",
+      "- [x] Sin cuello de botella en empaque.",
+    ].join("\n"),
+    "utf8",
+  );
   writeFileSync(
     join(videoDir, "06-fuentes-y-verificacion.md"),
     [
       "# 06 Fuentes",
+      "- **Riesgo factual del contenido:** `[x] Afirmaciones factuales verificables`",
+      "- **Grado de controversia o riesgo:** `[x] Medio (cifras/datos técnicos)`",
       "## 🔬 Parte 1: Investigación Previa",
       "1. https://doi.org/10.1000/xyz123",
       "## 📋 Parte 2: Verificación del Borrador del Guion",
@@ -250,4 +304,113 @@ test("approval_authority reports NOT_EVALUABLE when no runtime registry exists y
   const check = report.checks.find((c) => c.id === "approval_authority")!;
   assert.equal(check.result, "NOT_EVALUABLE");
   assert.match(check.details ?? "", /casilla Markdown no acredita/);
+});
+
+test("packaging_structure fails when fewer than 5 titles or 3 thumbnail concepts are present in 01-packaging.md", (t) => {
+  const { videoDir } = makeValidFixture(t);
+  writeFileSync(
+    join(videoDir, "01-packaging.md"),
+    [
+      "# 01 Packaging",
+      "## 2. Opciones de Títulos",
+      "1. Solo uno",
+      "2. Solo dos",
+      "## 3. Variantes de Miniatura",
+      "### Miniatura A",
+      "### Miniatura B",
+      "## 4. Checklist de Control de Calidad",
+      "- [x] Ok",
+    ].join("\n"),
+    "utf8",
+  );
+  const report = checkVideoContract(videoDir);
+  const check = report.checks.find((c) => c.id === "packaging_structure")!;
+  assert.ok(check, "packaging_structure check must exist");
+  assert.equal(check.result, "FAIL");
+  assert.match(check.details ?? "", /5|Miniatura C/);
+});
+
+test("research_sources_structure fails when risk header or Parte 1 sources are missing in 06-fuentes-y-verificacion.md", (t) => {
+  const { videoDir } = makeValidFixture(t);
+  writeFileSync(
+    join(videoDir, "06-fuentes-y-verificacion.md"),
+    [
+      "# 06 Fuentes sin declaración de riesgo",
+      "## 🔬 Parte 1: Investigación Previa",
+      "Sin fuentes listadas.",
+      "## 📋 Parte 2: Verificación del Borrador del Guion",
+    ].join("\n"),
+    "utf8",
+  );
+  const report = checkVideoContract(videoDir);
+  const check = report.checks.find((c) => c.id === "research_sources_structure")!;
+  assert.ok(check, "research_sources_structure check must exist");
+  assert.equal(check.result, "FAIL");
+});
+
+test("script_block_ids fails when Puerta de Control Editorial is removed from 02-guion.md", (t) => {
+  const { videoDir } = makeValidFixture(t);
+  writeFileSync(
+    join(videoDir, "02-guion.md"),
+    [
+      "# 02 Guion",
+      "## 2. Guion Maestro",
+      "### [B01_Gancho] — Bloque uno",
+      "- **Tiempo estimado:** `00:00 - 00:15`",
+    ].join("\n"),
+    "utf8",
+  );
+  const report = checkVideoContract(videoDir);
+  const check = report.checks.find((c) => c.id === "script_block_ids")!;
+  assert.equal(check.result, "FAIL");
+  assert.match(check.details ?? "", /Puerta de Control Editorial/);
+});
+
+test("resource_license_log fails when mandatory license sections are missing or a resource has a prohibited license (CC-BY-NC / SIN LICENCIA)", (t) => {
+  const { videoDir } = makeValidFixture(t);
+  writeFileSync(
+    join(videoDir, "04-registro-recursos.md"),
+    [
+      "# 04 Recursos",
+      "## 1. Material de Stock",
+      "| `clip.mp4` | Web | URL | Autor | CC-BY-NC (No Comercial) |",
+      "## 2. Activos Visuales Generados por IA",
+      "| `img.png` | IA | — | Plan | $0 | Comercial |",
+      "## 3. Locución y Voz Sintética / TTS",
+      "| `voz.wav` | TTS | Voz | Biblioteca | Comercial |",
+    ].join("\n"),
+    "utf8",
+  );
+  const report = checkVideoContract(videoDir);
+  const check = report.checks.find((c) => c.id === "resource_license_log")!;
+  assert.ok(check, "resource_license_log check must exist");
+  assert.equal(check.result, "FAIL");
+  assert.match(check.details ?? "", /CC-BY-NC|licencia/i);
+});
+
+test("close_deliverables fails when 05-metricas-retencion.md or entregable-final.md lacks required closing sections", (t) => {
+  const { videoDir } = makeValidFixture(t);
+  writeFileSync(join(videoDir, "05-metricas-retencion.md"), "# 05 Métricas vacío\n", "utf8");
+  const report1 = checkVideoContract(videoDir);
+  const check1 = report1.checks.find((c) => c.id === "close_deliverables")!;
+  assert.ok(check1, "close_deliverables check must exist");
+  assert.equal(check1.result, "FAIL");
+
+  // Restore valid 05-metricas-retencion.md but write incomplete entregable-final.md
+  writeFileSync(
+    join(videoDir, "05-metricas-retencion.md"),
+    [
+      "# 05 Métricas",
+      "## 1. Registro de Intervalos de Consulta",
+      "| **Primeras 24 Horas** | `22/10/2026` |",
+      "## 5. Retrospectiva Editorial",
+      "- Mejora única.",
+    ].join("\n"),
+    "utf8",
+  );
+  writeFileSync(join(videoDir, "entregable-final.md"), "# Entregable incompleto sin secciones\n", "utf8");
+  const report2 = checkVideoContract(videoDir);
+  const check2 = report2.checks.find((c) => c.id === "close_deliverables")!;
+  assert.equal(check2.result, "FAIL");
+  assert.match(check2.details ?? "", /entregable-final\.md/);
 });
