@@ -27,7 +27,8 @@ function createPiHarness(opts: HarnessOptions) {
   const hooks = new Map<string, Array<(event: any, ctx: any) => any>>();
   const tools = new Map<string, any>();
   const commands = new Map<string, any>();
-  let activeTools = ["read", "write", "edit", "bash", "mcp_unknown_mutate"];
+  const allTools = ["read", "write", "edit", "bash", "mcp_unknown_mutate"];
+  let activeTools = [...allTools];
   const notifications: Array<{ message: string; level: string }> = [];
   const confirmations: Array<{ title: string; message: string }> = [];
   const statusUpdates: Array<{ key: string; text: string | undefined }> = [];
@@ -43,6 +44,9 @@ function createPiHarness(opts: HarnessOptions) {
     },
     registerTool(def: any) {
       tools.set(def.name, def);
+      if (!allTools.includes(def.name)) {
+        allTools.push(def.name);
+      }
       if (!activeTools.includes(def.name)) {
         activeTools.push(def.name);
       }
@@ -57,7 +61,7 @@ function createPiHarness(opts: HarnessOptions) {
       activeTools = [...next];
     },
     getAllTools() {
-      return activeTools.map((name) => ({ name }));
+      return allTools.map((name) => ({ name }));
     },
   };
 
@@ -94,13 +98,13 @@ function createPiHarness(opts: HarnessOptions) {
     };
   };
 
-  async function runBeforeAgentStart(systemPrompt = "Base prompt") {
+  async function runBeforeAgentStart(systemPrompt = "Base prompt", prompt = "Hola") {
     const ctx = makeCtx();
     let currentPrompt = systemPrompt;
     for (const handler of hooks.get("before_agent_start") ?? []) {
       const res = await handler(
         {
-          prompt: "Hola",
+          prompt,
           systemPrompt: currentPrompt,
           systemPromptOptions: { selectedTools: activeTools, cwd: opts.videoDir },
         },
@@ -822,6 +826,103 @@ test("agent cannot bypass contract or master checks by injecting forged PASS res
   assert.equal(masterCheck?.result, "PASS");
   assert.equal(masterCheck?.verifiedBy, "runtime");
 });
+
+test("read_only consultation during an active phase removes write/edit from active tools and blocks writing or editing an otherwise-allowed file", async (t) => {
+  const { videoDir } = setupTempVideo(t);
+  const h = createPiHarness({ videoDir });
+
+  // Advance to P03_SCRIPT EN_CURSO so 02-guion.md is an allowed file for the active phase
+  await h.invokeTool("yts_transition", { action: "start", phase: "P01_PACKAGING" });
+  await h.invokeTool("yts_transition", { action: "submit", phase: "P01_PACKAGING" });
+  await h.invokeCommand("yts-approve", "P01_PACKAGING");
+  await h.invokeTool("yts_transition", { action: "start", phase: "P02_RESEARCH" });
+  await h.invokeTool("yts_transition", { action: "submit", phase: "P02_RESEARCH" });
+  await h.invokeCommand("yts-approve", "P02_RESEARCH");
+  await h.invokeTool("yts_transition", { action: "start", phase: "P03_SCRIPT" });
+
+  const scriptPath = join(videoDir, "02-guion.md");
+  const origScript = readFileSync(scriptPath, "utf8");
+
+  // Creator sends a read-only consultation prompt while P03_SCRIPT is EN_CURSO
+  const turn = await h.runBeforeAgentStart(
+    "Prompt base",
+    "consulta: revisa este guion y dime qué mejorarías",
+  );
+  assert.match(turn.systemPrompt, /Ruta de solo lectura/);
+  assert.equal(turn.activeTools.includes("write"), false, "write must be removed in read_only mode");
+  assert.equal(turn.activeTools.includes("edit"), false, "edit must be removed in read_only mode");
+  assert.equal(turn.activeTools.includes("yts_transition"), false, "yts_transition must be removed in read_only mode");
+  assert.equal(turn.activeTools.includes("read"), true, "read must stay active in read_only mode");
+  assert.equal(turn.activeTools.includes("yts_status"), true, "yts_status must stay active in read_only mode");
+
+  // Even if the model invokes write or edit on the active phase file 02-guion.md, tool_call blocks it
+  const writeAttempt = await h.invokeTool("write", {
+    path: "02-guion.md",
+    content: "Guion sobrescrito durante una consulta",
+  });
+  assert.equal(writeAttempt.blocked, true);
+  assert.match(writeAttempt.reason, /solo lectura/i);
+  assert.equal(readFileSync(scriptPath, "utf8"), origScript);
+
+  const editAttempt = await h.invokeTool("edit", {
+    path: "02-guion.md",
+    oldText: "B01",
+    newText: "B99",
+  });
+  assert.equal(editAttempt.blocked, true);
+  assert.match(editAttempt.reason, /solo lectura/i);
+  assert.equal(readFileSync(scriptPath, "utf8"), origScript);
+});
+
+test("read_only consultation blocks yts_transition at tool_call and direct execute with zero registry side effects", async (t) => {
+  const { videoDir } = setupTempVideo(t);
+  const h = createPiHarness({ videoDir });
+
+  // Start P01_PACKAGING in production mode first
+  await h.runBeforeAgentStart("Prompt base", "Inicia P01_PACKAGING");
+  const startRes = await h.invokeTool("yts_transition", { action: "start", phase: "P01_PACKAGING" });
+  assert.equal(startRes.blocked, false);
+  const regBefore = readFileSync(registryPath(videoDir), "utf8");
+
+  // Switch to a read-only consultation turn
+  await h.runBeforeAgentStart("Prompt base", "consulta: audita el estado actual sin tocar nada");
+
+  // 1. Attempting yts_transition via tool_call is blocked
+  const submitAttempt = await h.invokeTool("yts_transition", {
+    action: "submit",
+    phase: "P01_PACKAGING",
+  });
+  assert.equal(submitAttempt.blocked, true);
+  assert.match(submitAttempt.reason, /solo lectura/i);
+  assert.equal(readFileSync(registryPath(videoDir), "utf8"), regBefore);
+
+  // 2. Even direct invocation of yts_transition.execute is rejected in read_only mode
+  const transitionTool = h.tools.get("yts_transition");
+  assert.ok(transitionTool);
+  const directOut = await transitionTool.execute(
+    "tc-direct",
+    { action: "submit", phase: "P01_PACKAGING" },
+    undefined,
+    undefined,
+    { cwd: videoDir, hasUI: true },
+  );
+  assert.equal(directOut.isError, true);
+  assert.equal(readFileSync(registryPath(videoDir), "utf8"), regBefore);
+
+  // 3. Subsequent production turn restores production capabilities
+  const prodTurn = await h.runBeforeAgentStart(
+    "Prompt base",
+    "Envía P01_PACKAGING a revisión con submit",
+  );
+  assert.equal(prodTurn.activeTools.includes("write"), true);
+  assert.equal(prodTurn.activeTools.includes("yts_transition"), true);
+  const prodSubmit = await h.invokeTool("yts_transition", {
+    action: "submit",
+    phase: "P01_PACKAGING",
+  });
+  assert.equal(prodSubmit.blocked, false);
+});
+
 
 
 

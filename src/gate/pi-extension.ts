@@ -5,6 +5,7 @@ import {
   buildThreeLayerPrompt,
   detectWorkspaceLink,
   resolveWorkflowContext,
+  type WorkMode,
 } from "../core/context-resolver.ts";
 import {
   approveAcceptanceSheet,
@@ -29,7 +30,11 @@ import {
   measureMasterFile,
   type AcceptanceSheet,
 } from "../checks/media-measurement.ts";
-import { buildCapabilityCatalog, type ToolCapabilityEntry } from "./capabilities.ts";
+import {
+  buildCapabilityCatalog,
+  isReadOnlyCapability,
+  type ToolCapabilityEntry,
+} from "./capabilities.ts";
 
 export type EvaluationResult = Evaluation;
 
@@ -540,9 +545,31 @@ function verifyFilmcraftCall(
   return { ok: true };
 }
 
+function extractPromptText(event: any): string {
+  if (typeof event?.prompt === "string") return event.prompt;
+  if (typeof event?.input === "string") return event.input;
+  if (typeof event?.text === "string") return event.text;
+  if (Array.isArray(event?.messages)) {
+    for (let i = event.messages.length - 1; i >= 0; i--) {
+      const msg = event.messages[i];
+      if (msg?.role === "user") {
+        if (typeof msg.content === "string") return msg.content;
+        if (Array.isArray(msg.content)) {
+          return msg.content
+            .map((part: any) => (typeof part?.text === "string" ? part.text : ""))
+            .join(" ")
+            .trim();
+        }
+      }
+    }
+  }
+  return "";
+}
+
 export function createYoutubeShellExtension(options: YoutubeShellExtensionOptions = {}) {
   const catalog = buildCapabilityCatalog(options.extraCapabilities);
   const nowFn = options.now ?? (() => new Date().toISOString());
+  let activeWorkMode: WorkMode = "production";
 
   function refreshUi(ctx: any): void {
     if (!ctx || !ctx.hasUI) return;
@@ -675,6 +702,15 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         required: ["action", "phase"],
       },
       async execute(_toolCallId: string, params: Record<string, unknown>, _signal: unknown, _onUpdate: unknown, ctx: any) {
+        if (activeWorkMode === "read_only") {
+          const reason =
+            "Modo de solo lectura activo (consulta/auditoría): no se permiten transiciones de fase en este turno.";
+          return {
+            content: [{ type: "text", text: `Transición denegada: ${reason}` }],
+            details: { ok: false, reasons: [reason] },
+            isError: true,
+          };
+        }
         const res = executeAgentTransition(ctx.cwd, params, nowFn());
         if (!res.ok) {
           return {
@@ -935,23 +971,28 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
       const ev = evaluate(reg, reader);
       const activeWorkPhases = ev.phases.filter((p) => p.canWork).map((p) => p.id);
 
+      const resolvedWorkflow = resolveWorkflowContext({
+        videoDir: ctx.cwd,
+        promptText: extractPromptText(event),
+        reg,
+        evaluation: ev,
+        hasRegistry,
+      });
+      activeWorkMode = resolvedWorkflow.workMode;
+
       const candidateTools: string[] = (pi.getAllTools?.() ?? []).map((t: { name: string }) => t.name);
       const allowedTools = candidateTools.filter((name) => {
         const entry = catalog.get(name);
         if (!entry) return false;
+        if (resolvedWorkflow.workMode === "read_only" && !isReadOnlyCapability(entry)) {
+          return false;
+        }
         if (entry.allowedPhases === "ALL") return true;
         if (entry.allowedPhases === "ANY_ACTIVE") return activeWorkPhases.length > 0;
         return entry.allowedPhases.some((p) => activeWorkPhases.includes(p));
       });
       pi.setActiveTools?.(allowedTools);
 
-      const resolvedWorkflow = resolveWorkflowContext({
-        videoDir: ctx.cwd,
-        promptText: typeof event?.prompt === "string" ? event.prompt : "",
-        reg,
-        evaluation: ev,
-        hasRegistry,
-      });
       const governanceBlock = buildThreeLayerPrompt(resolvedWorkflow);
       return {
         systemPrompt: `${String(event.systemPrompt ?? "")}\n\n${governanceBlock}`,
@@ -973,6 +1014,14 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         return {
           block: true,
           reason: `Operación bloqueada: la herramienta "${toolName}" no está registrada en el catálogo de capacidades de youtube-shell.`,
+        };
+      }
+
+      if (activeWorkMode === "read_only" && !isReadOnlyCapability(cap)) {
+        return {
+          block: true,
+          reason:
+            "Operación bloqueada: modo de solo lectura activo (consulta/auditoría); no se permiten escrituras, ediciones ni transiciones de fase en este turno.",
         };
       }
 

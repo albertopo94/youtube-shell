@@ -18,6 +18,18 @@ export interface ToolCapabilityEntry {
   requiresHumanConfirmation: boolean;
   evidenceStatus: "documentada" | "probada";
   validationMethod?: string;
+  readOnly?: boolean;
+}
+
+export function isReadOnlyCapability(entry: ToolCapabilityEntry): boolean {
+  if (typeof entry.readOnly === "boolean") {
+    return entry.readOnly;
+  }
+  return (
+    entry.capability === "read" ||
+    entry.capability === "research" ||
+    entry.capability === "measure"
+  );
 }
 
 export const FILMCRAFT_MCP_CAPABILITIES: readonly ToolCapabilityEntry[] = [
