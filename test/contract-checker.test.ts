@@ -5,10 +5,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { checkVideoContract } from "../src/checks/contract-checker.ts";
 
-function makeValidFixture(t: { after: (fn: () => void) => void }) {
+function makeValidFixture(
+  t: { after: (fn: () => void) => void },
+  location: string = "videos-en-estudio",
+) {
   const root = mkdtempSync(join(tmpdir(), "yts-contract-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
-  const videoDir = join(root, "01-video");
+  const videoDir = join(root, "mis-canales", "canal-x", location, "01-video");
   mkdirSync(videoDir, { recursive: true });
 
   writeFileSync(
@@ -101,15 +104,57 @@ test("f1: unnormalized state ('HECHO') on Estado actual or Fase activa fails nor
   }
 });
 
-test("missing Estado actual / Fase activa line is FAIL, never a silent OK", (t) => {
+test("f2: PUBLICADO archived under videos-publicados passes normalized_state", (t) => {
+  const { videoDir, catalogPath } = makeValidFixture(t, "videos-publicados");
+  writeFileSync(join(videoDir, "00-estado-produccion.md"), "**Estado actual:** `PUBLICADO`\n", "utf8");
+  const report = checkVideoContract(videoDir, { catalogPath });
+  assert.equal(report.result, "PASS");
+  const check = report.checks.find((c) => c.id === "normalized_state")!;
+  assert.equal(check.result, "PASS");
+});
+
+test("f3: PUBLICADO inside videos-en-estudio fails normalized_state", (t) => {
+  const { videoDir } = makeValidFixture(t, "videos-en-estudio");
+  writeFileSync(join(videoDir, "00-estado-produccion.md"), "**Estado actual:** `PUBLICADO`\n", "utf8");
+  const report = checkVideoContract(videoDir);
+  assert.equal(report.result, "FAIL");
+  const check = report.checks.find((c) => c.id === "normalized_state")!;
+  assert.equal(check.result, "FAIL");
+  assert.match(check.details ?? "", /videos-publicados/);
+});
+
+test("f4: missing or unformatted general state line is FAIL, never inferred from prose or tables", (t) => {
   const { videoDir } = makeValidFixture(t);
-  writeFileSync(join(videoDir, "00-estado-produccion.md"), "# Sin línea de estado\n", "utf8");
+  writeFileSync(
+    join(videoDir, "00-estado-produccion.md"),
+    "| Estado actual | NO_INICIADO |\n",
+    "utf8",
+  );
   const report = checkVideoContract(videoDir);
   const check = report.checks.find((c) => c.id === "normalized_state")!;
   assert.equal(check.result, "FAIL");
 });
 
-test("f2: script block missing in storyboard fails script_storyboard_ids", (t) => {
+test("f5: state with invalid suffix or extra text outside backticks fails normalized_state", (t) => {
+  const { videoDir } = makeValidFixture(t);
+  writeFileSync(
+    join(videoDir, "00-estado-produccion.md"),
+    "**Estado actual:** `EN_CURSO_INVALIDO`\n",
+    "utf8",
+  );
+  const report1 = checkVideoContract(videoDir);
+  assert.equal(report1.checks.find((c) => c.id === "normalized_state")?.result, "FAIL");
+
+  writeFileSync(
+    join(videoDir, "00-estado-produccion.md"),
+    "**Estado actual:** `EN_CURSO` extra\n",
+    "utf8",
+  );
+  const report2 = checkVideoContract(videoDir);
+  assert.equal(report2.checks.find((c) => c.id === "normalized_state")?.result, "FAIL");
+});
+
+test("f6: script block missing in storyboard fails script_storyboard_ids", (t) => {
   const { videoDir } = makeValidFixture(t);
   writeFileSync(
     join(videoDir, "03-storyboard-y-edicion.md"),
@@ -123,7 +168,7 @@ test("f2: script block missing in storyboard fails script_storyboard_ids", (t) =
   assert.match(check.details ?? "", /B02_Cuerpo/);
 });
 
-test("f3: inconsistent timecodes between script and storyboard fail script_storyboard_ids", (t) => {
+test("f7: inconsistent timecodes between script and storyboard fail script_storyboard_ids", (t) => {
   const { videoDir } = makeValidFixture(t);
   writeFileSync(
     join(videoDir, "03-storyboard-y-edicion.md"),
@@ -140,7 +185,7 @@ test("f3: inconsistent timecodes between script and storyboard fail script_story
   assert.match(check.details ?? "", /00:15 - 01:00.*00:15 - 01:30/);
 });
 
-test("f4: green catalog entry without a named tested operation (< 3 words) fails catalog_coherence", (t) => {
+test("f8: green catalog entry without a named tested operation (< 3 words) fails catalog_coherence", (t) => {
   const { videoDir, catalogPath } = makeValidFixture(t);
   writeFileSync(
     catalogPath,
@@ -157,7 +202,7 @@ test("f4: green catalog entry without a named tested operation (< 3 words) fails
   assert.match(check.details ?? "", /Alfa/);
 });
 
-test("f5: green catalog entry without PROBADA or yellow without DOCUMENTADA fails catalog_coherence", (t) => {
+test("f9: green catalog entry without PROBADA or yellow without DOCUMENTADA fails catalog_coherence", (t) => {
   const { videoDir, catalogPath } = makeValidFixture(t);
   writeFileSync(
     catalogPath,

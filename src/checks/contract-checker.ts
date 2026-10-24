@@ -15,7 +15,15 @@ export const CANONICAL_FILES = [
   "06-fuentes-y-verificacion.md",
 ] as const;
 
-const VALID_STATE_PATTERN = /\b(NO_INICIADO|EN_CURSO|BLOQUEADO|PENDIENTE_APROBACION|APROBADO)\b/;
+const STATE_DECLARATION_RE = /^\*\*(Estado actual|Fase activa):\*\*\s*`([^`]+)`\s*$/;
+const ACTIVE_PRODUCTION_STATES = new Set([
+  "NO_INICIADO",
+  "EN_CURSO",
+  "BLOQUEADO",
+  "PENDIENTE_APROBACION",
+  "APROBADO",
+]);
+const ARCHIVED_PUBLISHED_DIR_RE = /(?:^|\/)mis-canales\/[^/]+\/videos-publicados\/[^/]+\/?$/;
 
 export interface ContractCheckItem {
   id: string;
@@ -69,26 +77,50 @@ function checkNormalizedState(videoDir: string): ContractCheckItem {
     };
   }
   const lines = readFileSync(estadoPath, "utf8").split(/\r?\n/);
-  const stateLines = lines.filter((line) => /(Estado actual|Fase activa)/.test(line));
-  if (stateLines.length === 0) {
+  let match: RegExpExecArray | null = null;
+  for (const line of lines) {
+    const m = STATE_DECLARATION_RE.exec(line);
+    if (m) {
+      match = m;
+      break;
+    }
+  }
+  if (!match) {
     return {
       id: "normalized_state",
       result: "FAIL",
-      details: "00-estado-produccion.md no contiene ninguna línea 'Estado actual' o 'Fase activa'.",
+      details:
+        "00-estado-produccion.md — falta un estado general con formato '**Estado actual:** `VALOR`'.",
     };
   }
-  const invalid = stateLines.filter((line) => !VALID_STATE_PATTERN.test(line));
-  if (invalid.length > 0) {
+  const value = match[2];
+  if (ACTIVE_PRODUCTION_STATES.has(value)) {
+    return {
+      id: "normalized_state",
+      result: "PASS",
+      evidence: ["00-estado-produccion.md"],
+    };
+  }
+  if (value === "PUBLICADO") {
+    const normalizedDir = videoDir.replace(/\\/g, "/");
+    if (ARCHIVED_PUBLISHED_DIR_RE.test(normalizedDir)) {
+      return {
+        id: "normalized_state",
+        result: "PASS",
+        evidence: ["00-estado-produccion.md"],
+      };
+    }
     return {
       id: "normalized_state",
       result: "FAIL",
-      details: `Estado no reconocido: ${invalid[0].slice(0, 80)}`,
+      details:
+        "PUBLICADO solo es válido dentro de mis-canales/<canal>/videos-publicados/<video>/.",
     };
   }
   return {
     id: "normalized_state",
-    result: "PASS",
-    evidence: ["00-estado-produccion.md"],
+    result: "FAIL",
+    details: `Estado no reconocido: ${value}`,
   };
 }
 

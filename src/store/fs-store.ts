@@ -214,9 +214,12 @@ export function syncStatusView(videoDir: string, reg: Registry): void {
   const ev = evaluate(reg, createFsReader(videoDir));
   const states = ev.phases.map((p) => p.effective);
 
-  let overall: StoredStatus = "NO_INICIADO";
+  let overall: StoredStatus | "PUBLICADO" = "NO_INICIADO";
   if (states.every((s) => s === "APROBADO")) {
-    overall = "APROBADO";
+    const isArchivedPublished = /(?:^|\/)mis-canales\/[^/]+\/videos-publicados\/[^/]+\/?$/.test(
+      videoDir.replace(/\\/g, "/"),
+    );
+    overall = isArchivedPublished ? "PUBLICADO" : "APROBADO";
   } else if (states.some((s) => s === "BLOQUEADO" || s === "OBSOLETO")) {
     overall = "BLOQUEADO";
   } else if (states.some((s) => s === "PENDIENTE_APROBACION")) {

@@ -109,3 +109,41 @@ test("registryPath lives inside the video folder", (t) => {
   mkdirSync(join(video, "exports"));
   assert.equal(registryPath(video), join(video, ".youtube-shell", "registro.json"));
 });
+
+test("syncStatusView writes PUBLICADO only when all phases are approved under videos-publicados", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "yts-store-pub-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const studyDir = join(root, "mis-canales", "canal-x", "videos-en-estudio", "01-video");
+  const pubDir = join(root, "mis-canales", "canal-x", "videos-publicados", "01-video");
+  cpSync(TEMPLATES, studyDir, { recursive: true });
+  cpSync(TEMPLATES, pubDir, { recursive: true });
+
+  const makeAllApproved = (id: string): Registry => {
+    const reg = createRegistry(id, "2026-10-24T00:00:00Z");
+    for (const phaseId of Object.keys(reg.phases) as Array<keyof typeof reg.phases>) {
+      reg.phases[phaseId].status = "APROBADO";
+      reg.phases[phaseId].approvals.push({
+        phase: phaseId,
+        contractVersion: 1,
+        approvedAt: "2026-10-24T01:00:00Z",
+        actor: { kind: "creator", channel: "test" },
+        artifacts: [],
+        checks: [],
+        acknowledgedWarns: [],
+      });
+    }
+    return reg;
+  };
+
+  saveRegistry(studyDir, makeAllApproved("01-video"));
+  saveRegistry(pubDir, makeAllApproved("01-video"));
+
+  assert.match(
+    readFileSync(join(studyDir, "00-estado-produccion.md"), "utf8"),
+    /\*\*Estado actual:\*\*\s*`APROBADO`/,
+  );
+  assert.match(
+    readFileSync(join(pubDir, "00-estado-produccion.md"), "utf8"),
+    /\*\*Estado actual:\*\*\s*`PUBLICADO`/,
+  );
+});
