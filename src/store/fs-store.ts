@@ -16,6 +16,7 @@ import {
 } from "node:fs";
 import { basename, dirname, join, sep } from "node:path";
 import { createRegistry, evaluate, isSafeEvidencePath } from "../core/machine.ts";
+import { detectWorkspaceLink } from "../core/context-resolver.ts";
 import { CONTRACT_VERSION, PHASE_IDS } from "../core/phases.ts";
 import { extractSection } from "../core/sections.ts";
 import type {
@@ -283,6 +284,15 @@ export function scaffoldVideoDir(
 
   const nowIso = options.now ?? new Date().toISOString();
   const reg = loadRegistry(videoDir, { videoId: basename(videoDir), now: nowIso });
+  if (!reg.workspaceLink) {
+    const detected = detectWorkspaceLink(videoDir);
+    if (detected) {
+      reg.workspaceLink = {
+        ...detected,
+        linkedAt: nowIso,
+      };
+    }
+  }
   saveRegistry(videoDir, reg);
   return { createdFiles, registry: reg };
 }

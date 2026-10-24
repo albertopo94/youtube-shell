@@ -1,6 +1,11 @@
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, readFileSync, realpathSync, statSync } from "node:fs";
-import { basename, dirname, join, sep } from "node:path";
+import { basename, dirname, join, resolve, sep } from "node:path";
+import {
+  buildThreeLayerPrompt,
+  detectWorkspaceLink,
+  resolveWorkflowContext,
+} from "../core/context-resolver.ts";
 import {
   approvePhase,
   blockPhase,
@@ -16,7 +21,7 @@ import {
 import { getPhase, PHASE_IDS } from "../core/phases.ts";
 import { extractSection } from "../core/sections.ts";
 import type { CheckRun, Context, DeclaredEvidence, EffectiveStatus, PhaseId, Result } from "../core/types.ts";
-import { createFsReader, loadRegistry, saveRegistry, scaffoldVideoDir } from "../store/fs-store.ts";
+import { createFsReader, loadRegistry, registryPath, saveRegistry, scaffoldVideoDir } from "../store/fs-store.ts";
 import { CANONICAL_FILES, checkVideoContract } from "../checks/contract-checker.ts";
 import {
   evaluateMasterAcceptance,
@@ -770,9 +775,61 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
       },
     });
 
+    pi.registerCommand("yts-link", {
+      description: "Vincula la carpeta del video con la oficina de producción y el directorio del canal.",
+      handler: async (args: string, ctx: any) => {
+        const nowIso = nowFn();
+        const tokens = args.trim().split(/\s+/).filter(Boolean);
+        let officeRoot: string | undefined;
+        let channelDir: string | undefined;
+
+        if (tokens.length === 0 || tokens[0] === "auto") {
+          const detected = detectWorkspaceLink(ctx.cwd);
+          if (!detected) {
+            ctx.ui.notify(
+              "No se pudo autodetectar la oficina. Uso: /yts-link <ruta-oficina> [ruta-canal]",
+              "error",
+            );
+            return;
+          }
+          officeRoot = detected.officeRoot;
+          channelDir = detected.channelDir;
+        } else {
+          officeRoot = resolve(ctx.cwd, tokens[0]);
+          if (!existsSync(officeRoot)) {
+            ctx.ui.notify(`La ruta de oficina no existe: ${officeRoot}`, "error");
+            return;
+          }
+          if (tokens[1]) {
+            channelDir = resolve(ctx.cwd, tokens[1]);
+            if (!existsSync(channelDir)) {
+              ctx.ui.notify(`La ruta de canal no existe: ${channelDir}`, "error");
+              return;
+            }
+          }
+        }
+
+        const reg = loadRegistry(ctx.cwd, { videoId: basename(ctx.cwd), now: nowIso });
+        reg.workspaceLink = {
+          officeRoot,
+          ...(channelDir ? { channelDir } : {}),
+          linkedAt: nowIso,
+        };
+        reg.updatedAt = nowIso;
+        saveRegistry(ctx.cwd, reg);
+        refreshUi(ctx);
+        ctx.ui.notify(
+          `Vínculo registrado: oficina=${officeRoot}${channelDir ? ` · canal=${channelDir}` : ""}`,
+          "info",
+        );
+      },
+    });
+
     pi.on("before_agent_start", async (event: any, ctx: any) => {
       const nowIso = nowFn();
       const reader = createFsReader(ctx.cwd);
+      const hasRegistry =
+        existsSync(registryPath(ctx.cwd)) || existsSync(join(ctx.cwd, "00-estado-produccion.md"));
       const reg = loadRegistry(ctx.cwd, { videoId: basename(ctx.cwd), now: nowIso });
       const ev = evaluate(reg, reader);
       const activeWorkPhases = ev.phases.filter((p) => p.canWork).map((p) => p.id);
@@ -787,22 +844,14 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
       });
       pi.setActiveTools?.(allowedTools);
 
-      const phaseLines = ev.phases.map((p) => `- ${p.id}: ${p.effective}`).join("\n");
-      const governanceBlock = [
-        "[youtube-shell — Gobernanza y Persona]",
-        "Rol: Director Creativo y de Producción Audiovisual.",
-        "Comunicación ejecutiva: hablar en términos de entregables tangibles, ritmo narrativo y experiencia de escucha/visión; evitar jerga de terminal o fontanería interna salvo pedido explícito.",
-        "Reglas estructurales:",
-        "- La autoridad de estado vive en .youtube-shell/registro.json; 00-estado-produccion.md es una vista legible.",
-        "- Ninguna fase comienza sin las fases previas en APROBADO con huellas SHA-256 vigentes.",
-        "- Solo el creador aprueba fases mediante /yts-approve; el agente solicita revisión con yts_transition(submit).",
-        "- Prohibido usar voces mecánicas del sistema (/usr/bin/say) o dejar afirmaciones fácticas en PENDIENTE.",
-        "",
-        "[youtube-shell runtime]",
-        "Fases:",
-        phaseLines,
-        `Siguiente acción permitida: ${ev.nextAction}`,
-      ].join("\n");
+      const resolvedWorkflow = resolveWorkflowContext({
+        videoDir: ctx.cwd,
+        promptText: typeof event?.prompt === "string" ? event.prompt : "",
+        reg,
+        evaluation: ev,
+        hasRegistry,
+      });
+      const governanceBlock = buildThreeLayerPrompt(resolvedWorkflow);
       return {
         systemPrompt: `${String(event.systemPrompt ?? "")}\n\n${governanceBlock}`,
       };

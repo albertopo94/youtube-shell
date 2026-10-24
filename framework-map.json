@@ -72,9 +72,9 @@
       "classification": "context_reference",
       "phases": ["GLOBAL", "P01_PACKAGING", "P02_RESEARCH"],
       "skill": "yts-orquestador",
-      "consumer": "skills/yts-orquestador/SKILL.md",
+      "consumer": "src/core/context-resolver.ts",
       "enforcement": "detectWorkspaceLink / /yts-link / resolveLayer3References",
-      "tests": ["test/store.test.ts", "test/package-manifest.test.ts"]
+      "tests": ["test/context-resolver.test.ts", "test/store.test.ts"]
     },
     {
       "id": "ORQ-05",

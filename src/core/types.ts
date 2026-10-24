@@ -97,6 +97,12 @@ export interface HistoryEntry {
   note?: string;
 }
 
+export interface WorkspaceLink {
+  officeRoot: string;
+  channelDir?: string;
+  linkedAt: string;
+}
+
 export interface Registry {
   schemaVersion: 1;
   contractVersion: 1;
@@ -105,6 +111,7 @@ export interface Registry {
   updatedAt: string;
   phases: Record<PhaseId, PhaseRecord>;
   history: HistoryEntry[];
+  workspaceLink?: WorkspaceLink;
 }
 
 export interface Context {
