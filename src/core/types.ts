@@ -103,6 +103,13 @@ export interface WorkspaceLink {
   linkedAt: string;
 }
 
+export interface AcceptanceSheetApproval {
+  path: string;
+  sha256: string;
+  approvedAt: string;
+  actor: { kind: "creator"; channel: string };
+}
+
 export interface Registry {
   schemaVersion: 1;
   contractVersion: 1;
@@ -112,6 +119,7 @@ export interface Registry {
   phases: Record<PhaseId, PhaseRecord>;
   history: HistoryEntry[];
   workspaceLink?: WorkspaceLink;
+  acceptanceSheetApproval?: AcceptanceSheetApproval;
 }
 
 export interface Context {

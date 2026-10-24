@@ -146,6 +146,20 @@ export function validateRegistry(raw: unknown, expectedVideoId?: string): Regist
     }
   }
 
+  if (obj.acceptanceSheetApproval !== undefined) {
+    const sheetApp = obj.acceptanceSheetApproval as Record<string, unknown> | null;
+    const actor = sheetApp?.actor as Record<string, unknown> | undefined;
+    if (
+      !sheetApp ||
+      typeof sheetApp.path !== "string" ||
+      typeof sheetApp.sha256 !== "string" ||
+      !actor ||
+      actor.kind !== "creator"
+    ) {
+      throw new Error("Aprobación de hoja de aceptación inválida en el registro.");
+    }
+  }
+
   return raw as Registry;
 }
 

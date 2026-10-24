@@ -200,7 +200,14 @@ test("end-to-end smoke test: /yts-init scaffolds a blank folder and 7 phases run
       maxTruePeakDbtp: 0,
     },
   };
-  writeFileSync(join(videoDir, "aceptacion.json"), JSON.stringify(sheet, null, 2), "utf8");
+  await callTool("write", {
+    path: "aceptacion.json",
+    content: JSON.stringify(sheet, null, 2),
+  });
+
+  const approveSheetCmd = commands.get("yts-approve-sheet");
+  assert.ok(approveSheetCmd, "/yts-approve-sheet command must be registered");
+  await approveSheetCmd.handler("aceptacion.json", ctx);
 
   const measureOut = await callTool("yts_measure_master", {
     masterPath: "master.mp4",

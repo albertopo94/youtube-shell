@@ -7,6 +7,7 @@ import {
   resolveWorkflowContext,
 } from "../core/context-resolver.ts";
 import {
+  approveAcceptanceSheet,
   approvePhase,
   blockPhase,
   evaluate,
@@ -294,40 +295,58 @@ function executeAgentTransition(
       ) {
         const masterFullPath = join(videoDir, masterItem.path);
         const sheetFullPath = join(videoDir, sheetItem.path);
-        const measured = measureMasterFile(masterFullPath);
-        if (!measured.ok) {
+        const sheetFp = reader.fingerprint({ file: sheetItem.path });
+        const approvedSheet = reg.acceptanceSheetApproval;
+        if (!approvedSheet || approvedSheet.path !== sheetItem.path) {
           checks.push({
             id: "master_measurement",
-            result: "NOT_EVALUABLE",
-            details: measured.reason,
+            result: "FAIL",
+            details: `La hoja de aceptación "${sheetItem.path}" requiere aprobación humana previa al render mediante /yts-approve-sheet.`,
+            verifiedBy: "runtime",
+          });
+        } else if (!sheetFp.ok || sheetFp.hash !== approvedSheet.sha256) {
+          checks.push({
+            id: "master_measurement",
+            result: "FAIL",
+            details: `La hoja de aceptación "${sheetItem.path}" fue modificada después de su aprobación humana; ejecute /yts-approve-sheet nuevamente.`,
             verifiedBy: "runtime",
           });
         } else {
-          let sheet: AcceptanceSheet | null = null;
-          try {
-            if (existsSync(sheetFullPath)) {
-              sheet = JSON.parse(readFileSync(sheetFullPath, "utf8")) as AcceptanceSheet;
+          const measured = measureMasterFile(masterFullPath);
+          if (!measured.ok) {
+            checks.push({
+              id: "master_measurement",
+              result: "NOT_EVALUABLE",
+              details: measured.reason,
+              verifiedBy: "runtime",
+            });
+          } else {
+            let sheet: AcceptanceSheet | null = null;
+            try {
+              if (existsSync(sheetFullPath)) {
+                sheet = JSON.parse(readFileSync(sheetFullPath, "utf8")) as AcceptanceSheet;
+              }
+            } catch {
+              sheet = null;
             }
-          } catch {
-            sheet = null;
+            let masterCreatedAt: string | undefined;
+            try {
+              masterCreatedAt = statSync(masterFullPath).mtime.toISOString();
+            } catch {
+              masterCreatedAt = undefined;
+            }
+            const report = evaluateMasterAcceptance(measured.metrics, sheet, { masterCreatedAt });
+            const nonPassingDetails = report.checks
+              .filter((c) => c.result !== "PASS")
+              .map((c) => `${c.id}: ${c.details}`)
+              .join("; ");
+            checks.push({
+              id: "master_measurement",
+              result: report.result,
+              details: nonPassingDetails || "Master medido por el runtime.",
+              verifiedBy: "runtime",
+            });
           }
-          let masterCreatedAt: string | undefined;
-          try {
-            masterCreatedAt = statSync(masterFullPath).mtime.toISOString();
-          } catch {
-            masterCreatedAt = undefined;
-          }
-          const report = evaluateMasterAcceptance(measured.metrics, sheet, { masterCreatedAt });
-          const nonPassingDetails = report.checks
-            .filter((c) => c.result !== "PASS")
-            .map((c) => `${c.id}: ${c.details}`)
-            .join("; ");
-          checks.push({
-            id: "master_measurement",
-            result: report.result,
-            details: nonPassingDetails || "Master medido por el runtime.",
-            verifiedBy: "runtime",
-          });
         }
       }
     }
@@ -401,8 +420,11 @@ function verifyWriteTargetAndSharedSections(
       allowedFiles.add(doc.file);
     }
   }
+  const isAssemblyAcceptanceSheet =
+    activeWorkPhases.includes("P06_ASSEMBLY") &&
+    (targetPath === "aceptacion.json" || /^[^/\\]+\.acceptance\.json$/.test(targetPath));
 
-  if (!allowedFiles.has(targetPath)) {
+  if (!allowedFiles.has(targetPath) && !isAssemblyAcceptanceSheet) {
     return {
       ok: false,
       reason: `Operación bloqueada: no se permite modificar "${targetPath}" en la fase activa (${activeWorkPhases.join(", ") || "ninguna"}). Archivos permitidos: ${Array.from(allowedFiles).join(", ") || "ninguno"}.`,
@@ -820,6 +842,84 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         refreshUi(ctx);
         ctx.ui.notify(
           `Vínculo registrado: oficina=${officeRoot}${channelDir ? ` · canal=${channelDir}` : ""}`,
+          "info",
+        );
+      },
+    });
+
+    pi.registerCommand("yts-approve-sheet", {
+      description:
+        "Acción exclusiva del creador para aprobar criptográficamente la hoja de aceptación pre-render (aceptacion.json).",
+      handler: async (args: string, ctx: any) => {
+        if (!ctx.hasUI) {
+          throw new Error(
+            "Aprobación denegada: /yts-approve-sheet requiere interfaz interactiva (hasUI=true).",
+          );
+        }
+        const sheetRel = args.trim() || "aceptacion.json";
+        const safe = isSafeEvidencePath(sheetRel);
+        if (!safe.ok) {
+          ctx.ui.notify(`Ruta inválida para hoja de aceptación: ${safe.reason}`, "error");
+          return;
+        }
+        const sheetFull = join(ctx.cwd, sheetRel);
+        if (!existsSync(sheetFull)) {
+          ctx.ui.notify(`No existe la hoja de aceptación "${sheetRel}".`, "error");
+          return;
+        }
+        let parsed: AcceptanceSheet;
+        try {
+          parsed = JSON.parse(readFileSync(sheetFull, "utf8")) as AcceptanceSheet;
+        } catch {
+          ctx.ui.notify(`"${sheetRel}" no contiene JSON válido.`, "error");
+          return;
+        }
+        if (
+          !parsed ||
+          parsed.approvedBeforeRender !== true ||
+          typeof parsed.approvedBy !== "string" ||
+          !parsed.approvedBy.trim() ||
+          Number.isNaN(Date.parse(parsed.approvedAt))
+        ) {
+          ctx.ui.notify(
+            `La hoja "${sheetRel}" debe declarar approvedBeforeRender=true, approvedBy y approvedAt válido.`,
+            "error",
+          );
+          return;
+        }
+
+        const reader = createFsReader(ctx.cwd);
+        const fp = reader.fingerprint({ file: sheetRel });
+        if (!fp.ok) {
+          ctx.ui.notify(`No se pudo calcular la huella de "${sheetRel}": ${fp.reason}`, "error");
+          return;
+        }
+
+        const confirmed = await ctx.ui.confirm(
+          "Aprobar hoja de aceptación pre-render",
+          `¿Confirma aprobar "${sheetRel}" (${fp.hash.slice(0, 19)}…) antes del render del master?`,
+        );
+        if (!confirmed) {
+          ctx.ui.notify(`Aprobación de "${sheetRel}" cancelada por el creador.`, "warning");
+          return;
+        }
+
+        const nowIso = nowFn();
+        const reg = loadRegistry(ctx.cwd, { videoId: basename(ctx.cwd), now: nowIso });
+        const res = approveAcceptanceSheet(reg, {
+          path: sheetRel,
+          sha256: fp.hash,
+          actor: { kind: "creator", channel: "pi-command" },
+          now: nowIso,
+        });
+        if (!res.ok) {
+          ctx.ui.notify(`No se pudo aprobar "${sheetRel}": ${res.reasons.join(" ")}`, "error");
+          return;
+        }
+        saveRegistry(ctx.cwd, res.registry);
+        refreshUi(ctx);
+        ctx.ui.notify(
+          `Hoja de aceptación pre-render "${sheetRel}" APROBADA por el creador (${fp.hash.slice(0, 19)}…).`,
           "info",
         );
       },

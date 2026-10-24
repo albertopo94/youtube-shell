@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  approveAcceptanceSheet,
   approvePhase,
   blockPhase,
   createRegistry,
@@ -286,4 +287,32 @@ test("the whole pipeline can be approved end to end, and history records every s
   assert.ok(ev.phases.every((p) => p.effective === "APROBADO"));
   assert.equal(reg.history.length, 7 * 3);
   assert.ok(reg.history.filter((h) => h.event === "approve").every((h) => h.actor === "creator"));
+});
+
+test("only the creator can approve a pre-render acceptance sheet, binding its path and sha256 in the registry", () => {
+  const reg = createRegistry("vid", "2026-10-24T00:00:00Z");
+  denied(
+    approveAcceptanceSheet(reg, {
+      path: "aceptacion.json",
+      sha256: "sha256:abc123",
+      actor: AGENT,
+      now: "2026-10-24T01:00:00Z",
+    }),
+    /Solo el creador/,
+  );
+
+  const approved = ok(
+    approveAcceptanceSheet(reg, {
+      path: "aceptacion.json",
+      sha256: "sha256:abc123",
+      actor: CREATOR,
+      now: "2026-10-24T01:00:00Z",
+    }),
+  );
+  assert.deepEqual(approved.acceptanceSheetApproval, {
+    path: "aceptacion.json",
+    sha256: "sha256:abc123",
+    approvedAt: "2026-10-24T01:00:00Z",
+    actor: CREATOR,
+  });
 });

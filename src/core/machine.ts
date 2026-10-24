@@ -1,5 +1,6 @@
 import { CONTRACT_VERSION, getPhase, PHASE_IDS, PHASES } from "./phases.ts";
 import type {
+  Actor,
   ArtifactReader,
   ArtifactRef,
   CheckRun,
@@ -542,5 +543,43 @@ export function unblockPhase(
     actor: ctx.actor.kind,
     note: trimmed,
   });
+  return { ok: true, registry: next };
+}
+
+export function approveAcceptanceSheet(
+  reg: Registry,
+  input: {
+    path: string;
+    sha256: string;
+    actor: Actor;
+    now?: string;
+  },
+): Result {
+  if (input.actor.kind !== "creator") {
+    return {
+      ok: false,
+      reasons: ["Solo el creador puede aprobar la hoja de aceptación pre-render."],
+    };
+  }
+  const safe = isSafeEvidencePath(input.path);
+  if (!safe.ok) {
+    return { ok: false, reasons: [safe.reason] };
+  }
+  if (!input.sha256 || !input.sha256.startsWith("sha256:")) {
+    return {
+      ok: false,
+      reasons: ["Huella SHA-256 inválida para la hoja de aceptación pre-render."],
+    };
+  }
+
+  const nowIso = input.now ?? new Date().toISOString();
+  const next = structuredClone(reg);
+  next.acceptanceSheetApproval = {
+    path: input.path,
+    sha256: input.sha256,
+    approvedAt: nowIso,
+    actor: input.actor,
+  };
+  next.updatedAt = nowIso;
   return { ok: true, registry: next };
 }

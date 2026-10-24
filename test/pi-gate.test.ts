@@ -456,6 +456,7 @@ test("creator cancelling a sensitive confirmation or running without UI blocks t
     if (id === "P06_ASSEMBLY") {
       syncStoryboardBlocksOnDisk(videoDir);
       renderValidMasterAndSheetOnDisk(videoDir);
+      await h.invokeCommand("yts-approve-sheet", "aceptacion.json");
     }
     await h.invokeTool("yts_transition", {
       action: "submit",
@@ -766,8 +767,45 @@ test("agent cannot bypass contract or master checks by injecting forged PASS res
   assert.equal(realMasterFail.blocked, true);
   assert.match(realMasterFail.reason, /master_measurement.*FAIL/);
 
-  // 4. Once a valid pre-render acceptance sheet is on disk, runtime measures and stamps verifiedBy="runtime"
+  // 4. Agent can write aceptacion.json during P06_ASSEMBLY, but submitting WITHOUT /yts-approve-sheet fails even if JSON says approvedBeforeRender=true
   renderValidMasterAndSheetOnDisk(videoDir);
+  const validSheetJson = readFileSync(join(videoDir, "aceptacion.json"), "utf8");
+  const writeSheetRes = await h.invokeTool("write", {
+    path: "aceptacion.json",
+    content: validSheetJson,
+  });
+  assert.equal(writeSheetRes.blocked, false, "P06_ASSEMBLY must allow writing aceptacion.json");
+
+  const unapprovedSheetSubmit = await h.invokeTool("yts_transition", {
+    action: "submit",
+    phase: "P06_ASSEMBLY",
+    evidence: [
+      { role: "master", path: "master.mp4" },
+      { role: "acceptance_sheet", path: "aceptacion.json" },
+    ],
+  });
+  assert.equal(unapprovedSheetSubmit.blocked, true);
+  assert.match(unapprovedSheetSubmit.reason, /\/yts-approve-sheet/);
+
+  // 5. Creator approves the sheet via /yts-approve-sheet, then agent tampers with aceptacion.json -> hash mismatch blocks submit
+  await h.invokeCommand("yts-approve-sheet", "aceptacion.json");
+  await h.invokeTool("write", {
+    path: "aceptacion.json",
+    content: `${validSheetJson}\n`,
+  });
+  const tamperedSheetSubmit = await h.invokeTool("yts_transition", {
+    action: "submit",
+    phase: "P06_ASSEMBLY",
+    evidence: [
+      { role: "master", path: "master.mp4" },
+      { role: "acceptance_sheet", path: "aceptacion.json" },
+    ],
+  });
+  assert.equal(tamperedSheetSubmit.blocked, true);
+  assert.match(tamperedSheetSubmit.reason, /\/yts-approve-sheet|modificad|cambi/i);
+
+  // 6. Creator re-approves the exact sheet on disk -> runtime measures and stamps verifiedBy="runtime"
+  await h.invokeCommand("yts-approve-sheet", "aceptacion.json");
   const realMasterPass = await h.invokeTool("yts_transition", {
     action: "submit",
     phase: "P06_ASSEMBLY",
