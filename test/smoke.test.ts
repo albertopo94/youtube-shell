@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createYoutubeShellExtension } from "../src/gate/pi-extension.ts";
@@ -72,6 +72,11 @@ test("end-to-end smoke test: /yts-init scaffolds a blank folder and 7 phases run
   const initCmd = commands.get("yts-init");
   assert.ok(initCmd, "/yts-init command must be registered");
   await initCmd.handler("", ctx);
+  assert.equal(existsSync(join(videoDir, "entregable-final.md")), true);
+  assert.equal(
+    readFileSync(join(videoDir, "entregable-final.md"), "utf8"),
+    readFileSync(join(TEMPLATES, "entregable-final.md"), "utf8"),
+  );
 
   // P01_PACKAGING
   await callTool("yts_transition", { action: "start", phase: "P01_PACKAGING" });
@@ -206,7 +211,6 @@ test("end-to-end smoke test: /yts-init scaffolds a blank folder and 7 phases run
   await callTool("yts_transition", {
     action: "submit",
     phase: "P06_ASSEMBLY",
-    checks: [{ id: "master_measurement", result: measureOut.details.result }],
     evidence: [
       { role: "master", path: "master.mp4" },
       { role: "acceptance_sheet", path: "aceptacion.json" },

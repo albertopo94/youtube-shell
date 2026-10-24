@@ -18,11 +18,11 @@ Orden de trabajo de [brief-lector.md §12.5](brief-lector.md). Se actualiza en c
 
 ## 2. Dónde nos quedamos (Handoff para la próxima sesión)
 
-- **Versión actual:** `0.6.1` (`84/84` tests en verde con `npm test` y `npm run smoke`).
+- **Versión actual:** `0.6.2` (`86/86` tests en verde con `npm test` y `npm run smoke`).
 - **Upstreams fijados en [`upstream-lock.json`](../upstream-lock.json):**
-  - `albertopo94/youtube`: commit `13d06b2cc39b2c414b74dc7198119f320cb33f8c` (`2026-10-23T22:52:58Z`, `v0.5.14-consumer-compatibility-record` + disposición final).
+  - `albertopo94/youtube`: commit `13d06b2cc39b2c414b74dc7198119f320cb33f8c` (`2026-10-23T22:52:58Z`, `v0.5.14-consumer-compatibility-record` + disposición final, con las 8 plantillas `00..06` + `entregable-final.md` espejadas).
   - `earendil-works/pi`: versión revisada `v1.3.0` (`71023aec1546d6d677a65669c5665c0927ce0dd0`); detectada en remoto `v1.4.0` (`4a080252f06caf63a525d7873c5d94d3c23887e0`, aún con `reviewed: false`).
-- **Estado de Git:** `main` local en `v0.6.1`; comando `youtube-shell` enlazado globalmente en `/Users/albertmac11/.local/bin/youtube-shell` mediante `npm link`.
+- **Estado de Git:** `main` local en `v0.6.2`; comando `youtube-shell` enlazado globalmente en `/Users/albertmac11/.local/bin/youtube-shell` mediante `npm link`.
 
 ---
 

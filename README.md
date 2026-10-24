@@ -24,7 +24,7 @@ pi install git:github.com/albertopo94/youtube-shell
 ```
 
 ### Comandos exclusivos del creador (UI de `pi`)
-- `/yts-init`: inicializa las 7 plantillas canónicas (`00`..`06`) y `.youtube-shell/registro.json` en la carpeta actual.
+- `/yts-init`: inicializa las 8 plantillas canónicas (`00`..`06` + `entregable-final.md`) y `.youtube-shell/registro.json` en la carpeta actual.
 - `/yts-status`: muestra y refresca el resumen de las 7 fases y la siguiente acción permitida.
 - `/yts-approve <FASE> [--ack-warn] [nota]`: aprueba una fase en `PENDIENTE_APROBACION`, sellando las huellas SHA-256 de sus artefactos y sincronizando la vista `00-estado-produccion.md`.
 - `/yts-reject <FASE> <nota>`: devuelve una fase pendiente a `EN_CURSO` con observaciones.
@@ -44,15 +44,15 @@ pi install git:github.com/albertopo94/youtube-shell
 ## Verificación y seguimiento de upstreams
 
 ```bash
-npm test              # Suite completa (84 tests, 0 dependencias)
+npm test              # Suite completa (86 tests, 0 dependencias)
 npm run smoke         # Smoke test de punta a punta (P01 -> P07 + medición ffmpeg)
 npm run upstreams:check  # Verifica si albertopo94/youtube o earendil-works/pi avanzaron
 ```
 
 ## Estado actual y próximos pasos (Roadmap)
 
-**Dónde estamos (`v0.6.1`):** los hitos del MVP más el lanzador CLI `youtube-shell` (`bin/youtube-shell.mjs`) y el panel visual TUI de las 7 fases están implementados y verificados con 84 tests (`npm test` y `npm run smoke`), con las versiones de referencia fijadas en [`upstream-lock.json`](upstream-lock.json):
-- `albertopo94/youtube` en `13d06b2` (`v0.5.14-consumer-compatibility-record`: las 7 plantillas canónicas espejadas sin deriva, verificador de contrato endurecido con 10 fixtures y validación contextual de `PUBLICADO` en `videos-publicados/`, separación de formato vs. riesgo factual, audio adaptable al formato con sonoridad en el master, método agnóstico de proveedores y *Puerta de Correspondencia del Arranque*).
+**Dónde estamos (`v0.6.2`):** los hitos del MVP más el lanzador CLI `youtube-shell` (`bin/youtube-shell.mjs`), el panel visual TUI de las 7 fases y la verificación de procedencia `verifiedBy: "runtime"` en todos los checks de fase están implementados y verificados con 86 tests (`npm test` y `npm run smoke`), con las versiones de referencia fijadas en [`upstream-lock.json`](upstream-lock.json):
+- `albertopo94/youtube` en `13d06b2` (`v0.5.14-consumer-compatibility-record`: las 8 plantillas canónicas espejadas sin deriva incluyendo `entregable-final.md`, verificador de contrato endurecido con 10 fixtures y validación contextual de `PUBLICADO` en `videos-publicados/`, separación de formato vs. riesgo factual, audio adaptable al formato con sonoridad en el master, método agnóstico de proveedores y *Puerta de Correspondencia del Arranque*).
 - `earendil-works/pi` en `v1.3.0` (`71023ae`, con `v1.4.0` registrado en `latest_seen` pendiente de revisión).
 
 **Qué sigue en la próxima sesión (detalle en [docs/progreso.md](docs/progreso.md)):**

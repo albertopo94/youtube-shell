@@ -271,6 +271,10 @@ export function submitPhase(reg: Registry, id: PhaseId, input: SubmitInput, ctx:
     const run = checkById.get(checkId);
     if (!run) {
       reasons.push(`Check obligatorio "${checkId}" sin resultado: NOT_EVALUABLE.`);
+    } else if (run.verifiedBy !== "runtime") {
+      reasons.push(
+        `Check obligatorio "${checkId}" rechazado: el resultado debe proceder del verificador del runtime (verifiedBy="runtime").`,
+      );
     } else if (run.result === "FAIL" || run.result === "NOT_EVALUABLE") {
       reasons.push(
         `Check "${checkId}" con resultado ${run.result}${run.details ? `: ${run.details}` : ""}.`,
@@ -279,10 +283,16 @@ export function submitPhase(reg: Registry, id: PhaseId, input: SubmitInput, ctx:
   }
 
   for (const run of input.checks) {
-    if (!def.checks.includes(run.id) && (run.result === "FAIL" || run.result === "NOT_EVALUABLE")) {
-      reasons.push(
-        `Check "${run.id}" con resultado ${run.result}${run.details ? `: ${run.details}` : ""}.`,
-      );
+    if (!def.checks.includes(run.id)) {
+      if (run.verifiedBy !== "runtime") {
+        reasons.push(
+          `Check "${run.id}" rechazado: el resultado debe proceder del verificador del runtime (verifiedBy="runtime").`,
+        );
+      } else if (run.result === "FAIL" || run.result === "NOT_EVALUABLE") {
+        reasons.push(
+          `Check "${run.id}" con resultado ${run.result}${run.details ? `: ${run.details}` : ""}.`,
+        );
+      }
     }
   }
 

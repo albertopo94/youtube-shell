@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, lstatSync, readFileSync, realpathSync } from "node:fs";
+import { existsSync, lstatSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { basename, dirname, join, sep } from "node:path";
 import {
   approvePhase,
@@ -259,14 +259,74 @@ function executeAgentTransition(
     return startPhase(reg, phase, ctx);
   }
   if (action === "submit") {
-    const explicitChecks = Array.isArray(input.checks) ? (input.checks as CheckRun[]) : [];
-    const explicitIds = new Set(explicitChecks.map((c) => c.id));
-    const phaseCheckIds = new Set(getPhase(phase).checks);
-    const autoChecks: CheckRun[] = checkVideoContract(videoDir)
-      .checks.filter((c) => phaseCheckIds.has(c.id) && !explicitIds.has(c.id))
-      .map((c) => ({ id: c.id, result: c.result, details: c.details }));
-    const checks = [...explicitChecks, ...autoChecks];
+    if (input.checks !== undefined) {
+      return {
+        ok: false,
+        reasons: [
+          'El agente no puede inyectar ni sustituir resultados de checks en "yts_transition(submit)"; el runtime calcula todos los checks directamente sobre el disco.',
+        ],
+      };
+    }
     const evidence = Array.isArray(input.evidence) ? (input.evidence as DeclaredEvidence[]) : [];
+    const phaseCheckIds = new Set(getPhase(phase).checks);
+    const checks: CheckRun[] = checkVideoContract(videoDir)
+      .checks.filter((c) => phaseCheckIds.has(c.id))
+      .map((c) => ({
+        id: c.id,
+        result: c.result,
+        details: c.details,
+        verifiedBy: "runtime" as const,
+      }));
+
+    if (phaseCheckIds.has("master_measurement")) {
+      const masterItem = evidence.find((e) => e.role === "master");
+      const sheetItem = evidence.find((e) => e.role === "acceptance_sheet");
+      if (
+        masterItem &&
+        sheetItem &&
+        isSafeEvidencePath(masterItem.path).ok &&
+        isSafeEvidencePath(sheetItem.path).ok
+      ) {
+        const masterFullPath = join(videoDir, masterItem.path);
+        const sheetFullPath = join(videoDir, sheetItem.path);
+        const measured = measureMasterFile(masterFullPath);
+        if (!measured.ok) {
+          checks.push({
+            id: "master_measurement",
+            result: "NOT_EVALUABLE",
+            details: measured.reason,
+            verifiedBy: "runtime",
+          });
+        } else {
+          let sheet: AcceptanceSheet | null = null;
+          try {
+            if (existsSync(sheetFullPath)) {
+              sheet = JSON.parse(readFileSync(sheetFullPath, "utf8")) as AcceptanceSheet;
+            }
+          } catch {
+            sheet = null;
+          }
+          let masterCreatedAt: string | undefined;
+          try {
+            masterCreatedAt = statSync(masterFullPath).mtime.toISOString();
+          } catch {
+            masterCreatedAt = undefined;
+          }
+          const report = evaluateMasterAcceptance(measured.metrics, sheet, { masterCreatedAt });
+          const nonPassingDetails = report.checks
+            .filter((c) => c.result !== "PASS")
+            .map((c) => `${c.id}: ${c.details}`)
+            .join("; ");
+          checks.push({
+            id: "master_measurement",
+            result: report.result,
+            details: nonPassingDetails || "Master medido por el runtime.",
+            verifiedBy: "runtime",
+          });
+        }
+      }
+    }
+
     return submitPhase(reg, phase, { checks, evidence }, ctx);
   }
   if (action === "block") {
@@ -582,7 +642,6 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
           },
           reason: { type: "string" },
           resolution: { type: "string" },
-          checks: { type: "array" },
           evidence: { type: "array" },
         },
         required: ["action", "phase"],

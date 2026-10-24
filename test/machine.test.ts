@@ -35,7 +35,8 @@ class FakeProject implements ArtifactReader {
 }
 
 const evidencePath = (role: string) => `exports/${role}.bin`;
-const passingChecks = (id: PhaseId): CheckRun[] => getPhase(id).checks.map((c) => ({ id: c, result: "PASS" }));
+const passingChecks = (id: PhaseId): CheckRun[] =>
+  getPhase(id).checks.map((c) => ({ id: c, result: "PASS", verifiedBy: "runtime" }));
 const allEvidence = (id: PhaseId) => getPhase(id).evidence.map((e) => ({ role: e.role, path: evidencePath(e.role) }));
 
 let clock = 0;
@@ -103,6 +104,22 @@ test("a required check that did not run is NOT_EVALUABLE and blocks submission",
   denied(submitPhase(reg, "P03_SCRIPT", { checks: [], evidence: [] }, ctx(project)), /script_block_ids.*NOT_EVALUABLE/);
 });
 
+test("submitPhase rejects a required check that lacks verifiedBy=runtime provenance", () => {
+  const project = new FakeProject();
+  let reg = approveThrough(project, "P02_RESEARCH");
+  project.fill("P03_SCRIPT");
+  reg = ok(startPhase(reg, "P03_SCRIPT", ctx(project)));
+  denied(
+    submitPhase(
+      reg,
+      "P03_SCRIPT",
+      { checks: [{ id: "script_block_ids", result: "PASS" }], evidence: [] },
+      ctx(project),
+    ),
+    /script_block_ids.*verifiedBy="runtime"/,
+  );
+});
+
 test("a FAIL or NOT_EVALUABLE check blocks submission", () => {
   const project = new FakeProject();
   let reg = approveThrough(project, "P02_RESEARCH");
@@ -110,7 +127,12 @@ test("a FAIL or NOT_EVALUABLE check blocks submission", () => {
   reg = ok(startPhase(reg, "P03_SCRIPT", ctx(project)));
   for (const result of ["FAIL", "NOT_EVALUABLE"] as const) {
     denied(
-      submitPhase(reg, "P03_SCRIPT", { checks: [{ id: "script_block_ids", result, details: "B04 sin ID" }], evidence: [] }, ctx(project)),
+      submitPhase(
+        reg,
+        "P03_SCRIPT",
+        { checks: [{ id: "script_block_ids", result, details: "B04 sin ID", verifiedBy: "runtime" }], evidence: [] },
+        ctx(project),
+      ),
       new RegExp(`script_block_ids.*${result}.*B04`),
     );
   }
@@ -121,7 +143,14 @@ test("a WARN never passes silently: the creator must acknowledge it when approvi
   let reg = approveThrough(project, "P02_RESEARCH");
   project.fill("P03_SCRIPT");
   reg = ok(startPhase(reg, "P03_SCRIPT", ctx(project)));
-  reg = ok(submitPhase(reg, "P03_SCRIPT", { checks: [{ id: "script_block_ids", result: "WARN", details: "plantilla antigua" }], evidence: [] }, ctx(project)));
+  reg = ok(
+    submitPhase(
+      reg,
+      "P03_SCRIPT",
+      { checks: [{ id: "script_block_ids", result: "WARN", details: "plantilla antigua", verifiedBy: "runtime" }], evidence: [] },
+      ctx(project),
+    ),
+  );
   denied(approvePhase(reg, "P03_SCRIPT", {}, ctx(project, CREATOR)), /WARN/);
   reg = ok(approvePhase(reg, "P03_SCRIPT", { acknowledgeWarnings: true }, ctx(project, CREATOR)));
   assert.deepEqual(reg.phases.P03_SCRIPT.approvals.at(-1)?.acknowledgedWarnings, ["script_block_ids"]);

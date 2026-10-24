@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -200,6 +201,78 @@ function setupTempVideo(t: { after: (fn: () => void) => void }) {
   return { root, videoDir };
 }
 
+function resolveFactcheckOnDisk(videoDir: string) {
+  const fuentesPath = join(videoDir, "06-fuentes-y-verificacion.md");
+  const orig = readFileSync(fuentesPath, "utf8");
+  const resolved = orig
+    .replaceAll("[Insertar DOI o URL real]", "https://doi.org/10.1000/xyz123")
+    .replaceAll("`PENDIENTE`", "`VERIFICADO`");
+  writeFileSync(fuentesPath, resolved, "utf8");
+}
+
+function syncStoryboardBlocksOnDisk(videoDir: string) {
+  const storyPath = join(videoDir, "03-storyboard-y-edicion.md");
+  const orig = readFileSync(storyPath, "utf8");
+  const extraRows = [
+    "| **04** | `[B04_La_Revelacion_del_Mecanismo]` | `← derivar` | *\"...\"* | 🖼️ Imagen | `[gen]` | `Prompt` | SFX |",
+    "| **05** | `[B05_La_Prueba_o_Experimento]` | `← derivar` | *\"...\"* | 🖼️ Imagen | `[gen]` | `Prompt` | SFX |",
+    "| **06** | `[B06_Payoff_Reencuadre_Mental]` | `← derivar` | *\"...\"* | 🖼️ Imagen | `[gen]` | `Prompt` | SFX |",
+    "| **07** | `[B07_Cierre_CTA]` | `← derivar` | *\"...\"* | 🖼️ Imagen | `[gen]` | `Prompt` | SFX |",
+  ].join("\n");
+  writeFileSync(
+    storyPath,
+    orig.replace("| **...** | ... | ... | ... | ... | ... | ... | ... |", extraRows),
+    "utf8",
+  );
+}
+
+function renderValidMasterAndSheetOnDisk(videoDir: string) {
+  execFileSync(
+    "ffmpeg",
+    [
+      "-y",
+      "-f",
+      "lavfi",
+      "-i",
+      "color=c=blue:s=320x180:r=24:d=1",
+      "-f",
+      "lavfi",
+      "-i",
+      "sine=frequency=440:sample_rate=48000:duration=1",
+      "-af",
+      "volume=-18dB",
+      "-c:v",
+      "libx264",
+      "-pix_fmt",
+      "yuv420p",
+      "-c:a",
+      "aac",
+      join(videoDir, "master.mp4"),
+    ],
+    { stdio: "ignore" },
+  );
+  writeFileSync(
+    join(videoDir, "aceptacion.json"),
+    JSON.stringify(
+      {
+        schemaVersion: 1,
+        videoId: "01-video",
+        approvedBy: "creador",
+        approvedAt: "2020-01-01T00:00:00Z",
+        approvedBeforeRender: true,
+        loudness: {
+          targetLufs: -23,
+          toleranceLu: 25,
+          maxTruePeakDbtp: 0,
+        },
+      },
+      null,
+      2,
+    ),
+    "utf8",
+  );
+}
+
 test("before_agent_start removes bash, uncataloged tools, and write/edit when no phase is active", async (t) => {
   const { videoDir } = setupTempVideo(t);
   const h = createPiHarness({ videoDir });
@@ -324,7 +397,6 @@ test("in shared 06-fuentes-y-verificacion.md, P04_FACTCHECK cannot overwrite app
   await h.invokeTool("yts_transition", {
     action: "submit",
     phase: "P03_SCRIPT",
-    checks: [{ id: "script_block_ids", result: "PASS" }],
   });
   await h.invokeCommand("yts-approve", "P03_SCRIPT");
 
@@ -374,28 +446,20 @@ test("creator cancelling a sensitive confirmation or running without UI blocks t
     "P05_ANIMATIC",
     "P06_ASSEMBLY",
   ] as const) {
+    await h.invokeTool("yts_transition", { action: "start", phase: id });
+    if (id === "P04_FACTCHECK") {
+      resolveFactcheckOnDisk(videoDir);
+    }
     if (id === "P05_ANIMATIC") {
       writeFileSync(join(videoDir, "scratch.wav"), "audio");
     }
     if (id === "P06_ASSEMBLY") {
-      writeFileSync(join(videoDir, "master.mp4"), "video");
-      writeFileSync(join(videoDir, "aceptacion.json"), "{}");
+      syncStoryboardBlocksOnDisk(videoDir);
+      renderValidMasterAndSheetOnDisk(videoDir);
     }
-    await h.invokeTool("yts_transition", { action: "start", phase: id });
     await h.invokeTool("yts_transition", {
       action: "submit",
       phase: id,
-      checks:
-        id === "P03_SCRIPT"
-          ? [{ id: "script_block_ids", result: "PASS" }]
-          : id === "P04_FACTCHECK"
-            ? [{ id: "factcheck_resolved", result: "PASS" }]
-            : id === "P06_ASSEMBLY"
-              ? [
-                  { id: "script_storyboard_ids", result: "PASS" },
-                  { id: "master_measurement", result: "PASS" },
-                ]
-              : [],
       evidence:
         id === "P05_ANIMATIC"
           ? [{ role: "scratch_track", path: "scratch.wav" }]
@@ -547,10 +611,10 @@ test("FilmCraft MCP inventory is gated by phase and blocks unsafe engine command
   await h.invokeTool("yts_transition", { action: "submit", phase: "P03_SCRIPT" });
   await h.invokeCommand("yts-approve", "P03_SCRIPT");
   await h.invokeTool("yts_transition", { action: "start", phase: "P04_FACTCHECK" });
+  resolveFactcheckOnDisk(videoDir);
   await h.invokeTool("yts_transition", {
     action: "submit",
     phase: "P04_FACTCHECK",
-    checks: [{ id: "factcheck_resolved", result: "PASS" }],
   });
   await h.invokeCommand("yts-approve", "P04_FACTCHECK");
   await h.invokeTool("yts_transition", { action: "start", phase: "P05_ANIMATIC" });
@@ -618,6 +682,107 @@ test("renderStartupPanel renders wide and narrow studio panels and session_start
   // /yts-status command notifies with a compact 7-phase summary and refreshes status bar
   await h.invokeCommand("yts-status");
   assert.ok(h.notifications.some((n) => n.message.includes("P01_PACKAGING") && n.message.includes("P07_CLOSE")));
+});
+
+test("agent cannot bypass contract or master checks by injecting forged PASS results in yts_transition(submit)", async (t) => {
+  const { videoDir } = setupTempVideo(t);
+  const h = createPiHarness({ videoDir });
+
+  // 1. Tool schema does not advertise `checks` on yts_transition
+  const transitionTool = h.tools.get("yts_transition");
+  assert.ok(transitionTool);
+  assert.equal("checks" in (transitionTool.parameters?.properties ?? {}), false);
+
+  // 2. Advance to P04_FACTCHECK EN_CURSO (leaving PENDIENTE rows in 06-fuentes-y-verificacion.md)
+  await h.invokeTool("yts_transition", { action: "start", phase: "P01_PACKAGING" });
+  await h.invokeTool("yts_transition", { action: "submit", phase: "P01_PACKAGING" });
+  await h.invokeCommand("yts-approve", "P01_PACKAGING");
+
+  await h.invokeTool("yts_transition", { action: "start", phase: "P02_RESEARCH" });
+  await h.invokeTool("yts_transition", { action: "submit", phase: "P02_RESEARCH" });
+  await h.invokeCommand("yts-approve", "P02_RESEARCH");
+
+  await h.invokeTool("yts_transition", { action: "start", phase: "P03_SCRIPT" });
+  await h.invokeTool("yts_transition", { action: "submit", phase: "P03_SCRIPT" });
+  await h.invokeCommand("yts-approve", "P03_SCRIPT");
+
+  await h.invokeTool("yts_transition", { action: "start", phase: "P04_FACTCHECK" });
+  const beforeForgedReg = loadRegistry(videoDir, { videoId: "01-video", now: "x" });
+
+  // Forged PASS for factcheck_resolved is rejected and registry is unchanged
+  const forgedFactcheck = await h.invokeTool("yts_transition", {
+    action: "submit",
+    phase: "P04_FACTCHECK",
+    checks: [{ id: "factcheck_resolved", result: "PASS" }],
+  });
+  assert.equal(forgedFactcheck.blocked, true);
+  assert.match(forgedFactcheck.reason, /no puede inyectar ni sustituir resultados de checks/i);
+  assert.deepEqual(loadRegistry(videoDir, { videoId: "01-video", now: "x" }), beforeForgedReg);
+
+  // Resolve on disk and advance to P06_ASSEMBLY
+  resolveFactcheckOnDisk(videoDir);
+  const cleanFactcheck = await h.invokeTool("yts_transition", { action: "submit", phase: "P04_FACTCHECK" });
+  assert.equal(cleanFactcheck.blocked, false);
+  await h.invokeCommand("yts-approve", "P04_FACTCHECK");
+
+  await h.invokeTool("yts_transition", { action: "start", phase: "P05_ANIMATIC" });
+  writeFileSync(join(videoDir, "scratch.wav"), "RIFF-scratch", "utf8");
+  await h.invokeTool("yts_transition", {
+    action: "submit",
+    phase: "P05_ANIMATIC",
+    evidence: [{ role: "scratch_track", path: "scratch.wav" }],
+  });
+  await h.invokeCommand("yts-approve", "P05_ANIMATIC");
+
+  // 3. In P06_ASSEMBLY, a master that fails the acceptance sheet cannot pass via forged checks nor via normal submit
+  await h.invokeTool("yts_transition", { action: "start", phase: "P06_ASSEMBLY" });
+  syncStoryboardBlocksOnDisk(videoDir);
+  renderValidMasterAndSheetOnDisk(videoDir);
+  writeFileSync(join(videoDir, "aceptacion.json"), "{}", "utf8");
+
+  const forgedMaster = await h.invokeTool("yts_transition", {
+    action: "submit",
+    phase: "P06_ASSEMBLY",
+    checks: [
+      { id: "script_storyboard_ids", result: "PASS" },
+      { id: "master_measurement", result: "PASS" },
+    ],
+    evidence: [
+      { role: "master", path: "master.mp4" },
+      { role: "acceptance_sheet", path: "aceptacion.json" },
+    ],
+  });
+  assert.equal(forgedMaster.blocked, true);
+  assert.match(forgedMaster.reason, /no puede inyectar ni sustituir resultados de checks/i);
+
+  const realMasterFail = await h.invokeTool("yts_transition", {
+    action: "submit",
+    phase: "P06_ASSEMBLY",
+    evidence: [
+      { role: "master", path: "master.mp4" },
+      { role: "acceptance_sheet", path: "aceptacion.json" },
+    ],
+  });
+  assert.equal(realMasterFail.blocked, true);
+  assert.match(realMasterFail.reason, /master_measurement.*FAIL/);
+
+  // 4. Once a valid pre-render acceptance sheet is on disk, runtime measures and stamps verifiedBy="runtime"
+  renderValidMasterAndSheetOnDisk(videoDir);
+  const realMasterPass = await h.invokeTool("yts_transition", {
+    action: "submit",
+    phase: "P06_ASSEMBLY",
+    evidence: [
+      { role: "master", path: "master.mp4" },
+      { role: "acceptance_sheet", path: "aceptacion.json" },
+    ],
+  });
+  assert.equal(realMasterPass.blocked, false);
+  const regAfterAssembly = loadRegistry(videoDir, { videoId: "01-video", now: "x" });
+  const masterCheck = regAfterAssembly.phases.P06_ASSEMBLY.submission?.checks.find(
+    (c) => c.id === "master_measurement",
+  );
+  assert.equal(masterCheck?.result, "PASS");
+  assert.equal(masterCheck?.verifiedBy, "runtime");
 });
 
 

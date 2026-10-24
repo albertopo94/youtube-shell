@@ -12,6 +12,7 @@
       },
       "affects_us": [
         "_framework/plantillas/pipeline-video-template/",
+        "_framework/plantillas/entregable-final-template.md",
         "_framework/scripts/check-contrato.sh",
         "_framework/scripts/test-check-contrato.sh",
         "_framework/referencias/evidencia-piloto/medicion-master-piloto.md",
@@ -52,6 +53,10 @@
         "templates/pipeline-video/06-fuentes-y-verificacion.md": {
           "source": "_framework/plantillas/pipeline-video-template/06-fuentes-y-verificacion.md",
           "sha256": "122d3af2b597cc4455a7173503cc9cf60be7d18f90f2b5926e4876631c1c1242"
+        },
+        "templates/pipeline-video/entregable-final.md": {
+          "source": "_framework/plantillas/entregable-final-template.md",
+          "sha256": "3bc7c64079fe7948e52f6fa53759a14889f083f366420a3d722b8016926c1162"
         }
       }
     },

@@ -51,13 +51,20 @@ que bloquea trabajo legítimo.
 `WARN` nunca equivale en silencio a `PASS`. **`NOT_EVALUABLE`** (incluido un check que todavía no
 existe) bloquea el envío: "no pude comprobarlo" nunca se convierte en "permitido".
 
-## Supuestos pendientes de validación del creador
+## Decisiones y verificadores del contrato v1
 
-1. **Orden lineal 01→07** tal como lo trae la tabla de la plantilla. Hoy la investigación (`P02`)
-   espera a que el packaging esté aprobado.
-2. **`entregable-final.md`** lo exige la tabla de `00-estado-produccion.md`, pero no forma parte de
-   la suite 00→06 ni existe como plantilla.
-3. **El reparto de `03-storyboard-y-edicion.md`** entre `P05` y `P06` (secciones 1-2 frente a 3-4).
-4. **Los checks por fase** son el mínimo de v1; `script_block_ids`, `factcheck_resolved`,
-   `script_storyboard_ids` y `master_measurement` todavía no están implementados, así que esas
-   fases no pueden enviarse hasta que existan (cerrado por defecto).
+1. **Orden lineal `P01_PACKAGING` → `P07_CLOSE`** tal como lo trae la tabla de la plantilla. La
+   investigación (`P02_RESEARCH`) espera a que el packaging esté aprobado y con huella vigente.
+2. **`entregable-final.md`** se espeja byte a byte en
+   `templates/pipeline-video/entregable-final.md` desde
+   `_framework/plantillas/entregable-final-template.md` del repositorio upstream (registrado en
+   `upstream-lock.json`) y es creado automáticamente por `/yts-init` (`scaffoldVideoDir`).
+3. **Reparto de archivos compartidos por sección:** `06-fuentes-y-verificacion.md` se reparte entre
+   `P02_RESEARCH` (encabezado + "Parte 1") y `P04_FACTCHECK` ("Parte 2" + "Checkpoints de Rigor"), y
+   `03-storyboard-y-edicion.md` se reparte entre `P05_ANIMATIC` ("Consistencia Visual" + "Montaje
+   Preliminar") y `P06_ASSEMBLY` ("Tabla de Escenas" + "Capas Obligatorias").
+4. **Checks automáticos de fase ejecutados exclusivamente por el runtime:** `script_block_ids`,
+   `factcheck_resolved` y `script_storyboard_ids` (`src/checks/contract-checker.ts`), así como
+   `master_measurement` (`src/checks/media-measurement.ts`), son calculados directamente sobre el
+   disco por el runtime al ejecutar `yts_transition(submit)` y sellados con
+   `verifiedBy: "runtime"`. El agente no puede inyectar ni sustituir resultados de checks.

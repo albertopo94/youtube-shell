@@ -43,6 +43,7 @@ export interface CheckRun {
   id: string;
   result: CheckVerdict;
   details?: string;
+  verifiedBy?: "runtime";
 }
 
 export interface DeclaredEvidence {
