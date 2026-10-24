@@ -145,15 +145,15 @@ test("end-to-end smoke test: /yts-init scaffolds a blank folder and 7 phases run
   const origStoryboard = readFileSync(join(videoDir, "03-storyboard-y-edicion.md"), "utf8");
   const updatedStoryboard = origStoryboard
     .replace(
-      "| **01** | `[B01_Dilema_BucleAbierto]` | `← derivar` | *\"...\"* | 🖼️ Imagen estática *(luego animar)* | Google Flow ➔ Pestaña *\"Imagen\"* (Imagen 3) | `[Prompt con anclajes de estilo] --ar 16:9` | Impact Whoosh + Pista musical |",
-      "| **01** | `[B01_Hook]` | `00:00 - 00:01` | *\"Hola\"* | 🖼️ Imagen | Flow | `Prompt 1` | SFX |",
+      "| **01** | `[B01_Dilema_BucleAbierto]` | `← derivar` | *\"...\"* | 🖼️ Imagen estática *(luego animar)* | `[ej. generador de imagen con anclajes de estilo]` | `[Prompt con anclajes de estilo] --ar 16:9` | Impact Whoosh + Pista musical |",
+      "| **01** | `[B01_Hook]` | `00:00 - 00:01` | *\"Hola\"* | 🖼️ Imagen | `[generador de imagen]` | `Prompt 1` | SFX |",
     )
     .replace(
-      "| **02** | `[B02_La_Falsa_Causa]` | `← derivar` | *\"...\"* | 🎥 Clip de video | Stock libre: Coverr / Pexels | `[URL directa de búsqueda / descarga]` | Sub-bass bajo voz |",
-      "| **02** | `[B02_Cierre]` | `00:01 - 00:02` | *\"Fin\"* | 🎥 Clip | Stock | `Prompt 2` | SFX |",
+      "| **02** | `[B02_La_Falsa_Causa]` | `← derivar` | *\"...\"* | 🎥 Clip de video | `[banco de stock libre disponible]` | `[URL directa de búsqueda / descarga]` | Sub-bass bajo voz |",
+      "| **02** | `[B02_Cierre]` | `00:01 - 00:02` | *\"Fin\"* | 🎥 Clip | `[stock libre]` | `Prompt 2` | SFX |",
     )
     .replace(
-      "| **03** | `[B03_El_Quiebre_o_Anomalia]` | `← derivar` | *\"...\"* | 🎥 Clip de video cinemático | Google Flow ➔ Pestaña *\"Video\"* (Veo) | `[Prompt con movimiento de cámara]` | SFX click en palabra clave |\n",
+      "| **03** | `[B03_El_Quiebre_o_Anomalia]` | `← derivar` | *\"...\"* | 🎥 Clip de video cinemático | `[ej. generador de video con imagen de referencia]` | `[Prompt con movimiento de cámara]` | SFX click en palabra clave |\n",
       "",
     );
   await callTool("write", { path: "03-storyboard-y-edicion.md", content: updatedStoryboard });

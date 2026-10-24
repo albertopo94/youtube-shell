@@ -6,9 +6,9 @@
       "role": "Domain knowledge (layer 3): phases, templates, contract checker, pilot measurement",
       "reviewed": {
         "ref": "main",
-        "commit": "f552339344ff7072bf1624d781156e16518e778c",
-        "committed_at": "2026-10-22T10:52:46Z",
-        "reviewed_on": "2026-10-22"
+        "commit": "13d06b2cc39b2c414b74dc7198119f320cb33f8c",
+        "committed_at": "2026-10-23T22:52:58Z",
+        "reviewed_on": "2026-10-24"
       },
       "affects_us": [
         "_framework/plantillas/pipeline-video-template/",
@@ -27,7 +27,7 @@
       "mirrored": {
         "templates/pipeline-video/00-estado-produccion.md": {
           "source": "_framework/plantillas/pipeline-video-template/00-estado-produccion.md",
-          "sha256": "f8814f68dd044999291de85b3f3007c67689f1f31cf8762f6360f7fd5030d36f"
+          "sha256": "21a1b00a3cb335e6ff4717e68620fd10c199ce83c8e8813e1ecaef1481f90271"
         },
         "templates/pipeline-video/01-packaging.md": {
           "source": "_framework/plantillas/pipeline-video-template/01-packaging.md",
@@ -35,23 +35,23 @@
         },
         "templates/pipeline-video/02-guion.md": {
           "source": "_framework/plantillas/pipeline-video-template/02-guion.md",
-          "sha256": "b6eb00794dea5db4a9986a92ed39c61f750731896d55fb63df309740d61ffd8c"
+          "sha256": "c5e92578cba7449401ca39a0e6a9c3c8c83a28d56796def0f401de1a4f91d65d"
         },
         "templates/pipeline-video/03-storyboard-y-edicion.md": {
           "source": "_framework/plantillas/pipeline-video-template/03-storyboard-y-edicion.md",
-          "sha256": "e194471b5bb982e6f95831bbef796abf27ee6cccdae55c6d7dd1c90b529df56b"
+          "sha256": "33b65e0665106d36286591de8e70c8df77dd63fb538ab1517d703b52a36002c0"
         },
         "templates/pipeline-video/04-registro-recursos.md": {
           "source": "_framework/plantillas/pipeline-video-template/04-registro-recursos.md",
-          "sha256": "e9c9d57137d7c154bfd3adfcc5bc6fe1b0811b450c96187191cc8d641b93f987"
+          "sha256": "c8b02da15d1a650c965fd70a4d2b032aa39ee1cbe52c59b49064556c658e6a12"
         },
         "templates/pipeline-video/05-metricas-retencion.md": {
           "source": "_framework/plantillas/pipeline-video-template/05-metricas-retencion.md",
-          "sha256": "0c5ce4c0e5fc43dee2e84cecad8b5a88a1db7bee6c68cf01be9ae87f68a5960f"
+          "sha256": "d7311758cd635a2316307838769bf7758a137a5b5de7268cd1dc93a951a7f6e3"
         },
         "templates/pipeline-video/06-fuentes-y-verificacion.md": {
           "source": "_framework/plantillas/pipeline-video-template/06-fuentes-y-verificacion.md",
-          "sha256": "7aa4f46d1829160ef7b41213b4129b0e5ee7dd904f46b6f742eebe85f18ef062"
+          "sha256": "122d3af2b597cc4455a7173503cc9cf60be7d18f90f2b5926e4876631c1c1242"
         }
       }
     },

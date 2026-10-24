@@ -8,7 +8,8 @@
 > - En historia, tecnología, derecho o actualidad, las fuentes primarias pueden ser archivos oficiales, normas, datasets o publicaciones institucionales reconocidas (no limitado a DOIs de papers).
 
 - **Tema / Paper central:** 
-- **Régimen de Veracidad:** `[ ] Régimen 1: Ficción (N/A)` / `[ ] Régimen 2: Factual General` / `[ ] Régimen 3: Zona Roja YMYL`
+- **Riesgo factual del contenido:** `[ ] Sin afirmaciones sobre la realidad (N/A permitido)` / `[ ] Afirmaciones factuales verificables` / `[ ] Zona Roja YMYL`
+  - *Ficción, relax o formatos híbridos no quedan exentos si mencionan hechos, historia, ciencia, salud, finanzas u otras afirmaciones sobre la realidad.*
 - **Grado de controversia o riesgo:** `[ ] Bajo (consenso amplio)` / `[ ] Medio (cifras/datos técnicos)` / `[ ] Alto (salud/financiero/polémico)`
 
 > **Aclaración del Régimen 1 (Ficción):** la ficción **no** exime automático de verificar. Un relato puede mencionar

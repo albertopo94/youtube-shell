@@ -7,6 +7,20 @@
 - **Grado de Guionado:** `[ ] Palabra por palabra (Full Script para voz en off/IA)` / `[ ] Estructura nítida (Bullet points con espacio para pensar para screencasts/experto)`
 - **Duración total estimada:** (ej. 8 minutos)
 - **Estado de Locución:** `[ ] Borrador provisional (Scratch Track)` / `[ ] Definitiva aprobada`
+- **Modo de Progresión (anti-spoiler condicionado, rol 03 §3):** `[ ] El descubrimiento es parte de la experiencia (misterio/transformación/reto/divulgación con revelación)` / `[ ] La respuesta temprana es el valor (tutorial/explicación directa/consulta de búsqueda)` — **Justificación en una línea:** `[por qué este caso para este video]
+
+---
+
+## 0. Puerta de Correspondencia del Arranque (Obligatorio — antes de cerrar guion y storyboard)
+
+> Rol 03 §1. Las cuatro comprobaciones van **respondidas por escrito** aquí; es evidencia exigible por `AGENTS.md` §05 (DoD de guion). La ventana temporal se evalúa según formato y duración (Shorts: segundo cero; dinámico/tutorial: ~5–10 s; ensayo/documental: ~15–30 s).
+
+| Comprobación | Respuesta escrita |
+| :--- | :--- |
+| **Primera imagen** — ¿relación visual comprensible con el concepto de la miniatura cuando es pertinente? | |
+| **Primera frase** — ¿confirma el tema/promesa sin preámbulo que no aporte? | |
+| **Ventana de arranque del formato** — ¿contexto/interés/reto/recompensa suficientes para quedarse? | |
+| **Cumplir y superar** — ¿confirma lo prometido y empieza a aportar valor extra sin exagerar? | |
 
 ---
 
@@ -21,7 +35,7 @@
   - ¿Se incluye el disclaimer legal correspondiente en la descripción del video?
 - [ ] **Declaración de Contenido Sintético / IA (YouTube Policy):**
   - [ ] **No requiere declaración:** Animación/estilo ficticio, clonación de la propia voz del creador, voz sintética estándar de biblioteca que no imita a terceros, o gráficos abstractos.
-  - [ ] **Sí requiere declaración obligatoria en Studio:** Muestra personas reales diciendo/haciendo cosas ficticias, voz que imita a una persona real, escenas o eventos realistas generados por IA, o música generada por IA (conforme a los criterios vigentes de YouTube Studio).
+  - [ ] **Revisar y declarar en Studio cuando corresponda:** Muestra personas reales diciendo/haciendo cosas ficticias, voz que imita a una persona real, escenas o eventos realistas generados por IA, o música generada por IA cuando sea el foco principal del video. Aplicar el criterio vigente de YouTube Studio para contenido alterado o sintético; si hay duda, registrar la decisión y la fuente consultada.
 
 ---
 
@@ -33,10 +47,10 @@
 ### [B01_Dilema_BucleAbierto] — Tensión Inicial y Pregunta Irresistible
 - **Tiempo estimado (Ejemplo):** `00:00 - 00:15` (~15s)
 - **Objetivo narrativo:** Plantear el síntoma universal, el dolor o la paradoja en bucle abierto.  
-  *(❌ LINTER ANTI-SPOILER: Terminantemente prohibido nombrar el mecanismo biológico/técnico central o dar la solución aquí).*
+  *(Anti-spoiler **condicionado**, ver `roles/03` §3: solo se aplica cuando el descubrimiento forma parte de la experiencia. En tutorial, explicación directa o respuesta de búsqueda, la solución se entrega pronto y la tensión se construye sobre el **cómo**, el **por qué** o la **aplicación** — ese caso usa un bloque de respuesta directa, no este).*
 - **Locución literal (Texto para voz):**
   > *"..."*
-- **Visual sugerido (para Animatic):** Imagen o plano de máxima tensión cognitiva (sin desvelar el desenlace).
+- **Visual sugerido (para Animatic):** Imagen o plano de máxima tensión cognitiva (sin desvelar el desenlace, cuando aplica).
 
 ---
 
@@ -58,12 +72,14 @@
 
 ---
 
-### [B04_La_Revelacion_del_Mecanismo] — El Hallazgo Oculto
+### [B04_La_Revelacion_del_Mecanismo] — El Hallazgo Oculto (solo cuando el descubrimiento es parte de la experiencia)
 - **Tiempo estimado (Ejemplo):** `01:20 - 02:40` (~80s)
-- **Objetivo narrativo:** Revelar por primera vez el **Mecanismo Desconocido** (*Unfamiliar Mechanism* de Eugene Schwartz) que explica la verdad detrás del enigma.
+- **Objetivo narrativo:** Revelar por primera vez el **Mecanismo Desconocido** (*Unfamiliar Mechanism* de Eugene Schwartz) que explica la verdad detrás del enigma.  
+  ⚠️ **Este bloque es del esqueleto de misterio:** se usa cuando el Modo de Progresión del encabezado es *"el descubrimiento es parte de la experiencia"*.  
+  **En los demás modos (tutorial, explicación directa, respuesta de búsqueda) B04 no es una revelación: es la demostración, la aplicación, el procedimiento o el desarrollo de la respuesta.** El agente elige la forma según el formato y la plantilla no le obliga a revelar algo que no deba revelarse.
 - **Locución literal (Texto para voz):**
   > *"..."*
-- **Visual sugerido (para Animatic):** Diagrama animado o visualización conceptual del mecanismo.
+- **Visual sugerido (para Animatic):** Diagrama animado o visualización conceptual del mecanismo (cuando aplica).
 
 ---
 

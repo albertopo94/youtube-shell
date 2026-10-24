@@ -2,7 +2,7 @@
 
 | Contenido en este repo | Origen | Licencia |
 | :-- | :-- | :-- |
-| `templates/pipeline-video/*.md` (suite 00→06 por video) | [`albertopo94/youtube`](https://github.com/albertopo94/youtube) — `_framework/plantillas/pipeline-video-template/` (rama `main`, sincronizado el 2026-10-22) | MIT |
+| `templates/pipeline-video/*.md` (suite 00→06 por video) | [`albertopo94/youtube`](https://github.com/albertopo94/youtube) — `_framework/plantillas/pipeline-video-template/` (rama `main`, sincronizado el 2026-10-24) | MIT |
 | Conocimiento de dominio de fases, estados normalizados y contrato de archivos | [`albertopo94/youtube`](https://github.com/albertopo94/youtube) — `AGENTS.md`, `_framework/scripts/check-contrato.sh` | MIT |
 
 El runtime es [`pi`](https://github.com/earendil-works/pi) (MIT, earendil-works), usado como
