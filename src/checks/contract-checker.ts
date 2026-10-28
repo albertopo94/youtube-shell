@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { CONTRACT_VERSION } from "../core/phases.ts";
 import { extractSection, PREAMBLE } from "../core/sections.ts";
@@ -40,6 +40,8 @@ export interface ContractCheckReport {
 
 export interface ContractCheckOptions {
   catalogPath?: string;
+  techniquesPath?: string;
+  rolesDir?: string;
 }
 
 function checkCanonicalFiles(videoDir: string): ContractCheckItem {
@@ -613,6 +615,109 @@ function checkCloseDeliverables(videoDir: string): ContractCheckItem {
   };
 }
 
+const VALID_FUNDAMENTO = new Set(["FUENTE", "HIPÓTESIS", "DERIVACIÓN", "CONTRATO INTERNO"]);
+const VALID_VALIDACION = new Set([
+  "SIN_PROBAR",
+  "PILOTO_PARCIAL",
+  "PILOTO_VALIDADO",
+  "REPETIDA",
+  "VERIFICADA_DETERMINÍSTICAMENTE",
+]);
+const VALID_OPERATIVA = new Set(["INFORMATIVA", "RECOMENDADA", "OBLIGATORIA", "COMPUERTA"]);
+
+export function checkTechniquesRegistryCoherence(
+  techniquesPath: string,
+  rolesDir?: string,
+): ContractCheckItem {
+  if (!existsSync(techniquesPath)) {
+    return {
+      id: "techniques_registry_coherence",
+      result: "WARN",
+      details: "registro-tecnicas — archivo no encontrado (se salta comprobación)",
+    };
+  }
+
+  const lines = readFileSync(techniquesPath, "utf8").split(/\r?\n/);
+  const rows = lines.filter((l) => /^\|\s*\*\*/.test(l));
+
+  if (rows.length === 0) {
+    return {
+      id: "techniques_registry_coherence",
+      result: "FAIL",
+      details: "registro-tecnicas — no se encontraron filas de técnicas registradas",
+    };
+  }
+
+  const ids: string[] = [];
+  const problems: string[] = [];
+
+  for (const line of rows) {
+    const cols = line.split("|");
+    const rawId = (cols[1] ?? "").replace(/[\*`\s]/g, "");
+    if (!rawId) continue;
+    ids.push(rawId);
+
+    const fund = (cols[3] ?? "").trim();
+    const val = (cols[4] ?? "").trim();
+    const op = (cols[5] ?? "").replace(/[\*`\s]/g, "");
+
+    if (!VALID_FUNDAMENTO.has(fund)) {
+      problems.push(`registro-tecnicas — '${rawId}': fundamento inválido '${fund}'`);
+    }
+    if (!VALID_VALIDACION.has(val)) {
+      problems.push(`registro-tecnicas — '${rawId}': validación propia inválida '${val}'`);
+    }
+    if (!VALID_OPERATIVA.has(op)) {
+      problems.push(`registro-tecnicas — '${rawId}': fuerza operativa inválida '${op}'`);
+    }
+  }
+
+  const seen = new Set<string>();
+  const dups = new Set<string>();
+  for (const id of ids) {
+    if (seen.has(id)) {
+      dups.add(id);
+    }
+    seen.add(id);
+  }
+  if (dups.size > 0) {
+    problems.unshift(`registro-tecnicas — IDs duplicados encontrados: ${[...dups].join(" ")}`);
+  }
+
+  if (rolesDir && existsSync(rolesDir)) {
+    const roleFiles = readdirSync(rolesDir).filter((f) => f.endsWith(".md"));
+    const idSet = new Set(ids);
+    const missingInRegistry = new Set<string>();
+    for (const rf of roleFiles) {
+      const content = readFileSync(join(rolesDir, rf), "utf8");
+      const matches = content.matchAll(/\[(GATE|PACK|GUI|VID-IA)-[0-9]{3}\]/g);
+      for (const m of matches) {
+        const roleId = m[0].replace(/[\[\]]/g, "");
+        if (!idSet.has(roleId)) {
+          missingInRegistry.add(roleId);
+        }
+      }
+    }
+    for (const roleId of missingInRegistry) {
+      problems.push(`roles — ID '${roleId}' referenciado en roles/ pero AUSENTE en registro-tecnicas.md`);
+    }
+  }
+
+  if (problems.length > 0) {
+    return {
+      id: "techniques_registry_coherence",
+      result: "FAIL",
+      details: problems.join("; "),
+    };
+  }
+
+  return {
+    id: "techniques_registry_coherence",
+    result: "PASS",
+    evidence: [`${techniquesPath} (${ids.length} técnicas)`],
+  };
+}
+
 export function checkVideoContract(
   videoDir: string,
   options: ContractCheckOptions = {},
@@ -633,6 +738,17 @@ export function checkVideoContract(
 
   if (options.catalogPath) {
     checks.push(checkCatalogCoherence(options.catalogPath));
+  }
+
+  const defaultTechPath = join(videoDir, "_framework", "registro-tecnicas.md");
+  const techPath = options.techniquesPath ?? (existsSync(defaultTechPath) ? defaultTechPath : undefined);
+  if (techPath) {
+    const rolesDir =
+      options.rolesDir ??
+      (existsSync(join(videoDir, "_framework", "roles"))
+        ? join(videoDir, "_framework", "roles")
+        : undefined);
+    checks.push(checkTechniquesRegistryCoherence(techPath, rolesDir));
   }
 
   let overall: CheckVerdict = "PASS";

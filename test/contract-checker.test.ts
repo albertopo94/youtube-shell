@@ -414,3 +414,42 @@ test("close_deliverables fails when 05-metricas-retencion.md or entregable-final
   assert.equal(check2.result, "FAIL");
   assert.match(check2.details ?? "", /entregable-final\.md/);
 });
+
+test("f10: duplicate ID in registro-tecnicas.md fails techniques_registry_coherence", (t) => {
+  const { root, videoDir } = makeValidFixture(t);
+  const techPath = join(root, "registro-tecnicas.md");
+  writeFileSync(
+    techPath,
+    [
+      "| ID | Técnica | Fundamento | Validación Propia | Fuerza Operativa | Ámbito | Ubicación | Fuente | Acción |",
+      "| :--- | :--- | :---: | :---: | :---: | :--- | :--- | :--- | :--- |",
+      "| **`GATE-001`** | Timecodes | CONTRATO INTERNO | VERIFICADA_DETERMINÍSTICAMENTE | **COMPUERTA** | Ámbito | `roles/01` | Fuente | Acción |",
+      "| **`GATE-001`** | Duplicado | FUENTE | SIN_PROBAR | **RECOMENDADA** | Ámbito | `roles/01` | Fuente | Acción |",
+    ].join("\n"),
+    "utf8",
+  );
+  const report = checkVideoContract(videoDir, { techniquesPath: techPath });
+  assert.equal(report.result, "FAIL");
+  const check = report.checks.find((c) => c.id === "techniques_registry_coherence")!;
+  assert.equal(check.result, "FAIL");
+  assert.match(check.details ?? "", /duplicados.*GATE-001/);
+});
+
+test("f11: invalid operational strength in registro-tecnicas.md fails techniques_registry_coherence", (t) => {
+  const { root, videoDir } = makeValidFixture(t);
+  const techPath = join(root, "registro-tecnicas.md");
+  writeFileSync(
+    techPath,
+    [
+      "| ID | Técnica | Fundamento | Validación Propia | Fuerza Operativa | Ámbito | Ubicación | Fuente | Acción |",
+      "| :--- | :--- | :---: | :---: | :---: | :--- | :--- | :--- | :--- |",
+      "| **`GATE-001`** | Timecodes | CONTRATO INTERNO | VERIFICADA_DETERMINÍSTICAMENTE | **FUERZA_INVALIDA** | Ámbito | `roles/01` | Fuente | Acción |",
+    ].join("\n"),
+    "utf8",
+  );
+  const report = checkVideoContract(videoDir, { techniquesPath: techPath });
+  assert.equal(report.result, "FAIL");
+  const check = report.checks.find((c) => c.id === "techniques_registry_coherence")!;
+  assert.equal(check.result, "FAIL");
+  assert.match(check.details ?? "", /fuerza operativa inválida/);
+});

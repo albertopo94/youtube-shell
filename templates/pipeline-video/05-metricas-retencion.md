@@ -145,3 +145,20 @@
 
 ---
 
+## 9. Salud Operativa y Optimización de Catálogo
+
+### Regla de Desapego y Cierre de Studio (Manejo del "10 de 10")
+> **Origen:** estudio de fuente 2 (MrBeast), capítulo 19. ✅ **ADOPTADO.**
+- **El sesgo de refresco obsesivo:** Cuando un video clasifica temporalmente como "10 de 10" (rendimiento inferior a las 10 últimas entregas), el instinto destructivo es refrescar la aplicación compulsivamente, generando parálisis y desgaste mental.
+- **Protocolo de desconexión activa:**
+  1. Identificar la variable objetiva sin juicio emocional: ¿falló el CTR (packaging poco intrigante) o la retención inicial (promesa no correspondida)?
+  2. Asentar la lección aprendida en la sección de Mejora Única Nombrada (§5).
+  3. **Cerrar YouTube Studio:** cortar el seguimiento en vivo para evitar decisiones impulsivas.
+  4. Volcar de inmediato la energía en la producción del siguiente video en cola.
+
+### Auditoría Periódica de Catálogo Antiguo (*Evergreen Backlog*)
+> **Origen:** estudio de fuente 2 (MrBeast), capítulo 11. ✅ **ADOPTADO.**
+- En videos de temática perenne (*evergreen*) con retención interna sólida pero vistas estancadas, auditar periódicamente el empaque.
+- Aplicar un re-empaque moderno (ej. técnica de pantalla dividida *split-screen* o reformulación del bucle de curiosidad) meses después puede reactivar la recomendación del algoritmo y capturar demanda latente a coste cero de grabación.
+
+

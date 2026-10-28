@@ -28,6 +28,9 @@
 - **Documento vs. imagen que se anima:** una lámina de referencia compuesta (ej. dos paneles lado a lado) sirve para *documentar* al personaje, pero un generador de video puede interpretar la división como parte de la escena (duplicar al personaje o partir la composición). Para generar, usar las vistas por separado cuando la herramienta admita varias referencias. **Usar una lámina compuesta solo si se comprobó que el modelo la interpreta como referencia y no como escena; no asumir que todas las herramientas interpretan igual las referencias múltiples.**
 - **Textura y acabado son parámetros estéticos del proyecto:** piel lisa, grano cinematográfico, nitidez máxima o eliminación de textura **nunca** son valores universales de una referencia maestra; son decisiones estéticas elegidas según el proyecto, sin contradecir el objetivo de la generación. Distinguir siempre textura natural de artefactos.
 - **Archivar, no solo describir:** los anclajes de la §1 deben poder guardarse como **archivos de referencia concretos** (imagen de personaje, de escenario, de luz), no solo como texto dentro de cada prompt. Registrarlos en `04-registro-recursos.md` (sección de referencias reutilizables).
+- **Pipeline Asset-First (estados, prendas y utilería incrustada):** Para personajes recurrentes, registrar de antemano referencias de sus estados previstos (con y sin prenda, estados de daño o suciedad tras conflictos) e incrustar accesorios pequeños (relojes, herramientas, armas) directamente en la hoja de personaje (*baked prop sheets*) para no saturar los slots de entrada de imagen.
+- **Hojas de Localización Multicámara Reutilizables:** Para escenarios recurrentes del canal, generar un set maestro de 4 a 5 tiros de cámara estandarizados (plano general, tiro a ventana, mesa de trabajo, contrapicado) archivados en `04-registro-recursos.md`, reutilizándolos como fondos maestros sin regenerar el entorno desde cero.
+- **Sintaxis de Etiquetado Explícito (@tagging):** En prompts para escenas con múltiples elementos, enlazar explícitamente cada sujeto (`@Ref_P1`), fondo (`@Ref_Set_1`) y voz (`@Ref_Voz_1`) en cada instrucción para evitar alucinaciones cruzadas.
 
 ---
 
@@ -47,9 +50,9 @@
 
 > **Nota de trazabilidad y entrega de prompts:** Cada fila enlaza con el bloque de guion `[Bxx]` correspondiente.  
 > **Ficha de Prompt Obligatoria:** Todo prompt que el agente entregue al creador debe indicar:  
-> 1) *Tipo de Asset* (🖼️ Imagen estática / 🎥 Clip de video / 🎵 Música / 🔊 SFX).  
+> 1) *Tipo de Asset* (🖼️ Imagen estática / 🎥 Clip de video / 🎙️ Locución con dirección actoral / 🎵 Música / 🔊 SFX).  
 > 2) *Herramienta y método de ejecución:* la plataforma elegida (o método genérico si la tarea no depende de un proveedor) y los **parámetros necesarios para ejecutar la tarea**; la pestaña/módulo concreto es opcional y se indica solo si la herramienta lo tiene (ej. Google Flow ➔ Pestaña *"Imagen"* vs. Pestaña *"Video"*). *Ver `AGENTS.md` §02.4.*  
-> 3) *Modo operativo* (Text-to-Image 16:9, Image-to-Video con cámara, etc.).  
+> 3) *Modo operativo* (Text-to-Image 16:9, Image-to-Video con cámara, Text-to-Speech con acotaciones, etc.).  
 > 4) *Prompt listo para copiar*.
 
 | Escena # | Bloque Guion | Timecode | Texto de Locución Asociado | Tipo de Asset (Imagen / Video / Audio) | Herramienta / Método elegido | Prompt de Generación / URL del Asset | Diseño Sonoro (SFX / Música) |
@@ -61,13 +64,31 @@
 
 > *Los nombres concretos de proveedores que aparecían antes en esta tabla (Google Flow, Coverr, etc.) eran ejemplos; el flujo no depende de ellos (ver `AGENTS.md` §02.4).*
 
-> **Los timecodes de esta tabla no son ejemplos fijos.** Derivan del **guion aprobado en `02-guion.md`** y de la **locución real medida** (duración y pausas del audio grabado). Un ejemplo con números concretos se copia; un ejemplo con "← derivar" no. Antes esta tabla llevaba IDs y tiempos de la estructura previa (`[B01_Dilema]`, `00:00-00:08`), que no coincidían con el guion (`[B01_Dilema_BucleAbierto]`, `00:00-00:15`) y se propagaban como si fueran reales.
+> **Los timecodes de esta tabla no son ejemplos fijos.** Derivan del **guion aprobado en `02-guion.md`** y de la **locución real medida** (duración y pausas del audio grabado). Un ejemplo con números concretos se copia; un ejemplo con "← derivar" no. Antes esta tabla llevaba IDs y tiempos de la estructura previa (`[B01_Dilema]`, `00:00-00:08`), que no coincidían con el guion (`[B01_Dilema_BucleAbierto]`, `00:00-00:15`) y se propagaban como si fueran reales.  
+> **Pausas publicitarias para YouTube Studio (Mid-rolls en videos > 8 min):** Si el video supera los 8 minutos, registrar en la columna de timecodes o notas de transición los puntos exactos de respiro natural derivados de `02-guion.md` (ej. `[Mid-roll sugerido: 04:15]`). Esto permite ingresar directamente a YouTube Studio e insertar las pausas publicitarias manuales sin cortar frases ni arruinar la retención.
 
 ### 3.1 Generación con IA: pruebas preliminares e inspección del resultado real `[Política de Costo y Calidad]`
 
-> **Origen:** revisión externa 4 (`_framework/referencias/auditorias/revision-externa-4-2026-10-22.md`). Agnóstico de herramientas: se aplica cuando se generen recursos definitivos de pago con IA, con la plataforma que el creador tenga disponible.
+> **Origen:** revisión externa 4 (`_framework/referencias/auditorias/revision-externa-4-2026-10-22.md`) y estudio de dirección cinematográfica con IA (`_framework/referencias/auditorias/estudio-fuente-1-video-ia-2026-10-27.md`). Agnóstico de herramientas: se aplica cuando se generen recursos con IA, con la plataforma que el creador tenga disponible.
+
+**La Regla de los Tres Pasos contra el Desperdicio de Créditos:**
+1. *Comprobar la imagen fija antes de animar:* Validar anatomía, proporciones, vestimenta y encuadre en estático antes de solicitar video. Si no funciona en foto fija, no funcionará en movimiento.
+2. *Previsualizar el movimiento antes de renderizar en alta:* Probar velocidad, trayectoria y encuadre en baja resolución, modo borrador o animatic.
+3. *Planificar el corte antes de generar metraje innecesario:* Determinar los segundos exactos necesarios en el timeline para no renderizar segundos vacíos de pago.
+
+**Clasificación de Escenas y Continuidad Espacial (Escalera de 5 Niveles — ver rol 04 §3):**
+- [ ] **Mapa Cenital de Bloqueo:** En escenas grupales o entornos con varios elementos, ¿se fijó una vista aérea cenital como referencia espacial matriz para los tiros de cámara individuales?
+- [ ] **Nivel 1 (Diálogo Estático):** Ejes de mirada (*eyelines*) correspondientes en plano/contraplano e inserts de utilería generados como puntos de fuga para cortes limpios.
+- [ ] **Nivel 2 (Diálogo en Movimiento):** Aprovechar fondos de textura repetitiva (bosque, playa, niebla, desierto) donde las micro-inconsistencias de fondo no distraen.
+- [ ] **Nivel 3 (Plano Secuencia Multi-Personaje):** Mapeo explícito mediante stand-ins coloreados (Azul = P1, Naranja = P2) en prompt y separación de trayectoria de cámara vs. punto de mirada (*target*).
+- [ ] **Nivel 4 (Cobertura Multicámara Fija):** Cobertura coordinada de 4 o 5 ángulos editados y sincronizados en baja fidelidad antes del render final.
+- [ ] **Nivel 5 (Acción Compleja):** Desglose en *beats* físicos atómicos y seguimiento independiente de utilería arrojada o dinámica.
 
 **Pruebas preliminares antes de lo definitivo:**
+- [ ] **[VID-IA-009] Borradores en 480p:** Generar tandas de prueba en baja resolución / modo borrador para validar encuadre y dinamismo antes de renderizar la toma definitiva en 1080p.
+- [ ] **[VID-IA-007] Aislamiento Acústico en Prompt:** Salvo en formatos que busquen música integrada (Music-First), indicar preferentemente *"environmental sound only, no music, no subtitles"* para facilitar la mezcla limpia en el editor.
+- [ ] **[VID-IA-008] Control de Iteraciones Img2Img:** Como regla inicial, evitar más de 2 pasadas consecutivas sobre una misma imagen; si el fondo o personaje no encaja, evaluar reiniciar desde un prompt limpio consolidado.
+- [ ] **[VID-IA-010] Solapamiento en Diálogo:** En planos consecutivos de conversación, repetir la última línea de la toma anterior al inicio de la siguiente para asegurar un margen de corte limpio en el montaje.
 - [ ] Comprobar si la herramienta elegida ofrece un modo de prueba económico (borrador, preview, baja resolución). **Nunca asumir que es gratuito:** registrar el costo real de la prueba en `04-registro-recursos.md`.
 - [ ] Si NO ofrece modo económico, valorar una alternativa: prueba más pequeña, una imagen fija animada mínimamente, un clip simplificado o validación manual del storyboard.
 - [ ] La prueba valida: encuadre, acción, movimiento, **identidad del personaje** (vs. la referencia de la §1.1) y continuidad entre planos.
@@ -117,11 +138,14 @@ Para que el montaje se considere profesional (sea ejecutado con la herramienta d
    - [ ] **A1 — Locución / voz principal (si aplica):** comprobar inteligibilidad, consistencia de nivel y margen de pico seguro. No asignar automáticamente un objetivo de sonoridad de master a una pista aislada.
    - [ ] **A2 — Música (si aporta):** usar ducking o envolvente para que no tape la voz; registrar niveles concretos solo cuando sean relevantes para la mezcla aprobada.
    - [ ] **A3 — SFX (si aportan):** sincronizar los acentos con el evento visual o narrativo y evitar saturación.
+   - [ ] **Realismo Táctil de Foley (Audio IA):** Los impactos o interacciones físicas en escenas con IA combinan el golpe base con la textura física del entorno visible (salpicadura en lluvia, polvo, crujidos) sobre un colchón de ambiente continuo (*room tone*); prohibido depender del audio plano o metálico de los generadores de video.
    - [ ] **Master final:** registrar en la hoja de aceptación el objetivo integrado de sonoridad, el límite de pico y el método de medición. Como referencia de emisión, EBU R 128 usa −23 LUFS para el programa completo; no es un mandato universal para voz aislada ni para todos los destinos.
    - Un formato distinto (ambient, musical, contemplativo o screencast limpio) puede variar o suprimir capas que no aporten valor, con **justificación escrita en esta tabla**. Lo innegociable es que el resultado se **mida cuando aplique y se escuche**: claridad cuando hay locución, equilibrio y ausencia de picos molestos. La supresión de una pista es una decisión de diseño justificada, no una falta de producción.
 4. **Dinámica de Cuadro (*Pacing Visual*):**
    - [ ] En planos estáticos o imágenes fijas que duren **más de 5 segundos**, aplicar zooms continuos sutiles (*punch-ins* de escala 100% a 105% o paneo Ken Burns) para evitar sensación de foto congelada.
    - **Antes esta regla decía "más de 3 segundos" y la regla 1 decía "4 a 7".** Dos umbrales distintos y ninguno aplicable a todos los géneros; se unifican en 5 s como perfil por defecto, con la excepción justificada de la regla 1.
+5. **Pausas Naturales para Anuncios (Mid-Rolls en videos > 8 min):**
+   - [ ] En videos de duración superior a 8 minutos, asegurar que en los puntos de transición identificados en el guion se deje un respiro orgánico (fade out sutil de música, silencio breve de 0.5 a 1 s o cambio de plano limpio) y registrar los timecodes en esta orden de montaje para la inserción manual en YouTube Studio.
 
 ---
 

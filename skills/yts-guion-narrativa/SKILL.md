@@ -25,10 +25,20 @@ license: MIT
      2. **Primera frase:** confirma el tema/promesa sin preámbulo que no aporte valor.
      3. **Ventana de arranque del formato:** contexto/interés/reto/recompensa suficientes en la ventana propia del formato (Shorts: segundo cero; dinámico/tutorial: ~5–10 s; ensayo/documental: ~15–30 s).
      4. **Cumplir y superar:** confirma lo prometido y empieza a aportar valor extra sin exagerar.
-4. **Puerta de Originalidad y Credibilidad:**
-   - Prohibido inventar credenciales, biografías o experiencias personales ficticias para el narrador.
+   - **Puerta de Protección de la Satisfacción Acumulada (Payoff):** el desenlace debe cumplir y superar la promesa inicial del empaque; si la resolución decepciona o es un listicle superficial de relleno, el guion debe reescribirse antes de avanzar a la locución para proteger la reputación y el regreso de la audiencia.
+4. **Reglas de Redacción de Locución y Dirección Vocal IA:**
+   - **Regla de las 3 B's de Locución (MKBHD):**
+     1. *Básico:* vocabulario llano (nivel 6º de primaria), traduciendo jerga técnica pedante.
+     2. *Audaz:* oraciones asertivas y directas sin titubeos ni condicionales ("quizás", "podría ser") que socaven autoridad.
+     3. *Breve:* oraciones de máximo 25 palabras, párrafos de máximo 3 frases, sin descripciones dobles ni redundancias.
+   - **Voice Prompting y Acotaciones Actorales:** incluir indicaciones interpretativas entre corchetes (ej. `[Narrador: voz barítono pausada, documental BBC]`, `[Pausa dramática de 1.5s]`, `[Personaje Y: exaltada, respiración rápida]`) en los bloques `[Bxx]` para alimentar motores neuronales modernos (Gemini TTS / ElevenLabs) con emoción viva.
+   - **Pausas Naturales para Mid-rolls (> 8 min):** en videos de más de 8 minutos, planificar 1 o 2 transiciones o respiros naturales entre bloques temáticos y señalizarlos con `[Pausa natural / Mid-roll sugerido: mm:ss]` para su inserción manual en YouTube Studio.
+   - **Protocolo de Mención de Afiliados y Patrocinios:** verificar si existen enlaces de afiliados o recursos descargables e integrar una mención verbal orgánica en la locución, alineada con la descripción en `01-packaging.md` y `entregable-final.md`.
+   - **Doctrina "Copiar con Gusto" vs. Imitación Superficial:** trasplantar el conflicto estructural y la brecha de curiosidad de un outlier, pero adaptar el ritmo, la velocidad y el tono a la personalidad genuina del canal.
+5. **Puerta de Originalidad y Credibilidad:**
+   - Prohibido inventar credenciales, biografías o experiencias personales ficticias para el narrador. Cuando no se posean títulos formales, aplicar el **Método del Conejillo de Indias (*The Guinea Pig Method*)**: fundamentar autoridad en experimentos transparentes, pruebas empíricas directas, fuentes primarias y rigor metodológico.
    - Cumplir la promesa editorial de `01-packaging.md` desde el primer bloque.
-5. **Puerta de Congruencia Promesa ➜ Contenido (Linter de Alineación) `[Puerta Obligatoria]`:**
+6. **Puerta de Congruencia Promesa ➜ Contenido (Linter de Alineación) `[Puerta Obligatoria]`:**
    - Antes de dar por listo `02-guion.md`, responder afirmativamente a las 5 preguntas:
      1. ¿Qué promete explícitamente el título aprobado en `01-packaging.md`?
      2. ¿Qué expectativa y brecha de curiosidad genera la miniatura?

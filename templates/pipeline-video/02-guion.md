@@ -27,6 +27,9 @@
 ## 1. Puerta de Control Editorial y Monetización (Obligatorio)
 
 - [ ] **Aportación Original:** ¿Aporta análisis, síntesis, narrativa o conclusiones que van más allá del material de origen?
+- [ ] **Filtro de Anclas Visuales (Prueba de la Servilleta):** ¿La historia cuenta con elementos visuales, diagramas, demostraciones o anclas tangibles indispensables para el medio video, evitando ser un mero ensayo abstracto que funcionaría mejor como texto?
+- [ ] **Regla de las 3 B's de Locución:** ¿La redacción es Básica (vocabulario llano sin jerga pedante), Audaz (asertiva sin titubeos que socaven autoridad) y Breve (oraciones ≤25 palabras, sin descripciones dobles)?
+- [ ] **Protección de la Satisfacción Acumulada (Payoff):** ¿El desenlace del video cumple y supera la promesa inicial del empaque, aportando una conclusión o beneficio transformador y evitando cierres vacíos de relleno para proteger la reputación y la tasa de regreso de la audiencia?
 - [ ] **Anti-Contenido Reutilizado:** ¿Evita sustituir la obra original (en libros) o reproducir clips ajenos sin valor añadido (en noticias)?
 - [ ] **Fact-Checking Completado:** ¿Las afirmaciones sustanciales están verificadas con DOI en `06-fuentes-y-verificacion.md`? *(Obligatorio en Régimen 3 YMYL. En Régimen 1 Ficción: solo es `N/A` si el guion **no hace ninguna afirmación sobre lo real**; si menciona personas reales, lugares, hechos históricos, ciencia o salud, esas afirmaciones específicas se registran y verifican igual — el riesgo decide los controles, no el género).*
 - [ ] **Linter de Léxico Prohibido y Matización Científica (YMYL):**
@@ -36,13 +39,18 @@
 - [ ] **Declaración de Contenido Sintético / IA (YouTube Policy):**
   - [ ] **No requiere declaración:** Animación/estilo ficticio, clonación de la propia voz del creador, voz sintética estándar de biblioteca que no imita a terceros, o gráficos abstractos.
   - [ ] **Revisar y declarar en Studio cuando corresponda:** Muestra personas reales diciendo/haciendo cosas ficticias, voz que imita a una persona real, escenas o eventos realistas generados por IA, o música generada por IA cuando sea el foco principal del video. Aplicar el criterio vigente de YouTube Studio para contenido alterado o sintético; si hay duda, registrar la decisión y la fuente consultada.
+- [ ] **Mención de Afiliados, Patrocinios o Recursos Descargables:**
+  - [ ] **No aplica:** Video sin integraciones comerciales ni enlaces de afiliados.
+  - [ ] **Sí aplica:** Se verificó la mención verbal explícita y orgánica dentro de la locución (en el bloque correspondiente) y se preparó el texto de enlaces para la descripción en `01-packaging.md` / `entregable-final.md`.
 
 ---
 
 ## 2. Guion Maestro Estructurado por Bloques Atómicos (IDs Estables)
 
 > **Regla de ingeniería y flexibilidad temporal:** Cada bloque de locución tiene un identificador estable `[Bxx]` para facilitar la sincronización con el audio y las escenas en el editor.  
-> *Nota de adaptabilidad:* La cantidad de bloques y su duración deben calcularse en función de la **duración objetivo real del video** (ej. 1 min en Shorts, 8 min en divulgación o 20 min en un ensayo) y la velocidad de locución (~130 a 150 palabras por minuto). Los bloques y tiempos siguientes son un **ejemplo ilustrativo de referencia modular**: el agente puede añadir, dividir o consolidar bloques según el contenido, asegurando que no existan solapamientos de tiempo.
+> *Nota de adaptabilidad:* La cantidad de bloques y su duración deben calcularse en función de la **duración objetivo real del video** (ej. 1 min en Shorts, 8 min en divulgación o 20 min en un ensayo) y la velocidad de locución (~130 a 150 palabras por minuto). Los bloques y tiempos siguientes son un **ejemplo ilustrativo de referencia modular**: el agente puede añadir, dividir o consolidar bloques según el contenido, asegurando que no existan solapamientos de tiempo.  
+> **Pausas publicitarias naturales (Mid-rolls para videos > 8 min):** En videos de duración superior a 8 minutos, planificar 1 o 2 transiciones o pausas orgánicas entre bloques para insertar anuncios manuales en YouTube Studio sin cortar abruptamente la narración. Señalizar en la cabecera del bloque correspondiente con `[Pausa natural / Mid-roll sugerido: mm:ss]`.  
+> **Acotaciones actorales y Voice Prompting (Dirección Vocal IA):** En el texto de locución se permite y recomienda incluir indicaciones de interpretación entre corchetes (ej. `[Narrador: voz barítono pausada, tono reflexivo]`, `[Pausa dramática de 1.5s]`, `[Personaje Y: exaltada, respiración rápida]`) para alimentar motores neuronales modernos (Google AI Studio Generate Speech con Gemini, ElevenLabs, etc.) y dotar a las voces de emoción viva sin sonar planas.
 
 ### [B01_Dilema_BucleAbierto] — Tensión Inicial y Pregunta Irresistible
 - **Tiempo estimado (Ejemplo):** `00:00 - 00:15` (~15s)

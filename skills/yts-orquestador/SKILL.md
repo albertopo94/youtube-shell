@@ -34,3 +34,6 @@ license: MIT
 7. **Cierre y aprendizaje (`P07_CLOSE`):**
    - Completar `05-metricas-retencion.md` (intervalos de consulta, retrospectiva con una única mejora nombrada sin atribución causal infundada y protocolo de no republicar archivos idénticos) y `entregable-final.md`.
    - El estado terminal `PUBLICADO` solo es válido tras archivar el video con las 7 fases aprobadas bajo `mis-canales/<canal>/videos-publicados/<video>/`.
+8. **Gobernanza de Evidencia y Registro Central de Técnicas (`gobernanza-evidencia.md` y `registro-tecnicas.md`):**
+   - Para clasificar cualquier técnica operativa o heurística nueva del pipeline, aplicar las tres dimensiones de `references/gobernanza-evidencia.md`: **Dimensión A (Fundamento y Validación Propia)** (`FUENTE`, `HIPÓTESIS`, `DERIVACIÓN`, `CONTRATO INTERNO` cruzado con `SIN_PROBAR`, `PILOTO_PARCIAL`, `PILOTO_VALIDADO`, `REPETIDA`, `VERIFICADA_DETERMINÍSTICAMENTE`), **Dimensión B (Fuerza Operativa)** (`INFORMATIVA`, `RECOMENDADA`, `OBLIGATORIA`, `COMPUERTA`) y **Dimensión C (Decisión Histórica)**.
+   - Consultar `references/registro-tecnicas.md` para la matriz central de las 21 técnicas operativas catalogadas (`GATE-001..003`, `PACK-001..003`, `GUI-001..004`, `VID-IA-001..011`), asegurando que ninguna regla empírica bloquee una producción sin validación previa demostrada.

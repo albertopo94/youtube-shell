@@ -1,6 +1,6 @@
 {
   "schema": "youtube-shell.framework-map/v1",
-  "upstream_commit": "13d06b2cc39b2c414b74dc7198119f320cb33f8c",
+  "upstream_commit": "098a99d2a83bfdd5e05786a1f7c30e959383a33a",
   "source_inventory": [
     {
       "upstream_path": "AGENTS.md",
@@ -85,6 +85,18 @@
       "disposition": "enforced_in_runtime",
       "consumed_what": "Contrato de sincronización verificable mediante upstream-lock.json, hashes SHA-256 de las 8 plantillas espejadas y las 4 reglas con efecto en runtime adoptadas en youtube-shell.",
       "excluded_what": "Notas históricas sobre revisiones previas ya superadas tras actualizar a 13d06b2."
+    },
+    {
+      "upstream_path": "_framework/gobernanza-evidencia.md",
+      "disposition": "bundled_reference",
+      "consumed_what": "Espejado bajo skills/yts-orquestador/references/gobernanza-evidencia.md: marco de las 3 dimensiones (Fundamento, Validación Propia y Fuerza Operativa) para clasificar técnicas sin inflación epistémica.",
+      "excluded_what": "Auditorías históricas de sesiones pasadas de la oficina, archivadas en _framework/referencias/auditorias/."
+    },
+    {
+      "upstream_path": "_framework/registro-tecnicas.md",
+      "disposition": "bundled_reference",
+      "consumed_what": "Espejado bajo skills/yts-orquestador/references/registro-tecnicas.md y verificado mediante checkTechniquesRegistryCoherence en contract-checker.ts contra IDs únicos, enums válidos y cobertura de roles.",
+      "excluded_what": "Técnicas experimentales que aún no cuentan con formulación canónica en los roles."
     },
     {
       "upstream_path": "_framework/plantillas/pipeline-video-template/* + entregable-final-template.md",
@@ -836,6 +848,38 @@
       "verification_scope": {
         "deterministic_in_runtime": "Verifica la estructura de 05-metricas-retencion.md y entregable-final.md y solo permite el estado PUBLICADO bajo mis-canales/<canal>/videos-publicados/<video>/ con las 7 fases aprobadas.",
         "editorial_or_human_review": "Interpretación prudente de curvas de retención reales tras la publicación y traslado de aprendizajes al siguiente ciclo."
+      }
+    },
+    {
+      "id": "TECH-01",
+      "title": "Coherencia del Registro Central de Técnicas y Fuerzas Operativas",
+      "source": {
+        "file": "_framework/registro-tecnicas.md",
+        "section": "1. Matriz Central de Técnicas Seleccionadas"
+      },
+      "classification": "deterministic_gate",
+      "phases": ["GLOBAL", "P01_PACKAGING", "P02_RESEARCH", "P03_SCRIPT", "P05_ANIMATIC", "P06_ASSEMBLY"],
+      "skill": "yts-orquestador",
+      "consumer": "skills/yts-orquestador/references/registro-tecnicas.md",
+      "enforcement": "checkTechniquesRegistryCoherence / contract-checker / check_contrato.sh",
+      "tests": ["test/contract-checker.test.ts"],
+      "required_skill_terms": [
+        "gobernanza-evidencia",
+        "registro-tecnicas",
+        "fuerza operativa"
+      ],
+      "reference_policy": {
+        "level": "conditional",
+        "when": "Al evaluar técnicas operativas, clasificar reglas del pipeline o verificar coherencia del registro",
+        "references": [
+          "skills/yts-orquestador/references/gobernanza-evidencia.md",
+          "skills/yts-orquestador/references/registro-tecnicas.md"
+        ],
+        "required_evidence": "Verificación determinista de IDs únicos, enums válidos y cobertura de roles en techniques_registry_coherence."
+      },
+      "verification_scope": {
+        "deterministic_in_runtime": "checkTechniquesRegistryCoherence valida IDs sin duplicados, fundamentos, validaciones y fuerzas operativas canónicas.",
+        "editorial_or_human_review": "El creador calibra el nivel de validación propia y decide la promoción de técnicas recomendadas a obligatorias o compuertas."
       }
     }
   ]

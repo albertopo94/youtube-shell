@@ -6,9 +6,9 @@
       "role": "Domain knowledge (layer 3): phases, templates, contract checker, pilot measurement",
       "reviewed": {
         "ref": "main",
-        "commit": "13d06b2cc39b2c414b74dc7198119f320cb33f8c",
-        "committed_at": "2026-10-23T22:52:58Z",
-        "reviewed_on": "2026-10-24"
+        "commit": "098a99d2a83bfdd5e05786a1f7c30e959383a33a",
+        "committed_at": "2026-10-28T09:38:40Z",
+        "reviewed_on": "2026-10-28"
       },
       "affects_us": [
         "_framework/plantillas/pipeline-video-template/",
@@ -25,6 +25,8 @@
         "_framework/estrategia-idiomas.md",
         "_framework/agent-operating-standard.md",
         "_framework/compatibilidad-consumidores.md",
+        "_framework/gobernanza-evidencia.md",
+        "_framework/registro-tecnicas.md",
         "_framework/roles/",
         "AGENTS.md"
       ],
@@ -39,15 +41,15 @@
         },
         "templates/pipeline-video/01-packaging.md": {
           "source": "_framework/plantillas/pipeline-video-template/01-packaging.md",
-          "sha256": "6821a1c481881ec4f73493ae1cdcae44f22b750653294ec8d5c7edc739f5ed93"
+          "sha256": "a531f75feff01516ec231354b6173569b2beb996bf0c9edfd0a443113a68edef"
         },
         "templates/pipeline-video/02-guion.md": {
           "source": "_framework/plantillas/pipeline-video-template/02-guion.md",
-          "sha256": "c5e92578cba7449401ca39a0e6a9c3c8c83a28d56796def0f401de1a4f91d65d"
+          "sha256": "5dfe1440b176e3877f28dfd31776ca8670a81d32447f70e97a6ad2529c2cd959"
         },
         "templates/pipeline-video/03-storyboard-y-edicion.md": {
           "source": "_framework/plantillas/pipeline-video-template/03-storyboard-y-edicion.md",
-          "sha256": "33b65e0665106d36286591de8e70c8df77dd63fb538ab1517d703b52a36002c0"
+          "sha256": "4420361628faa9e75e1bdbbdbbdf72afde145a675bf2f0ecfe9da1284ac0e933"
         },
         "templates/pipeline-video/04-registro-recursos.md": {
           "source": "_framework/plantillas/pipeline-video-template/04-registro-recursos.md",
@@ -55,7 +57,7 @@
         },
         "templates/pipeline-video/05-metricas-retencion.md": {
           "source": "_framework/plantillas/pipeline-video-template/05-metricas-retencion.md",
-          "sha256": "d7311758cd635a2316307838769bf7758a137a5b5de7268cd1dc93a951a7f6e3"
+          "sha256": "ca4b04534594bd9ea8e1f8d897f4088995f3f4da381d6ea3cb7fe1593689900f"
         },
         "templates/pipeline-video/06-fuentes-y-verificacion.md": {
           "source": "_framework/plantillas/pipeline-video-template/06-fuentes-y-verificacion.md",
@@ -69,31 +71,31 @@
       "normative_sources": [
         {
           "upstream_path": "AGENTS.md",
-          "upstream_sha256": "995631e726cfba1a49237610a83967d2c13648fd42f6ec6022bc459aa7d6f308",
+          "upstream_sha256": "944cfc574cf3bac0ab86f83e625a06298b937b275c9eb4db7cdb8a8468aa4c78",
           "local_target": "skills/yts-orquestador/SKILL.md",
           "role": "orchestrator_skill"
         },
         {
           "upstream_path": "_framework/roles/01-investigacion-ideas.md",
-          "upstream_sha256": "92e0b2ebfa93934248bc2c6c7b3cd3f7eb04f76648d72ebbe1bd5821ba329bd7",
+          "upstream_sha256": "8e4f4c19e1b62d6e3c73e27980369674cc3eae027ddd444f974b54689c711440",
           "local_target": "skills/yts-investigacion-ideas/SKILL.md",
           "role": "role_skill"
         },
         {
           "upstream_path": "_framework/roles/02-packaging-miniaturas.md",
-          "upstream_sha256": "262fa149ec1b3c553af3e9866d192438efeaa1f8939344b991a888d8b24f8c14",
+          "upstream_sha256": "f30eeed5a2d0ec9edb3c26232029fd40f9eca8b977607823ffa6c02c5fc3aeeb",
           "local_target": "skills/yts-packaging-miniaturas/SKILL.md",
           "role": "role_skill"
         },
         {
           "upstream_path": "_framework/roles/03-guion-y-narrativa.md",
-          "upstream_sha256": "1996979335131855d6e1aa2d3ec2d8dcdb8265f1301c66549bd7374f78d461d3",
+          "upstream_sha256": "2f93f32493f4d967c17f7b2c2c49b12c603a92e23d503e4db66ce61f888edc1e",
           "local_target": "skills/yts-guion-narrativa/SKILL.md",
           "role": "role_skill"
         },
         {
           "upstream_path": "_framework/roles/04-direccion-y-edicion.md",
-          "upstream_sha256": "e66ab1d6c0ad27d01df2cb9dd9ff808d8f53a16d401f71a5d4a38d28eddcd7aa",
+          "upstream_sha256": "52b220768b1c4989bad332ecf10e045c21010b4915fd2426dc13ce5299368c50",
           "local_target": "skills/yts-direccion-edicion/SKILL.md",
           "role": "role_skill"
         },
@@ -105,7 +107,7 @@
         },
         {
           "upstream_path": "_framework/herramientas-y-apis.md",
-          "upstream_sha256": "4ccaa41aa0cac0841fe6cbfe0837728eb198cf387ebab3f1d20bb6a639742135",
+          "upstream_sha256": "6a120eeaf9ab5a62106185190c4273739c3eb6dbe6caaf2397a0b7b61be3dde3",
           "local_target": "skills/yts-orquestador/references/herramientas-y-apis.md",
           "role": "mirrored_reference"
         },
@@ -117,7 +119,7 @@
         },
         {
           "upstream_path": "_framework/ciclo-produccion.md",
-          "upstream_sha256": "7b8b21f51c0d9e9ce937347cd4158f65a760b2978b3ad146c2dfff4617e064bc",
+          "upstream_sha256": "5d1fba0e8567d3aae7923e2fdddf66475caca15249ca65cf2e8bed5252b25da5",
           "local_target": "skills/yts-orquestador/SKILL.md",
           "role": "consolidated_into_skill"
         },
@@ -141,15 +143,27 @@
         },
         {
           "upstream_path": "_framework/agent-operating-standard.md",
-          "upstream_sha256": "39507ff84b06d67de7e36d8ae48b2a26b1aa7129ad595567b189744977158ccd",
+          "upstream_sha256": "75722bd2e06571469c93d90ee418867a050f39b69b3773fa458526ddb69ae2bb",
           "local_target": "AGENTS.md",
           "role": "operating_standard"
         },
         {
           "upstream_path": "_framework/compatibilidad-consumidores.md",
-          "upstream_sha256": "21f7c8ed2c717ccf762ad4a64774c1fdaa536374d324439a6871e1fba17b9321",
+          "upstream_sha256": "5e0ea5c78fb9570f88c2733a799eee9d706bfa169342d6cc3c45444e53fc31fd",
           "local_target": "upstream-lock.json",
           "role": "consumer_contract"
+        },
+        {
+          "upstream_path": "_framework/gobernanza-evidencia.md",
+          "upstream_sha256": "68a6908f762a889adbf7b70d313969fbf4ae36590ce4649f5ba77b50bbe061ce",
+          "local_target": "skills/yts-orquestador/references/gobernanza-evidencia.md",
+          "role": "mirrored_reference"
+        },
+        {
+          "upstream_path": "_framework/registro-tecnicas.md",
+          "upstream_sha256": "c1d579529b6c0b7adb6ae9d1aa0402efd4c487d7e84532bfe11d691d5ef41b66",
+          "local_target": "skills/yts-orquestador/references/registro-tecnicas.md",
+          "role": "mirrored_reference"
         }
       ]
     },
