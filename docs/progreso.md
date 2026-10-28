@@ -18,11 +18,14 @@ Orden de trabajo de [brief-lector.md §12.5](brief-lector.md). Se actualiza en c
 
 ## 2. Dónde nos quedamos (Handoff para la próxima sesión)
 
-- **Versión actual:** `0.8.0` (`107/107` tests en verde con `npm test` y `npm run smoke`).
+- **Versión actual:** `0.9.0` (`109/109` tests en verde con `npm test` y `npm run smoke`).
 - **Upstreams fijados en [`upstream-lock.json`](../upstream-lock.json):**
   - `albertopo94/youtube`: commit `13d06b2cc39b2c414b74dc7198119f320cb33f8c` (`2026-10-23T22:52:58Z`, `v0.5.14-consumer-compatibility-record` + disposición final, con las 8 plantillas `00..06` + `entregable-final.md` espejadas en `mirrored` y las 14 fuentes normativas/consolidadas bloqueadas con SHA-256 en `normative_sources`).
   - `earendil-works/pi`: versión revisada `v1.3.0` (`71023aec1546d6d677a65669c5665c0927ce0dd0`); detectada en remoto `v1.4.0` (`4a080252f06caf63a525d7873c5d94d3c23887e0`, aún con `reviewed: false`).
-- **Estado de Git:** `main` local en `v0.8.0`; comando `youtube-shell` enlazado globalmente en `/Users/albertmac11/.local/bin/youtube-shell` mediante `npm link`.
+  - `storytold/filmcraft`: versión revisada `0.9.0` (`4a69a038d32761f604b3c7e4845b21fb40b3cbe4`), 17 herramientas MCP catalogadas.
+  - `storytold/effectcraft`: versión revisada `0.11.1` (`2a01226894c6bc58ae4fadcc24a10198d693acaa`), 27 herramientas MCP catalogadas con guardas de ejecución.
+  - `storytold/soundcraft`: versión revisada `0.8.0` (`2578ea69a388395ddadb6394d7b4ab40f21aa670`), 17 herramientas MCP catalogadas acotadas a `P06_ASSEMBLY`.
+- **Estado de Git:** `main` local en `v0.9.0`; comando `youtube-shell` enlazado globalmente en `/Users/albertmac11/.local/bin/youtube-shell` mediante `npm link`.
 
 ---
 
@@ -33,7 +36,7 @@ Orden de trabajo de [brief-lector.md §12.5](brief-lector.md). Se actualiza en c
 - [x] **Matriz de trazabilidad del conocimiento (`framework-map.json`) y bloqueo de fuentes normativas:** inventariar todas las fuentes de `albertopo94/youtube` (`source_inventory` + `consolidated_or_legacy_sources`), mapear las 23 reglas hacia sus skills con verificación semántica (`required_skill_terms`), políticas de referencia (`reference_policy`) y frontera Runtime vs. Editorial (`verification_scope`).
 - [x] **Resolvedor de contexto en 3 capas (`src/core/context-resolver.ts`), bloqueo operativo `read_only` y vínculo de oficina/canal (`/yts-link`):** clasificar turnos en `read_only` vs `production`, retirar y bloquear `write`/`edit`/`yts_transition` en la frontera de herramientas durante consultas, enrutar el playbook de la fase activa con referencias obligatorias/condicionales y vincular `officeRoot` y `channelDir` en `.youtube-shell/registro.json`.
 - [x] **Puertas de salida deterministas por fase, aprobación criptográfica pre-render (`/yts-approve-sheet`) y CI de deriva upstream:** añadir `packaging_structure`, `research_sources_structure`, `resource_license_log` y `close_deliverables`, reforzar `script_block_ids`, exigir `/yts-approve-sheet` con huella SHA-256 antes de validar `master_measurement`, y activar `.github/workflows/ci.yml` + `.github/workflows/upstreams.yml`.
+- [x] **Catalogar `effectcraft-cli` (`0.11.1`) y `soundcraft-cli` MCP y anclar motores en `upstream-lock.json`:** inventariar las 27 herramientas de EffectCraft y 17 de SoundCraft con guardas de fase (`P05_ANIMATIC`/`P06_ASSEMBLY` para EffectCraft y estrictamente `P06_ASSEMBLY` para SoundCraft), confirmación para scripts JSX y UI desktop, protección contra sobrescritura de Markdown y confinamiento de rutas en `src/gate/capabilities.ts` y `src/gate/pi-extension.ts`, más anclaje formal de `storytold/filmcraft`, `storytold/effectcraft` y `storytold/soundcraft` con verificación de versión de binarios locales en `test/upstream-lock.test.ts`.
 - [ ] **Dogfooding interactivo en la TUI con `youtube-shell`:** abrir una carpeta vacía de prueba ejecutando `youtube-shell`, correr `/yts-init`, comprobar en vivo la restricción de herramientas por fase y aprobar con `/yts-approve`.
 - [ ] **Revisar cambios de `earendil-works/pi` `v1.3.0 → v1.4.0`:** correr `npm run upstreams:check`, inspeccionar el diff de `packages/coding-agent/docs/extensions.md` y `types.ts` entre `71023ae` y `4a08025` y, tras validarlo, promover `upstreams.pi.reviewed` a `1.4.0` en `upstream-lock.json`.
-- [ ] **Catalogar `effectcraft-cli` (`0.11.1`) y `soundcraft-cli` MCP:** inventariar sus herramientas MCP igual que se hizo con `filmcraft-cli 0.9.0` e incorporarlas con guardas de fase (`P06_ASSEMBLY`) y ruta en `src/gate/capabilities.ts`.
 - [ ] **Primera corrida real con hoja de aceptación pre-render:** cuando el creador reactive un canal o video de prueba en su oficina (`albertopo94/youtube`), producir un video completo gobernado por `youtube-shell`.
