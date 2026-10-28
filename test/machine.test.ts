@@ -414,7 +414,22 @@ test("changeProductionMode allows setting mode before P03 and denies changes onc
   // 2. Changing mode once P03_SCRIPT is approved is denied
   denied(
     changeProductionMode(reg, "screen_first", ctx(project)),
-    /No se puede cambiar el flujo.*porque P03_SCRIPT ya fue redactado y aprobado/,
+    /No se puede cambiar el flujo.*porque P03_SCRIPT ya está en APROBADO/,
+  );
+
+  // 2b. Also denied when P03_SCRIPT is EN_CURSO or PENDIENTE_APROBACION
+  const p3Active = createRegistry("vid", "2026-10-21T00:00:00Z");
+  p3Active.phases.P01_PACKAGING.status = "APROBADO";
+  p3Active.phases.P02_RESEARCH.status = "APROBADO";
+  p3Active.phases.P03_SCRIPT.status = "EN_CURSO";
+  denied(
+    changeProductionMode(p3Active, "screen_first", ctx(project)),
+    /No se puede cambiar el flujo.*porque P03_SCRIPT ya está en EN_CURSO/,
+  );
+  p3Active.phases.P03_SCRIPT.status = "PENDIENTE_APROBACION";
+  denied(
+    changeProductionMode(p3Active, "screen_first", ctx(project)),
+    /No se puede cambiar el flujo.*porque P03_SCRIPT ya está en PENDIENTE_APROBACION/,
   );
 
   // Advance through P05_ANIMATIC APROBADO
@@ -438,6 +453,41 @@ test("changeProductionMode allows setting mode before P03 and denies changes onc
   // 3. Changing mode once P05_ANIMATIC is approved is denied
   denied(
     changeProductionMode(reg2, "music_first", ctx(project2)),
-    /No se puede cambiar el flujo.*porque P05_ANIMATIC ya está aprobada/,
+    /No se puede cambiar el flujo.*porque P05_ANIMATIC ya está en APROBADO/,
+  );
+
+  // 3b. Also denied when P05_ANIMATIC is EN_CURSO or PENDIENTE_APROBACION
+  const p5Active = createRegistry("vid", "2026-10-21T00:00:00Z");
+  p5Active.phases.P05_ANIMATIC.status = "EN_CURSO";
+  denied(
+    changeProductionMode(p5Active, "music_first", ctx(project2)),
+    /No se puede cambiar el flujo.*porque P05_ANIMATIC ya está en EN_CURSO/,
+  );
+  p5Active.phases.P05_ANIMATIC.status = "PENDIENTE_APROBACION";
+  denied(
+    changeProductionMode(p5Active, "music_first", ctx(project2)),
+    /No se puede cambiar el flujo.*porque P05_ANIMATIC ya está en PENDIENTE_APROBACION/,
+  );
+});
+
+test("submitPhase rejects discrepancy between authoritative registry mode and markdown view selection", () => {
+  const project = new FakeProject();
+  let reg = approveThrough(project, "P04_FACTCHECK");
+  reg.productionMode = "audio_first";
+  project.fill("P05_ANIMATIC");
+  project.files.set(
+    "00-estado-produccion.md",
+    "- **Flujo Audiovisual seleccionado:** `[ ] Audio-First` / `[x] Screen-First` / `[ ] Speaker-First` / `[ ] Music-First`",
+  );
+  reg = ok(startPhase(reg, "P05_ANIMATIC", ctx(project)));
+  project.files.set("exports/scratch_track.bin", "content");
+  denied(
+    submitPhase(
+      reg,
+      "P05_ANIMATIC",
+      { checks: [], evidence: [{ role: "scratch_track", path: "exports/scratch_track.bin" }] },
+      ctx(project),
+    ),
+    /Discrepancia de flujo: el registro autoritativo indica "audio_first", pero 00-estado-produccion\.md marca "screen_first"/i,
   );
 });

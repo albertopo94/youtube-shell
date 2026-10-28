@@ -99,6 +99,30 @@
       "excluded_what": "Técnicas experimentales que aún no cuentan con formulación canónica en los roles."
     },
     {
+      "upstream_path": "_framework/scripts/check-contrato.sh",
+      "disposition": "enforced_in_runtime",
+      "consumed_what": "Portado funcionalmente y superado por los verificadores nativos TypeScript src/checks/contract-checker.ts y src/checks/framework-checker.ts (comprobando archivos canónicos, normalización de estado, coherencia de catálogo y técnicas).",
+      "excluded_what": "Invocación por scripts de shell bash y comandos awk/sed externos; se ejecuta íntegramente como código de Node.js."
+    },
+    {
+      "upstream_path": "_framework/scripts/test-check-contrato.sh",
+      "disposition": "enforced_in_runtime",
+      "consumed_what": "Los 12 fixtures canónicos (f0 a f11) portados y probados de forma determinista en test/contract-checker.test.ts y test/framework-checker.test.ts.",
+      "excluded_what": "Pruebas de scripts bash temporales en /tmp con sed/awk de BSD/macOS; reemplazados por suites nativas con node:test."
+    },
+    {
+      "upstream_path": "_framework/referencias/evidencia-piloto/medicion-master-piloto.md",
+      "disposition": "test_fixture_only",
+      "consumed_what": "Utilizado como fixture negativo representativo en test/media-measurement.test.ts (-17.5 LUFS vs -23 LUFS objetivo, audio mono de 1 sola pista y segmentos visuales de 41.2s) para verificar que la hoja de aceptación detecta desvíos.",
+      "excluded_what": "Métricas del render de prueba como regla universal: los valores de la entrega piloto no constituyen una obligación para otros videos, sino evidencia de calibración del medidor."
+    },
+    {
+      "upstream_path": "_framework/plantillas/entregable-final-template.md",
+      "disposition": "mirrored_template",
+      "consumed_what": "Espejada byte a byte bajo templates/pipeline-video/entregable-final.md y verificada por SHA-256 en test/upstream-lock.test.ts.",
+      "excluded_what": "Plantillas de canal o de branding de la oficina."
+    },
+    {
       "upstream_path": "_framework/plantillas/pipeline-video-template/* + entregable-final-template.md",
       "disposition": "mirrored_template",
       "consumed_what": "Las 8 plantillas canónicas espejadas byte a byte en templates/pipeline-video/ y verificadas por SHA-256 en test/upstream-lock.test.ts.",

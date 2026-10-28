@@ -257,3 +257,40 @@ test("buildThreeLayerPrompt adapts P05_ANIMATIC evidence to the active productio
   assert.match(prompt, /screen_recording/);
   assert.equal(prompt.includes("scratch_track"), false, "Prompt for Screen-First must not demand scratch_track");
 });
+
+test("resolveWorkflowContext detects discrepancy between registry mode and markdown view without overriding registry authority", (t) => {
+  const tmp = mkdtempSync(join(tmpdir(), "yts-ctx-discrepancy-"));
+  t.after(() => rmSync(tmp, { recursive: true, force: true }));
+  const videoDir = join(tmp, "01-video");
+  cpSync(TEMPLATES, videoDir, { recursive: true });
+
+  const statusFile = join(videoDir, "00-estado-produccion.md");
+  const orig = readFileSync(statusFile, "utf8");
+  writeFileSync(
+    statusFile,
+    orig.replace(
+      "- **Flujo Audiovisual seleccionado:** `[ ] Audio-First` / `[ ] Screen-First` / `[ ] Speaker-First` / `[ ] Music-First`",
+      "- **Flujo Audiovisual seleccionado:** `[ ] Audio-First` / `[x] Screen-First` / `[ ] Speaker-First` / `[ ] Music-First`",
+    ),
+    "utf8",
+  );
+
+  const reader = createFsReader(videoDir);
+  let reg = createRegistry("01-video", "2026-10-24T10:00:00Z");
+  reg.productionMode = "audio_first";
+
+  const ev = evaluate(reg, reader);
+  const resolved = resolveWorkflowContext({
+    videoDir,
+    reg,
+    evaluation: ev,
+    hasRegistry: true,
+  });
+
+  assert.equal(resolved.layer3.productionMode, "audio_first", "Authoritative registry mode must win over markdown edit");
+  assert.ok(resolved.layer3.modeDiscrepancy);
+  assert.match(resolved.layer3.modeDiscrepancy, /Discrepancia de flujo.*audio_first.*screen_first/i);
+
+  const prompt = buildThreeLayerPrompt(resolved);
+  assert.match(prompt, /ALERTA DE DISCREPANCIA/);
+});

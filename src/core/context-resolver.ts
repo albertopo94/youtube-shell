@@ -299,6 +299,7 @@ export interface Layer3Resolution {
   channelFiles: Layer3FileStatus[];
   frameworkReferences: Layer3FileStatus[];
   productionMode: ProductionMode;
+  modeDiscrepancy?: string;
 }
 
 export function resolveLayer3References(
@@ -319,12 +320,21 @@ export function resolveLayer3References(
   });
 
   let productionMode: ProductionMode = reg?.productionMode ?? "audio_first";
+  let modeDiscrepancy: string | undefined;
+
   const statusPath = join(videoDir, "00-estado-produccion.md");
   if (existsSync(statusPath)) {
     try {
       const det = detectProductionMode(readFileSync(statusPath, "utf8"));
       if (det.ok) {
-        productionMode = det.mode;
+        if (reg?.productionMode && det.mode !== reg.productionMode) {
+          modeDiscrepancy = `Discrepancia de flujo: el registro autoritativo indica "${reg.productionMode}", pero 00-estado-produccion.md marca "${det.mode}". Ejecute /yts-mode o sincronice la vista Markdown.`;
+          productionMode = reg.productionMode;
+        } else if (!reg?.productionMode) {
+          productionMode = det.mode;
+        }
+      } else if (det.kind === "ambiguous") {
+        modeDiscrepancy = det.reason;
       }
     } catch {}
   }
@@ -361,6 +371,7 @@ export function resolveLayer3References(
     channelFiles,
     frameworkReferences,
     productionMode,
+    modeDiscrepancy,
   };
 }
 
@@ -507,6 +518,9 @@ export function buildThreeLayerPrompt(resolved: ResolvedWorkflowContext): string
       : "ninguna evidencia binaria adicional";
 
   const linkLines: string[] = [];
+  if (resolved.layer3.modeDiscrepancy) {
+    linkLines.push(`- ⚠️ ALERTA DE DISCREPANCIA: ${resolved.layer3.modeDiscrepancy}`);
+  }
   if (resolved.layer3.workspaceLink) {
     linkLines.push(`- Oficina vinculada: ${resolved.layer3.workspaceLink.officeRoot}`);
     if (resolved.layer3.workspaceLink.channelDir) {

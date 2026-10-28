@@ -42,7 +42,8 @@ interface SourceInventoryEntry {
     | "consumed_in_skill"
     | "bundled_reference"
     | "mirrored_template"
-    | "deliberately_external_office_or_channel_data";
+    | "deliberately_external_office_or_channel_data"
+    | "test_fixture_only";
   consumed_what: string;
   excluded_what: string;
 }
@@ -152,6 +153,16 @@ test("source_inventory and consolidated_or_legacy_sources cover all upstream sou
       true,
       `normative source ${src.upstream_path} must be documented in framework-map.json source_inventory`,
     );
+  }
+
+  for (const aff of lock.upstreams.youtube.affects_us) {
+    if (!aff.endsWith("/")) {
+      assert.equal(
+        inventoriedPaths.has(aff),
+        true,
+        `affects_us path ${aff} must be documented in framework-map.json source_inventory`,
+      );
+    }
   }
 
   for (const entry of map.source_inventory) {

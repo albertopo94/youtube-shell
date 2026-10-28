@@ -246,7 +246,17 @@ export function submitPhase(reg: Registry, id: PhaseId, input: SubmitInput, ctx:
     if (text) {
       const detected = detectProductionMode(text);
       if (detected.ok) {
-        mode = detected.mode;
+        if (reg.productionMode && detected.mode !== reg.productionMode) {
+          return {
+            ok: false,
+            reasons: [
+              `Discrepancia de flujo: el registro autoritativo indica "${reg.productionMode}", pero 00-estado-produccion.md marca "${detected.mode}". El registro es la única autoridad de estado. Ejecute /yts-mode o sincronice la vista Markdown antes de enviar.`,
+            ],
+          };
+        }
+        if (!reg.productionMode) {
+          mode = detected.mode;
+        }
       } else if (detected.kind === "ambiguous") {
         return { ok: false, reasons: [detected.reason] };
       } else {
@@ -536,20 +546,20 @@ export function changeProductionMode(
   const p03 = reg.phases.P03_SCRIPT;
   const p05 = reg.phases.P05_ANIMATIC;
 
-  if (p05?.status === "APROBADO") {
+  if (p05 && p05.status !== "NO_INICIADO") {
     return {
       ok: false,
       reasons: [
-        `No se puede cambiar el flujo a "${newMode}" porque P05_ANIMATIC ya está aprobada con el flujo "${reg.productionMode ?? "audio_first"}". Para cambiar el modo, primero reabra P05_ANIMATIC formalmente.`,
+        `No se puede cambiar el flujo a "${newMode}" porque P05_ANIMATIC ya está en ${p05.status} con el flujo "${reg.productionMode ?? "audio_first"}". Para cambiar el modo, primero reabra o cancele P05_ANIMATIC formalmente.`,
       ],
     };
   }
 
-  if (p03?.status === "APROBADO") {
+  if (p03 && p03.status !== "NO_INICIADO") {
     return {
       ok: false,
       reasons: [
-        `No se puede cambiar el flujo a "${newMode}" porque P03_SCRIPT ya fue redactado y aprobado con el flujo "${reg.productionMode ?? "audio_first"}". Para cambiar el modo, reabra P03_SCRIPT formalmente.`,
+        `No se puede cambiar el flujo a "${newMode}" porque P03_SCRIPT ya está en ${p03.status} (concebido bajo el flujo "${reg.productionMode ?? "audio_first"}"). El flujo audiovisual debe definirse antes de iniciar el guion, o reabrir formalmente la fase.`,
       ],
     };
   }
