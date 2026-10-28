@@ -31,9 +31,20 @@ license: MIT
 > **Gobernanza:** Las siguientes técnicas son heurísticas contrastadas de narrativa y retención. Se catalogan como **`[RECOMENDADA]`** conforme a `_framework/gobernanza-evidencia.md` y `_framework/registro-tecnicas.md`.
 
 - **[GUI-001] La Prueba de la Servilleta / Anclas Visuales:** validar que la historia cuenta con elementos visuales, diagramas o anclas tangibles indispensables para el medio video, evitando ensayos abstractos de texto.
-- **[GUI-002] Regla de las 3 B's de Locución (MKBHD):**
+- **Caja de Herramientas de Intros y Aperturas:**
+  - *Reafirmar la Promesa:* en el segundo cero, confirmar de inmediato con audio y video que el espectador está en el lugar correcto.
+  - *Frontloading:* adelantar un destello de la mejor calidad, datos o animación en los primeros compases.
+  - *Estructura R.A.I.N.Y. (<45 s en videos largos, <10 s en formatos dinámicos):*
+    - **R (Result):** adelantar el resultado o pregunta irresistible que se resolverá.
+    - **A (Address Objection):** desactivar el detector de mentiras del espectador abordando su principal objeción antes de que abandone.
+    - **I (Instant):** entrada rápida y sin preámbulos institucionales.
+    - **N (Now):** explicar por qué este tema es relevante y oportuno ahora mismo.
+    - **Y (You):** establecer por qué tú (el Unfair Edge o la prueba del conejillo de indias).
+- **Identidad Sonora contra la "Voz Genérica de IA" (Zack D. Films):**
+  - En canales sin presentador a cámara (*faceless*), queda desaconsejado utilizar las voces gratuitas estándar más trilladas de bibliotecas comunes (ej. voces estándar de CapCut). La audiencia las detecta en dos segundos como contenido automatizado de baja estofa y desliza (*swipe away*). Priorizar la clonación de la propia voz del creador o calibrar un modelo neuronal con una personalidad y entonación singulares que forjen la identidad sonora del canal.
+- **[GUI-002] Regla de las 3 B's de Locución (MKBHD) y Rigor Científico:**
   1. *Básico:* vocabulario llano (nivel 6º de primaria), traduciendo jerga técnica pedante.
-  2. *Audaz:* oraciones asertivas y directas sin titubeos ni condicionales ("quizás", "podría ser") que socaven autoridad.
+  2. *Audaz (sin eliminar la incertidumbre legítima):* suprimir vacilaciones verbales de estilo que resten autoridad (*"quizás"*, *"un poco"*), pero **conservar estrictamente los calificadores de rigor y matización científica (YMYL)**: correlación vs causalidad, hipótesis vs conclusión, y límites de modelos animales vs humanos.
   3. *Breve:* oraciones de máximo 25 palabras, párrafos de máximo 3 frases, sin descripciones dobles ni redundancias.
 - **[GUI-003] Voice Prompting y Acotaciones Actorales:** incluir indicaciones interpretativas entre corchetes (ej. `[Narrador: voz barítono pausada, documental BBC]`, `[Pausa dramática de 1.5s]`, `[Personaje Y: exaltada, respiración rápida]`) en los bloques `[Bxx]` para alimentar motores neuronales modernos (Gemini TTS / ElevenLabs) con emoción viva.
 - **[GUI-004] Pausas Naturales para Mid-rolls (> 8 min):** en videos de más de 8 minutos, planificar 1 o 2 transiciones o respiros naturales entre bloques temáticos y señalizarlos con `[Pausa natural / Mid-roll sugerido: mm:ss]` para su inserción manual en YouTube Studio.
@@ -42,6 +53,9 @@ license: MIT
   - *La respuesta temprana es el valor* (tutoriales, consultas directas): prohibido retrasar artificialmente la solución.
   - En Shorts y formatos dinámicos, aplicar la **Estructura del Arco en Bucle (*Looped Arc*)**, priorizar **Relatibilidad Universal** y no vulnerar políticas de **contenido reutilizado**.
 - **Puerta de Originalidad y Método del Conejillo de Indias (*The Guinea Pig Method*):** prohibido inventar credenciales falsas; fundamentar autoridad en experimentos transparentes, pruebas empíricas directas, fuentes primarias y rigor metodológico.
+- **Frontera de Verificación de Guion (Runtime vs. Juicio Editorial Humano):**
+  - El runtime verifica de forma determinista la presencia de bloques `[Bxx]` con timecodes válidos (`script_block_ids`) y la ausencia de marcadores `PENDIENTE` en fact-checking.
+  - La fuerza del gancho, la resonancia emocional del payoff y la cadencia expresiva no pueden automatizarse: dependen de la **revisión editorial humana del creador** antes de `/yts-approve P03_SCRIPT`.
 - **Protocolo de Mención de Afiliados y Patrocinios:** verificar si existen enlaces de afiliados o recursos descargables e integrar una mención verbal orgánica en la locución, alineada con `01-packaging.md` y `entregable-final.md`.
 - **Doctrina "Copiar con Gusto" vs. Imitación Superficial:** trasplantar el conflicto estructural y la brecha de curiosidad de un outlier, adaptando el ritmo y la voz al canal.
 

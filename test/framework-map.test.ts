@@ -43,6 +43,7 @@ interface SourceInventoryEntry {
     | "bundled_reference"
     | "mirrored_template"
     | "deliberately_external_office_or_channel_data"
+    | "deliberately_external_raw_transcripts_and_audits"
     | "test_fixture_only";
   consumed_what: string;
   excluded_what: string;
@@ -173,6 +174,11 @@ test("source_inventory and consolidated_or_legacy_sources cover all upstream sou
   assert.ok(
     map.source_inventory.some((e) => e.disposition === "deliberately_external_office_or_channel_data"),
     "source_inventory must explicitly declare deliberately external office/channel data",
+  );
+
+  assert.ok(
+    map.source_inventory.some((e) => e.disposition === "deliberately_external_raw_transcripts_and_audits"),
+    "source_inventory must explicitly declare deliberately external raw transcripts and historical audits",
   );
 
   assert.ok(Array.isArray(map.consolidated_or_legacy_sources) && map.consolidated_or_legacy_sources.length >= 4);

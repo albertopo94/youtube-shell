@@ -133,6 +133,12 @@
       "disposition": "deliberately_external_office_or_channel_data",
       "consumed_what": "Vinculados dinámicamente en Capa 3 mediante detectWorkspaceLink() y /yts-link para consultar ideas vetadas, referentes, identidad visual y banco de títulos sin empaquetar datos privados del creador.",
       "excluded_what": "Datos vivos de canales, backlogs e ideas del creador: se mantienen deliberadamente fuera del paquete npm/pi para separar el motor reutilizable del contenido privado de la oficina."
+    },
+    {
+      "upstream_path": "_framework/referencias/* (transcripciones brutas, auditorías y notas de creador)",
+      "disposition": "deliberately_external_raw_transcripts_and_audits",
+      "consumed_what": "Los aprendizajes metodológicos y técnicos destilados de las transcripciones (Masterclass 2025: R.A.I.N.Y., Frame Zero, 3 B's, 18%; MrBeast: desapego 10/10, A/B macrocambios; Zack D. Films: identidad sonora, microplanos; Hell Grind / Flick: asset-first, escalera de 5 niveles, foley compuesto) incorporados a las skills de rol.",
+      "excluded_what": "Cientos de kilobytes de transcripciones literales de audio en inglés y notas históricas de sesiones pasadas: se conservan deliberadamente en el repositorio maestro albertopo94/youtube como evidencia de procedencia para no sobrecargar el contexto del modelo con material no operativo."
     }
   ],
   "consolidated_or_legacy_sources": [
@@ -780,8 +786,8 @@
         "required_evidence": "aceptacion.json aprobado criptográficamente en .youtube-shell/registro.json y reporte PASS (o WARN reconocido) de master_measurement sobre el archivo master."
       },
       "verification_scope": {
-        "deterministic_in_runtime": "Verifica la firma SHA-256 de /yts-approve-sheet previa al render y mide contenedor, resolución, fps, duración, sonoridad LUFS, true peak dBTP, silencios, negros y ritmo de cortes con ffprobe/ffmpeg.",
-        "editorial_or_human_review": "Visionado final del master por el creador para confirmar impacto visual, inteligibilidad emocional y acabado artístico."
+        "deterministic_in_runtime": "Verifica la firma SHA-256 de /yts-approve-sheet previa al render y mide con ffprobe/ffmpeg: contenedor, resolución, fps, duración, sonoridad LUFS, true peak dBTP, silencios máximos, frames negros y cadencia promedio de corte (maxAverageShotSec).",
+        "editorial_or_human_review": "El creador audita plano por plano en la tabla de escenas de 03-storyboard-y-edicion.md que ningún plano estático supere 5s sin dinamismo (salvo excepciones creativas justificadas), y visiona el master final para confirmar impacto visual, inteligibilidad y acabado artístico."
       }
     },
     {

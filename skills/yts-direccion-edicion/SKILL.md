@@ -78,6 +78,23 @@ El agente y el creador seleccionan el flujo en `00-estado-produccion.md` antes d
 - **[VID-IA-005] Hojas de Localización Multicámara Reutilizables:** set maestro del entorno con 4 a 5 tiros de cámara estandarizados archivados en `04-registro-recursos.md`.
 - **[VID-IA-006] Sintaxis de Etiquetado Explícito (`@tagging`):** en prompts multi-personaje (`[Sujeto: @Ref_P1]...`) para evitar alucinaciones cruzadas.
 
+### Las 3 C del Montaje Visual (Content, Clarity, Continuity)
+- **1. Content (Filtro Anti-Decoración):** todo recurso visual (gráfico, infografía, clip de B-roll) debe **demostrar o clarificar** una idea, jamás rellenar tiempo de pantalla. Eliminar memes hiper-rápidos que deshumanicen el relato; priorizar demostraciones con propósito.
+- **2. Clarity (Punto Focal y Separación):** punto focal evidente en cada plano; crear separación nítida entre sujeto y fondo mediante contraste o desenfoque; aplicar **atenuación selectiva (*spotlight / focal dimming*)** oscureciendo el resto del cuadro ante documentos o interfaces complejas.
+- **3. Continuity (Continuidad y Ritmo):** cortes rectos limpios, J-Cuts / L-Cuts de 0.5 a 1 s para enlazar diálogo, cortes en barridos rápidos (*whip pan / motion masking*) para ocultar costuras entre tomas de acción IA, y eliminación de saltos focales bruscos.
+
+### Caja de Herramientas de Tensión Cinematográfica y Emoción (Hitchcock & Cundey)
+- *Espacio de Acecho (Lurking Space):* iluminar al sujeto dejando zonas perimetrales de penumbra donde el cerebro asume que algo puede ocultarse.
+- *La Bomba bajo la Mesa (Hitchcock):* revelar una amenaza o dato inquietante a la audiencia antes de que los personajes lo descubran.
+- *Mirada Fuera de Cuadro (Off-Screen Gaze):* cortar mientras el sujeto mira fijamente hacia afuera del encuadre para abrir un bucle de curiosidad urgente.
+- *Salto Abrupto de Escala:* pasar repentinamente de plano medio a primerísimo plano en momentos de revelación.
+- *Rima Visual con Variación Atmosférica:* repetir una micro-acción física en 3 momentos clave alterando la luz, el clima y el encuadre para narrar el arco emocional sin palabras.
+
+### Autenticidad Física, Vestimenta A-Roll y Frame Zero en Shorts
+- **Autenticidad Física:** ante cinemáticas digitales excesivamente pulidas que enfrían la narrativa, priorizar demostraciones físicas y analógicas tangibles (objetos reales, notas manuscritas, recortes sobre una mesa).
+- **Vestimenta Temática en A-Roll:** en canales con presentador a cámara, utilizar atuendos alineados con el universo temático del video para elevar el valor de producción percibido.
+- **Técnica Frame Zero para Shorts:** diseñar el fotograma del milisegundo cero con alto contraste, punto focal centrado y gancho visual inmediato para detener el scroll del espectador antes de que empiece la reproducción activa.
+
 ### Técnicas de Render, Textura y Economía de Créditos
 - **Regla de Tres Pasos contra Desperdicio:** comprobar imagen fija antes de animar, previsualizar en modo económico y planificar el corte exacto antes de renderizar.
 - **[VID-IA-009] Borradores en 480p:** correr tandas de prueba en baja resolución / borrador antes de escalar o renderizar la toma definitiva en 1080p.

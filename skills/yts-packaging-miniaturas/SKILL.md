@@ -28,6 +28,22 @@ license: MIT
 
 > **Gobernanza:** Las siguientes técnicas son heurísticas contrastadas de packaging. Se catalogan como **`[RECOMENDADA]`** conforme a `_framework/gobernanza-evidencia.md` y `_framework/registro-tecnicas.md`.
 
+### Los 5 Arquetipos de Curiosidad de Miniatura (Mecanismos Psicológicos)
+Al diseñar los conceptos de miniatura, emparejar el visual con el arquetipo que mejor explote la brecha de curiosidad de la historia:
+1. **Moment Thumbnail:** Captura el fotograma exacto congelado inmediatamente antes de una reacción o evento de alto impacto físico o emocional (tensión inminente).
+2. **Story Thumbnail:** Plantea una narrativa visual incompleta que dispara de inmediato la pregunta *"¿Qué pasa después?"*, preparando el primer acto del relato.
+3. **Result Thumbnail:** Muestra un resultado final asombroso o deseable (producto físico terminado, cifra, destreza); abre la brecha: *"¿Cómo lo hicieron?"* y *"¿Cómo puedo lograrlo yo?"*.
+4. **Transformation Thumbnail:** Yuxtapone el estado inicial con el resultado deseado; cuanto más identificable sea el punto de partida, mayor es la fascinación por el proceso.
+5. **Novelty Thumbnail:** Apela al impulso natural de presenciar algo nunca antes visto: belleza/escala monumental de asombro o anomalía inesperada que desafía la lógica habitual.
+
+### Procedimiento de Investigación Previa de Referencias Visuales
+Antes de diseñar los 3 conceptos candidatos:
+1. *Búsqueda en Incógnito:* Inspeccionar las miniaturas de los 10 videos más vistos del tema para no repetir la misma composición genérica ni paletas saturadas.
+2. *Google Imágenes Handoff:* Usar la plantilla parametrizada del framework para localizar imágenes en alta resolución del sujeto o locación.
+3. *Estudio de referentes sin herramientas de pago:* Si el creador dispone de Viewstats o similares, aprovecharlas para explorar cómo resuelven otros creadores el punto focal, **sin depender jamás de servicios de pago**.
+4. *Detenedores de Desplazamiento (Scroll Stoppers):* Evaluar si la pieza aprovecha elementos de detención visual (rostros con emoción clara, números grandes redondos, contrastes de escala, símbolos de valor o movimiento) sin abusar de todos a la vez.
+
+### Estrategias de Validación y Optimización
 - **[PACK-001] Estrategia A/B en Dos Tiempos:** probar Macrocambios conceptuales (Fase 1: ángulo, fondo o premisa radicalmente distinta) antes de entrar en micro-variaciones (Fase 2); respetar la ley de rendimientos decrecientes y no obsesionarse con micro-detalles.
 - **[PACK-002] Regla de Reducción al 18% y Límite de 3 Elementos Focales (MKBHD):**
   - Componer la miniatura con un **máximo de 3 elementos focales** (sujeto, objeto de tensión y texto/fondo limpio).

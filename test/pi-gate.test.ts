@@ -206,6 +206,15 @@ function setupTempVideo(t: { after: (fn: () => void) => void }) {
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const videoDir = join(root, "01-video");
   cpSync(TEMPLATES, videoDir, { recursive: true });
+  const guionPath = join(videoDir, "02-guion.md");
+  if (existsSync(guionPath)) {
+    const orig = readFileSync(guionPath, "utf8");
+    writeFileSync(
+      guionPath,
+      orig.replace("[ ] **No requiere declaración:**", "[x] **No requiere declaración:**"),
+      "utf8",
+    );
+  }
   return { root, videoDir };
 }
 

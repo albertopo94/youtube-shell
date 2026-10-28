@@ -297,6 +297,24 @@ function checkScriptAndStoryboard(videoDir: string): {
       },
     };
   }
+  if (
+    /Declaración de Contenido Sintético/i.test(guionText) &&
+    !/\[x\]\s*\*?\*?\s*(No requiere declaración|Revisar y declarar en Studio)/i.test(guionText)
+  ) {
+    return {
+      scriptIds: {
+        id: "script_block_ids",
+        result: "FAIL",
+        details:
+          "02-guion.md debe resolver la Declaración de Contenido Sintético / IA marcando una opción ([x] No requiere declaración o [x] Revisar y declarar en Studio).",
+      },
+      crossCheck: {
+        id: "script_storyboard_ids",
+        result: "NOT_EVALUABLE",
+        details: "02-guion.md no supera el control editorial: declaración de contenido sintético pendiente.",
+      },
+    };
+  }
   if (blocks.length === 0 || blocks.some((b) => !b.timecode)) {
     return {
       scriptIds: {

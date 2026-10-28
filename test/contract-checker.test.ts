@@ -453,3 +453,34 @@ test("f11: invalid operational strength in registro-tecnicas.md fails techniques
   assert.equal(check.result, "FAIL");
   assert.match(check.details ?? "", /fuerza operativa inválida/);
 });
+
+test("unresolved Declaración de Contenido Sintético in 02-guion.md fails script_block_ids", (t) => {
+  const { videoDir } = makeValidFixture(t);
+  const guionText = [
+    "# 02 Guion",
+    "## 1. Puerta de Control Editorial y Monetización (Obligatorio)",
+    "- [x] Aportación Original",
+    "- [ ] **Declaración de Contenido Sintético / IA (YouTube Policy):**",
+    "  - [ ] **No requiere declaración:** Animación o estilo ficticio.",
+    "  - [ ] **Revisar y declarar en Studio cuando corresponda:** Muestra personas reales.",
+    "## 2. Guion Maestro Estructurado por Bloques Atómicos (IDs Estables)",
+    "### [B01_Gancho] — Bloque uno",
+    "- **Tiempo estimado:** `00:00 - 00:15`",
+    "### [B02_Cuerpo] — Bloque dos",
+    "- **Tiempo estimado:** `00:15 - 01:00`",
+  ].join("\n");
+
+  writeFileSync(join(videoDir, "02-guion.md"), guionText, "utf8");
+  const report = checkVideoContract(videoDir);
+  assert.equal(report.result, "FAIL");
+  const check = report.checks.find((c) => c.id === "script_block_ids")!;
+  assert.equal(check.result, "FAIL");
+  assert.match(check.details ?? "", /Declaración de Contenido Sintético/i);
+
+  // When resolved by checking one box, it passes
+  const resolvedGuionText = guionText.replace("[ ] **No requiere declaración:**", "[x] **No requiere declaración:**");
+  writeFileSync(join(videoDir, "02-guion.md"), resolvedGuionText, "utf8");
+  const reportResolved = checkVideoContract(videoDir);
+  const checkResolved = reportResolved.checks.find((c) => c.id === "script_block_ids")!;
+  assert.equal(checkResolved.result, "PASS");
+});
