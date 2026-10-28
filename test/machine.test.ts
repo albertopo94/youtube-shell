@@ -359,3 +359,35 @@ test("production modes adapt required evidence in P05_ANIMATIC (screen_first, sp
   const aliasRes = submitPhase(regAlias, "P05_ANIMATIC", { checks: [], evidence: [{ role: "action_draft", path: "draft.mp4" }] }, ctx(projectAlias));
   ok(aliasRes);
 });
+
+test("submitting P05_ANIMATIC fails when mode is unselected or ambiguous in 00-estado-produccion.md", () => {
+  // 1. Unselected mode in P05_ANIMATIC
+  const pUnselected = new FakeProject();
+  let rUnselected = approveThrough(pUnselected, "P04_FACTCHECK");
+  pUnselected.fill("P05_ANIMATIC");
+  delete (rUnselected as any).productionMode;
+  pUnselected.files.set(
+    "00-estado-produccion.md",
+    "- **Flujo Audiovisual seleccionado:** `[ ] Audio-First` / `[ ] Screen-First` / `[ ] Speaker-First` / `[ ] Music-First`",
+  );
+  rUnselected = ok(startPhase(rUnselected, "P05_ANIMATIC", ctx(pUnselected)));
+  denied(
+    submitPhase(rUnselected, "P05_ANIMATIC", { checks: [], evidence: [{ role: "scratch_track", path: "exports/scratch_track.bin" }] }, ctx(pUnselected)),
+    /No se ha seleccionado ningún Flujo Audiovisual/i,
+  );
+
+  // 2. Ambiguous mode (multiple selected)
+  const pAmbiguous = new FakeProject();
+  let rAmbiguous = approveThrough(pAmbiguous, "P04_FACTCHECK");
+  pAmbiguous.fill("P05_ANIMATIC");
+  delete (rAmbiguous as any).productionMode;
+  pAmbiguous.files.set(
+    "00-estado-produccion.md",
+    "- **Flujo Audiovisual seleccionado:** `[x] Audio-First` / `[x] Screen-First` / `[ ] Speaker-First` / `[ ] Music-First`",
+  );
+  rAmbiguous = ok(startPhase(rAmbiguous, "P05_ANIMATIC", ctx(pAmbiguous)));
+  denied(
+    submitPhase(rAmbiguous, "P05_ANIMATIC", { checks: [], evidence: [{ role: "scratch_track", path: "exports/scratch_track.bin" }] }, ctx(pAmbiguous)),
+    /Selección ambigua en 00-estado-produccion\.md/i,
+  );
+});

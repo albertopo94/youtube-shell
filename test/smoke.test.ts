@@ -79,6 +79,12 @@ test("end-to-end smoke test: /yts-init scaffolds a blank folder and 7 phases run
   );
 
   // P01_PACKAGING
+  const origStatus = readFileSync(join(videoDir, "00-estado-produccion.md"), "utf8");
+  writeFileSync(
+    join(videoDir, "00-estado-produccion.md"),
+    origStatus.replace("[ ] Audio-First", "[x] Audio-First"),
+    "utf8",
+  );
   await callTool("yts_transition", { action: "start", phase: "P01_PACKAGING" });
   assert.match(readFileSync(join(videoDir, "00-estado-produccion.md"), "utf8"), /\*\*Estado actual:\*\*\s*`EN_CURSO`/);
   await callTool("yts_transition", { action: "submit", phase: "P01_PACKAGING" });

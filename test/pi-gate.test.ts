@@ -1046,6 +1046,22 @@ test("corrupt or invalid framework techniques registry fails closed and blocks t
   const writeBlock = await h.invokeTool("write", { path: "01-packaging.md", content: "hack" });
   assert.equal(writeBlock.blocked, true);
   assert.match(writeBlock.reason, /integridad del framework ha fallado/);
+
+  // 4. Human command /yts-approve is blocked by framework integrity
+  await h.invokeCommand("yts-approve", "P01_PACKAGING");
+  assert.ok(
+    h.notifications.some(
+      (n) => n.level === "error" && n.message.includes("la integridad del framework ha fallado"),
+    ),
+  );
+
+  // 5. Human command /yts-approve-sheet is blocked by framework integrity
+  await h.invokeCommand("yts-approve-sheet", "aceptacion.json");
+  assert.ok(
+    h.notifications.some(
+      (n) => n.level === "error" && n.message.includes("la integridad del framework ha fallado"),
+    ),
+  );
 });
 
 

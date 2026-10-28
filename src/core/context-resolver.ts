@@ -1,7 +1,7 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
 import type { Evaluation } from "./machine.ts";
-import { getPhase, type PhaseDefinition } from "./phases.ts";
+import { detectProductionMode, getPhase, getPhaseEvidence, type PhaseDefinition } from "./phases.ts";
 import { PREAMBLE } from "./sections.ts";
 import type { PhaseId, ProductionMode, Registry, WorkspaceLink } from "./types.ts";
 
@@ -318,7 +318,16 @@ export function resolveLayer3References(
     return { name, path: full, exists: existsSync(full) };
   });
 
-  const productionMode: ProductionMode = reg?.productionMode ?? "audio_first";
+  let productionMode: ProductionMode = reg?.productionMode ?? "audio_first";
+  const statusPath = join(videoDir, "00-estado-produccion.md");
+  if (existsSync(statusPath)) {
+    try {
+      const det = detectProductionMode(readFileSync(statusPath, "utf8"));
+      if (det.ok) {
+        productionMode = det.mode;
+      }
+    } catch {}
+  }
 
   let link = reg?.workspaceLink;
   if (!link) {
@@ -395,6 +404,58 @@ function formatEditableTargets(phaseDef: PhaseDefinition): string[] {
   return list;
 }
 
+function adaptPlaybookForMode(playbook: PhasePlaybook, mode: ProductionMode): PhasePlaybook {
+  if (playbook.phase !== "P05_ANIMATIC") {
+    return playbook;
+  }
+  if (mode === "screen_first") {
+    return {
+      ...playbook,
+      summary:
+        "Anclajes de consistencia visual, montaje preliminar en 03-storyboard-y-edicion.md (§§1-2) y captura de pantalla / acción (screen_recording).",
+      requiredDeliverableEvidence:
+        "Secciones §1 Consistencia Visual y §2 Fase 1: Montaje Preliminar completas en 03-storyboard-y-edicion.md más archivo de video/captura declarado en evidence(screen_recording).",
+      verificationBoundary: {
+        runtimeDeterministic:
+          "El runtime exige que exista el archivo de captura screen_recording dentro de la carpeta del video y sella las huellas SHA-256 de §§1-2 de 03-storyboard-y-edicion.md.",
+        humanEditorial:
+          "El creador revisa la captura de pantalla o demo preliminar para validar ritmo de interacción antes de /yts-approve P05_ANIMATIC.",
+      },
+    };
+  }
+  if (mode === "speaker_first") {
+    return {
+      ...playbook,
+      summary:
+        "Anclajes de consistencia visual, montaje preliminar en 03-storyboard-y-edicion.md (§§1-2) y toma A-roll de presentador (speaker_track).",
+      requiredDeliverableEvidence:
+        "Secciones §1 Consistencia Visual y §2 Fase 1: Montaje Preliminar completas en 03-storyboard-y-edicion.md más archivo de toma/cámara declarado en evidence(speaker_track).",
+      verificationBoundary: {
+        runtimeDeterministic:
+          "El runtime exige que exista el archivo speaker_track dentro de la carpeta del video y sella las huellas SHA-256 de §§1-2 de 03-storyboard-y-edicion.md.",
+        humanEditorial:
+          "El creador valida la toma base del presentador antes de /yts-approve P05_ANIMATIC.",
+      },
+    };
+  }
+  if (mode === "music_first") {
+    return {
+      ...playbook,
+      summary:
+        "Anclajes de consistencia visual, montaje preliminar en 03-storyboard-y-edicion.md (§§1-2) y pista musical guía (music_bed).",
+      requiredDeliverableEvidence:
+        "Secciones §1 Consistencia Visual y §2 Fase 1: Montaje Preliminar completas en 03-storyboard-y-edicion.md más pista musical declarada en evidence(music_bed).",
+      verificationBoundary: {
+        runtimeDeterministic:
+          "El runtime exige que exista la pista musical music_bed dentro de la carpeta del video y sella las huellas SHA-256 de §§1-2 de 03-storyboard-y-edicion.md.",
+        humanEditorial:
+          "El creador valida la cadencia y atmósfera musical del animatic antes de /yts-approve P05_ANIMATIC.",
+      },
+    };
+  }
+  return playbook;
+}
+
 export function resolveWorkflowContext(options: {
   videoDir: string;
   promptText?: string;
@@ -406,9 +467,9 @@ export function resolveWorkflowContext(options: {
   const workMode = classifyWorkMode(options.promptText ?? "", hasRegistry);
   const targetPhase = selectTargetPhase(options.evaluation);
   const phaseDefinition = getPhase(targetPhase);
-  const playbook = PHASE_PLAYBOOKS[targetPhase];
   const editableTargets = formatEditableTargets(phaseDefinition);
   const layer3 = resolveLayer3References(options.videoDir, options.reg, targetPhase);
+  const playbook = adaptPlaybookForMode(PHASE_PLAYBOOKS[targetPhase], layer3.productionMode);
   const hasAcceptanceSheetApproval = Boolean(options.reg as Record<string, unknown>) &&
     Boolean((options.reg as unknown as { acceptanceSheetApproval?: unknown }).acceptanceSheetApproval);
 
@@ -439,9 +500,10 @@ export function buildThreeLayerPrompt(resolved: ResolvedWorkflowContext): string
       ? resolved.phaseDefinition.checks.join(", ")
       : "ninguno (validación documental y aprobación humana)";
 
+  const phaseEvidence = getPhaseEvidence(resolved.targetPhase, resolved.layer3.productionMode);
   const evidenceLabel =
-    resolved.phaseDefinition.evidence.length > 0
-      ? resolved.phaseDefinition.evidence.map((e) => `${e.role} (${e.description})`).join(", ")
+    phaseEvidence.length > 0
+      ? phaseEvidence.map((e) => `${e.role} (${e.description})`).join(", ")
       : "ninguna evidencia binaria adicional";
 
   const linkLines: string[] = [];

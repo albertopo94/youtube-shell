@@ -978,6 +978,15 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
           return;
         }
 
+        const integrity = getFrameworkIntegrity();
+        if (integrity.result === "FAIL") {
+          ctx.ui.notify(
+            `Aprobación bloqueada: la integridad del framework ha fallado (${integrity.checks[0]?.details ?? "técnicas inválidas"}).`,
+            "error",
+          );
+          return;
+        }
+
         const nowIso = nowFn();
         const reader = createFsReader(ctx.cwd);
         const reg = loadRegistry(ctx.cwd, { videoId: basename(ctx.cwd), now: nowIso });
@@ -1099,6 +1108,15 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
           throw new Error(
             "Aprobación denegada: /yts-approve-sheet requiere interfaz interactiva (hasUI=true).",
           );
+        }
+
+        const integrity = getFrameworkIntegrity();
+        if (integrity.result === "FAIL") {
+          ctx.ui.notify(
+            `Aprobación bloqueada: la integridad del framework ha fallado (${integrity.checks[0]?.details ?? "técnicas inválidas"}).`,
+            "error",
+          );
+          return;
         }
         const sheetRel = args.trim() || "aceptacion.json";
         const safe = isSafeEvidencePath(sheetRel);

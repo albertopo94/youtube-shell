@@ -44,26 +44,52 @@ export const P05_EVIDENCE_BY_MODE: Record<ProductionMode, EvidenceRoleDefinition
   },
 };
 
-export function detectProductionMode(content: string): ProductionMode {
+export type DetectionResult =
+  | { ok: true; mode: ProductionMode }
+  | { ok: false; kind: "unselected" | "ambiguous" | "invalid"; reason: string };
+
+export function detectProductionMode(content: string): DetectionResult {
   const match = /Flujo Audiovisual seleccionado:\*\*\s*(.+)$/im.exec(content);
   if (match) {
     const line = match[1];
-    if (/\[x\]\s*(Screen-First|Action-First)/i.test(line)) return "screen_first";
-    if (/\[x\]\s*(Speaker-First|A-Roll)/i.test(line)) return "speaker_first";
-    if (/\[x\]\s*(Music-First|Ambient)/i.test(line)) return "music_first";
-    if (/\[x\]\s*Audio-First/i.test(line)) return "audio_first";
+    const selected: ProductionMode[] = [];
+    if (/\[x\]\s*Audio-First/i.test(line)) selected.push("audio_first");
+    if (/\[x\]\s*(Screen-First|Action-First)/i.test(line)) selected.push("screen_first");
+    if (/\[x\]\s*(Speaker-First|A-Roll)/i.test(line)) selected.push("speaker_first");
+    if (/\[x\]\s*(Music-First|Ambient)/i.test(line)) selected.push("music_first");
+
+    if (selected.length > 1) {
+      return {
+        ok: false,
+        kind: "ambiguous",
+        reason: `Selección ambigua en 00-estado-produccion.md: se han marcado ${selected.length} flujos simultáneos (${selected.join(", ")}). Debe seleccionarse exactamente uno.`,
+      };
+    }
+    if (selected.length === 1) {
+      return { ok: true, mode: selected[0] };
+    }
   }
 
   const directMatch = /\*\*(Modo de producci[oó]n|Flujo audiovisual):\*\*\s*`?([A-Za-z_-]+)`?/i.exec(content);
   if (directMatch) {
     const val = directMatch[2].toLowerCase();
-    if (val.includes("screen") || val.includes("action")) return "screen_first";
-    if (val.includes("speaker") || val.includes("roll")) return "speaker_first";
-    if (val.includes("music") || val.includes("ambient")) return "music_first";
-    if (val.includes("audio")) return "audio_first";
+    if (val.includes("screen") || val.includes("action")) return { ok: true, mode: "screen_first" };
+    if (val.includes("speaker") || val.includes("roll")) return { ok: true, mode: "speaker_first" };
+    if (val.includes("music") || val.includes("ambient")) return { ok: true, mode: "music_first" };
+    if (val.includes("audio")) return { ok: true, mode: "audio_first" };
+    return {
+      ok: false,
+      kind: "invalid",
+      reason: `Modo de producción no reconocido: "${directMatch[2]}". Valores válidos: Audio-First, Screen-First, Speaker-First, Music-First.`,
+    };
   }
 
-  return "audio_first";
+  return {
+    ok: false,
+    kind: "unselected",
+    reason:
+      "No se ha seleccionado ningún Flujo Audiovisual en 00-estado-produccion.md. Debe marcar exactamente uno: [x] Audio-First / [ ] Screen-First / [ ] Speaker-First / [ ] Music-First.",
+  };
 }
 
 export function getPhaseEvidence(

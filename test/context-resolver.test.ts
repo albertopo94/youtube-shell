@@ -201,3 +201,59 @@ test("/yts-link command links an isolated video folder to an office and channel 
   assert.match(out.systemPrompt, /Ruta de solo lectura/);
   assert.match(out.systemPrompt, new RegExp(officeDir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 });
+
+test("buildThreeLayerPrompt adapts P05_ANIMATIC evidence to the active production mode (Screen-First)", (t) => {
+  const tmp = mkdtempSync(join(tmpdir(), "yts-ctx-mode-"));
+  t.after(() => rmSync(tmp, { recursive: true, force: true }));
+  const videoDir = join(tmp, "01-video");
+  cpSync(TEMPLATES, videoDir, { recursive: true });
+
+  // Mark Screen-First in 00-estado-produccion.md
+  const statusFile = join(videoDir, "00-estado-produccion.md");
+  const orig = readFileSync(statusFile, "utf8");
+  writeFileSync(
+    statusFile,
+    orig.replace(
+      "- **Flujo Audiovisual seleccionado:** `[ ] Audio-First` / `[ ] Screen-First` / `[ ] Speaker-First` / `[ ] Music-First`",
+      "- **Flujo Audiovisual seleccionado:** `[ ] Audio-First` / `[x] Screen-First` / `[ ] Speaker-First` / `[ ] Music-First`",
+    ),
+    "utf8",
+  );
+
+  const reader = createFsReader(videoDir);
+  let reg = createRegistry("01-video", "2026-10-24T10:00:00Z");
+  // Set P05 as active
+  reg.phases.P01_PACKAGING.status = "APROBADO";
+  reg.phases.P01_PACKAGING.approvals = [{
+    actor: { kind: "creator", channel: "test" },
+    approvedAt: "2026-10-24T10:01:00Z",
+    contractVersion: 1,
+    artifacts: [],
+    checks: [],
+    acknowledgedWarnings: [],
+  }];
+  reg.phases.P02_RESEARCH.status = "APROBADO";
+  reg.phases.P02_RESEARCH.approvals = [reg.phases.P01_PACKAGING.approvals[0]];
+  reg.phases.P03_SCRIPT.status = "APROBADO";
+  reg.phases.P03_SCRIPT.approvals = [reg.phases.P01_PACKAGING.approvals[0]];
+  reg.phases.P04_FACTCHECK.status = "APROBADO";
+  reg.phases.P04_FACTCHECK.approvals = [reg.phases.P01_PACKAGING.approvals[0]];
+  reg.phases.P05_ANIMATIC.status = "EN_CURSO";
+
+  const ev = evaluate(reg, reader);
+  const resolved = resolveWorkflowContext({
+    videoDir,
+    promptText: "montar animatic de pantalla",
+    reg,
+    evaluation: ev,
+    hasRegistry: true,
+  });
+
+  assert.equal(resolved.targetPhase, "P05_ANIMATIC");
+  assert.equal(resolved.layer3.productionMode, "screen_first");
+
+  const prompt = buildThreeLayerPrompt(resolved);
+  assert.match(prompt, /Flujo audiovisual activo: Screen-First \/ Action-First/);
+  assert.match(prompt, /screen_recording/);
+  assert.equal(prompt.includes("scratch_track"), false, "Prompt for Screen-First must not demand scratch_track");
+});

@@ -238,26 +238,48 @@ export function submitPhase(reg: Registry, id: PhaseId, input: SubmitInput, ctx:
     }
   }
 
-  let detectedMode: ProductionMode = "audio_first";
+  let mode: ProductionMode | undefined = reg.productionMode;
+  let detectionError: string | undefined;
+
   if (typeof ctx.reader.readContent === "function") {
     const text = ctx.reader.readContent("00-estado-produccion.md");
-    if (text) detectedMode = detectProductionMode(text);
+    if (text) {
+      const detected = detectProductionMode(text);
+      if (detected.ok) {
+        mode = detected.mode;
+      } else if (detected.kind === "ambiguous") {
+        return { ok: false, reasons: [detected.reason] };
+      } else {
+        detectionError = detected.reason;
+      }
+    }
   }
-  const mode = reg.productionMode ?? detectedMode;
 
-  const expectedEvidence = getPhaseEvidence(id, mode);
+  if (id === "P05_ANIMATIC" && !mode) {
+    return {
+      ok: false,
+      reasons: [
+        detectionError ??
+          "Para enviar P05_ANIMATIC a revisión debe seleccionarse exactamente un Flujo Audiovisual en 00-estado-produccion.md ([x] Audio-First / [ ] Screen-First / [ ] Speaker-First / [ ] Music-First).",
+      ],
+    };
+  }
+
+  const effectiveMode: ProductionMode = mode ?? "audio_first";
+
+  const expectedEvidence = getPhaseEvidence(id, effectiveMode);
   const seenPrimaryRoles = new Set<string>();
 
   for (const item of input.evidence) {
-    if (!isAllowedEvidenceRole(id, item.role, mode)) {
+    if (!isAllowedEvidenceRole(id, item.role, effectiveMode)) {
       reasons.push(
-        `Rol de evidencia no declarado en el contrato de ${id} para el modo ${mode}: "${item.role}".`,
+        `Rol de evidencia no declarado en el contrato de ${id} para el modo ${effectiveMode}: "${item.role}".`,
       );
       continue;
     }
 
     const primaryRole = id === "P05_ANIMATIC"
-      ? (P05_EVIDENCE_BY_MODE[mode]?.primaryRole ?? item.role)
+      ? (P05_EVIDENCE_BY_MODE[effectiveMode]?.primaryRole ?? item.role)
       : item.role;
 
     if (seenPrimaryRoles.has(primaryRole)) {
@@ -325,7 +347,7 @@ export function submitPhase(reg: Registry, id: PhaseId, input: SubmitInput, ctx:
   }
 
   const next = structuredClone(reg);
-  next.productionMode = mode;
+  next.productionMode = effectiveMode;
   next.phases[id].status = "PENDIENTE_APROBACION";
   next.phases[id].submission = {
     submittedAt: ctx.now,

@@ -29,7 +29,7 @@
     {
       "upstream_path": "_framework/roles/04-direccion-y-edicion.md",
       "disposition": "enforced_in_runtime",
-      "consumed_what": "Evidencia scratch_track en P05_ANIMATIC, verificador script_storyboard_ids, las 4 capas de pulido, arquitectura de audio adaptable al formato, aprobación criptográfica /yts-approve-sheet y medición ffprobe/ffmpeg del master.",
+      "consumed_what": "Evidencia adaptable por modo en P05_ANIMATIC (scratch_track para audio_first, screen_recording para screen_first, speaker_track para speaker_first, music_bed para music_first), verificador script_storyboard_ids, las 4 capas de pulido, arquitectura de audio adaptable al formato, aprobación criptográfica /yts-approve-sheet y medición ffprobe/ffmpeg del master.",
       "excluded_what": "Calidad estética subjetiva del etalonaje, acting vocal o diseño sonoro fino, evaluados por el creador en la revisión de animatic y master."
     },
     {
@@ -675,7 +675,7 @@
     },
     {
       "id": "ANI-01",
-      "title": "Evidencia obligatoria de locución provisional (scratch_track) y protección de secciones de animatic",
+      "title": "Evidencia obligatoria de animatic según modo de producción y protección de secciones",
       "source": {
         "file": "_framework/roles/04-direccion-y-edicion.md",
         "section": "§1 Fase 1: Animatic y Locución Provisional"
@@ -683,8 +683,8 @@
       "classification": "deterministic_gate",
       "phases": ["P05_ANIMATIC"],
       "skill": "yts-direccion-edicion",
-      "consumer": "src/core/phases.ts",
-      "enforcement": "P05_ANIMATIC.evidence(scratch_track) + verifyWriteTargetAndSharedSections",
+      "consumer": "src/core/machine.ts",
+      "enforcement": "P05_ANIMATIC.evidence(adaptable por modo) + verifyWriteTargetAndSharedSections",
       "tests": ["test/machine.test.ts", "test/smoke.test.ts"],
       "required_skill_terms": [
         "scratch_track",
@@ -695,11 +695,11 @@
         "level": "mandatory",
         "when": "Durante P05_ANIMATIC antes de generar o adquirir assets visuales definitivos.",
         "references": ["02-guion.md", "03-storyboard-y-edicion.md"],
-        "required_evidence": "Secciones §1 Consistencia Visual y §2 Montaje Preliminar completas en 03-storyboard-y-edicion.md más archivo de audio scratch_track existente y no vacío."
+        "required_evidence": "Secciones §1 Consistencia Visual y §2 Montaje Preliminar completas en 03-storyboard-y-edicion.md más archivo de evidencia correspondiente al modo activo (scratch_track, screen_recording, speaker_track o music_bed)."
       },
       "verification_scope": {
-        "deterministic_in_runtime": "Exige archivo de evidencia con rol scratch_track dentro de la carpeta del video y sella con SHA-256 las secciones §§1-2 de 03-storyboard-y-edicion.md.",
-        "editorial_or_human_review": "Escucha humana del scratch_track para validar entonación natural, cadencia y ausencia de baches narrativos."
+        "deterministic_in_runtime": "Exige archivo de evidencia declarado según el modo activo dentro de la carpeta del video y sella con SHA-256 las secciones §§1-2 de 03-storyboard-y-edicion.md.",
+        "editorial_or_human_review": "Revisión humana del animatic preliminar para validar ritmo, pausas y encuadre antes de /yts-approve P05_ANIMATIC."
       }
     },
     {
