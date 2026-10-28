@@ -647,6 +647,84 @@ test("FilmCraft MCP inventory is gated by phase and blocks unsafe engine command
   assert.equal(badBatchEscape.blocked, true);
 });
 
+test("EffectCraft and SoundCraft MCP inventories are gated by phase and block unsafe engine commands, path escapes, and markdown overwrites", async (t) => {
+  const { videoDir } = setupTempVideo(t);
+  const h = createPiHarness({ videoDir });
+
+  // 1. Read-only inspection is allowed in any phase
+  const inspectEffect = await h.invokeTool("describe_command", { id: "comp.new" });
+  assert.equal(inspectEffect.blocked, false);
+
+  const inspectSound = await h.invokeTool("inspect_session", {});
+  assert.equal(inspectSound.blocked, false);
+
+  // 2. Mutating operations are blocked during P01_PACKAGING
+  await h.invokeTool("yts_transition", { action: "start", phase: "P01_PACKAGING" });
+  const earlyEffect = await h.invokeTool("execute_command", { id: "comp.new", params: { name: "Intro" } });
+  assert.equal(earlyEffect.blocked, true);
+
+  const earlySound = await h.invokeTool("bounce_mix", { out: "mix.wav" });
+  assert.equal(earlySound.blocked, true);
+
+  // Advance to P05_ANIMATIC
+  await h.invokeTool("yts_transition", { action: "submit", phase: "P01_PACKAGING" });
+  await h.invokeCommand("yts-approve", "P01_PACKAGING");
+  await h.invokeTool("yts_transition", { action: "start", phase: "P02_RESEARCH" });
+  await h.invokeTool("yts_transition", { action: "submit", phase: "P02_RESEARCH" });
+  await h.invokeCommand("yts-approve", "P02_RESEARCH");
+  await h.invokeTool("yts_transition", { action: "start", phase: "P03_SCRIPT" });
+  await h.invokeTool("yts_transition", { action: "submit", phase: "P03_SCRIPT" });
+  await h.invokeCommand("yts-approve", "P03_SCRIPT");
+  await h.invokeTool("yts_transition", { action: "start", phase: "P04_FACTCHECK" });
+  resolveFactcheckOnDisk(videoDir);
+  await h.invokeTool("yts_transition", { action: "submit", phase: "P04_FACTCHECK" });
+  await h.invokeCommand("yts-approve", "P04_FACTCHECK");
+  await h.invokeTool("yts_transition", { action: "start", phase: "P05_ANIMATIC" });
+
+  // 3. In P05_ANIMATIC: EffectCraft motion graphics is allowed, SoundCraft mixing is still blocked
+  const animaticEffect = await h.invokeTool("execute_command", { id: "comp.new", params: { name: "Plates" } });
+  assert.equal(animaticEffect.blocked, false);
+
+  const animaticSound = await h.invokeTool("bounce_mix", { out: "stems.wav" });
+  assert.equal(animaticSound.blocked, true, "SoundCraft mixing must stay blocked until P06_ASSEMBLY");
+
+  // Advance to P06_ASSEMBLY
+  writeFileSync(join(videoDir, "scratch.wav"), "RIFF-scratch", "utf8");
+  await h.invokeTool("yts_transition", {
+    action: "submit",
+    phase: "P05_ANIMATIC",
+    evidence: [{ role: "scratch_track", path: "scratch.wav" }],
+  });
+  await h.invokeCommand("yts-approve", "P05_ANIMATIC");
+  await h.invokeTool("yts_transition", { action: "start", phase: "P06_ASSEMBLY" });
+
+  // 4. In P06_ASSEMBLY: Both are allowed with safe parameters
+  const assemblyEffect = await h.invokeTool("save_project", { path: "animatic.ecproj" });
+  assert.equal(assemblyEffect.blocked, false);
+
+  const assemblySound = await h.invokeTool("bounce_mix", { out: "master_audio.wav" });
+  assert.equal(assemblySound.blocked, false);
+
+  // 5. Unsafe commands, Markdown overwrites and path escapes are blocked
+  const badEffectCmd = await h.invokeTool("execute_command", { id: "prefs.reset" });
+  assert.equal(badEffectCmd.blocked, true);
+
+  const badSoundCmd = await h.invokeTool("execute", { cmd: "app.quit" });
+  assert.equal(badSoundCmd.blocked, true);
+
+  const badEffectOverwrite = await h.invokeTool("save_project", { path: "02-guion.md" });
+  assert.equal(badEffectOverwrite.blocked, true);
+
+  const badSoundOverwrite = await h.invokeTool("bounce_mix", { out: "03-storyboard-y-edicion.md" });
+  assert.equal(badSoundOverwrite.blocked, true);
+
+  const badEffectEscape = await h.invokeTool("open_project", { path: "../outside.ecproj" });
+  assert.equal(badEffectEscape.blocked, true);
+
+  const badSoundEscape = await h.invokeTool("save_session", { path: "../outside.scraft" });
+  assert.equal(badSoundEscape.blocked, true);
+});
+
 test("renderStartupPanel renders wide and narrow studio panels and session_start + /yts-status refresh UI", async (t) => {
   const { videoDir } = setupTempVideo(t);
   const h = createPiHarness({ videoDir });

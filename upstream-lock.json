@@ -193,6 +193,62 @@
         "ctx.ui.setStatus",
         "ctx.ui.setTitle"
       ]
+    },
+    "filmcraft": {
+      "repo": "https://github.com/storytold/filmcraft",
+      "binary": "filmcraft-cli",
+      "role": "Media engine: non-linear timeline assembly and render (P05_ANIMATIC / P06_ASSEMBLY)",
+      "reviewed": {
+        "version": "0.9.0",
+        "tag": "v0.9.0",
+        "commit": "4a69a038d32761f604b3c7e4845b21fb40b3cbe4",
+        "committed_at": "2026-10-18T01:43:10Z",
+        "reviewed_on": "2026-10-28",
+        "evidence": "local binary filmcraft-cli 0.9.0, 17 MCP tools cataloged"
+      },
+      "affects_us": [
+        "Cargo.toml",
+        "crates/automation/",
+        "crates/engine/",
+        "crates/render/"
+      ]
+    },
+    "effectcraft": {
+      "repo": "https://github.com/storytold/effectcraft",
+      "binary": "effectcraft-cli",
+      "role": "Media engine: motion graphics, overlays and kinetic text render (P06_ASSEMBLY)",
+      "reviewed": {
+        "version": "0.11.1",
+        "tag": "v0.11.1",
+        "commit": "2a01226894c6bc58ae4fadcc24a10198d693acaa",
+        "committed_at": "2026-10-17T23:03:26Z",
+        "reviewed_on": "2026-10-28",
+        "evidence": "local binary effectcraft-cli 0.11.1, 27 MCP tools cataloged"
+      },
+      "affects_us": [
+        "Cargo.toml",
+        "crates/automation/",
+        "crates/engine/",
+        "crates/render/"
+      ]
+    },
+    "soundcraft": {
+      "repo": "https://github.com/storytold/soundcraft",
+      "binary": "soundcraft-cli",
+      "role": "Media engine: multi-track audio mixing and stems bounce (P06_ASSEMBLY, experimental)",
+      "reviewed": {
+        "version": "0.8.0",
+        "tag": "v0.8.0",
+        "commit": "2578ea69a388395ddadb6394d7b4ab40f21aa670",
+        "committed_at": "2026-10-17T21:16:15Z",
+        "reviewed_on": "2026-10-28",
+        "evidence": "local binary soundcraft-cli 0.8.0, 17 MCP tools cataloged"
+      },
+      "affects_us": [
+        "Cargo.toml",
+        "crates/automation/",
+        "crates/engine/"
+      ]
     }
   }
 }

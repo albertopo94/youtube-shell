@@ -11,10 +11,23 @@ import { join } from "node:path";
 const ROOT = join(import.meta.dirname, "..");
 const lock = JSON.parse(readFileSync(join(ROOT, "upstream-lock.json"), "utf8"));
 
+let authToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+if (!authToken) {
+  try {
+    const { execFileSync } = await import("node:child_process");
+    authToken = execFileSync("gh", ["auth", "token"], { encoding: "utf8", stdio: ["pipe", "pipe", "ignore"] }).trim();
+  } catch {}
+}
+
 async function gh(path) {
-  const res = await fetch(`https://api.github.com${path}`, {
-    headers: { Accept: "application/vnd.github+json", "User-Agent": "youtube-shell-upstreams-check" },
-  });
+  const headers = {
+    Accept: "application/vnd.github+json",
+    "User-Agent": "youtube-shell-upstreams-check",
+  };
+  if (authToken) {
+    headers.Authorization = `Bearer ${authToken}`;
+  }
+  const res = await fetch(`https://api.github.com${path}`, { headers });
   if (!res.ok) throw new Error(`GitHub API ${res.status} on ${path}`);
   return res.json();
 }
@@ -36,10 +49,11 @@ async function checkUpstream(name, u) {
   console.log(`   revisado: ${u.reviewed.version ?? u.reviewed.ref} @ ${u.reviewed.commit.slice(0, 7)} (${since})`);
   console.log(`   HEAD:     ${head.sha.slice(0, 7)} (${head.commit.committer.date})`);
 
-  if (name === "pi") {
+  if (u.reviewed.tag || u.reviewed.version) {
     const [latest] = await gh(`/repos/${repo}/tags?per_page=1`);
-    const isNew = latest && latest.name !== u.reviewed.tag;
-    console.log(`   última release: ${latest?.name ?? "?"}${isNew ? "  <- más nueva que la revisada" : ""}`);
+    const expectedTag = u.reviewed.tag ?? `v${u.reviewed.version}`;
+    const isNew = latest && latest.name !== expectedTag;
+    console.log(`   última release: ${latest?.name ?? "?"}${isNew ? `  <- más nueva que la revisada (${expectedTag})` : ""}`);
   }
 
   const hits = [];

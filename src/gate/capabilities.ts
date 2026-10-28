@@ -76,6 +76,214 @@ export const FILMCRAFT_MCP_CAPABILITIES: readonly ToolCapabilityEntry[] = [
   ),
 ];
 
+export const EFFECTCRAFT_MCP_CAPABILITIES: readonly ToolCapabilityEntry[] = [
+  // Read-only EffectCraft 0.11.1 inspection tools (bare and prefixed)
+  ...([
+    "describe_command",
+    "get_project",
+    "get_comp",
+    "get_layer",
+    "get_property",
+    "list_effects",
+    "list_fonts",
+    "get_state",
+    "history",
+  ] as const).flatMap(
+    (id): ToolCapabilityEntry[] => [
+      {
+        id,
+        capability: "read",
+        allowedPhases: "ALL",
+        requiresHumanConfirmation: false,
+        evidenceStatus: "documentada",
+      },
+      {
+        id: `effectcraft_${id}`,
+        capability: "read",
+        allowedPhases: "ALL",
+        requiresHumanConfirmation: false,
+        evidenceStatus: "documentada",
+      },
+    ],
+  ),
+  // Prefixed read-only tools shared with FilmCraft
+  ...([
+    "command_list",
+    "doc_inspect",
+    "render_frame",
+    "render_preview",
+  ] as const).map(
+    (id): ToolCapabilityEntry => ({
+      id: `effectcraft_${id}`,
+      capability: "read",
+      allowedPhases: "ALL",
+      requiresHumanConfirmation: false,
+      evidenceStatus: "documentada",
+    }),
+  ),
+  // Headless motion graphics & compositing operations (gated to P05_ANIMATIC / P06_ASSEMBLY)
+  ...([
+    "execute_command",
+    "set_property",
+    "add_keyframe",
+    "add_effect",
+    "open_project",
+    "save_project",
+    "undo",
+    "redo",
+    "batch",
+  ] as const).flatMap(
+    (id): ToolCapabilityEntry[] => [
+      {
+        id,
+        capability: "render",
+        allowedPhases: ["P05_ANIMATIC", "P06_ASSEMBLY"],
+        requiresHumanConfirmation: false,
+        evidenceStatus: "documentada",
+        validationMethod: "effectcraft_command_guard",
+      },
+      {
+        id: `effectcraft_${id}`,
+        capability: "render",
+        allowedPhases: ["P05_ANIMATIC", "P06_ASSEMBLY"],
+        requiresHumanConfirmation: false,
+        evidenceStatus: "documentada",
+        validationMethod: "effectcraft_command_guard",
+      },
+    ],
+  ),
+  // Prefixed headless operations shared with FilmCraft
+  ...([
+    "command_run",
+    "command_batch",
+  ] as const).map(
+    (id): ToolCapabilityEntry => ({
+      id: `effectcraft_${id}`,
+      capability: "render",
+      allowedPhases: ["P05_ANIMATIC", "P06_ASSEMBLY"],
+      requiresHumanConfirmation: false,
+      evidenceStatus: "documentada",
+      validationMethod: "effectcraft_command_guard",
+    }),
+  ),
+  // Sensitive JSX script evaluation (requires P06_ASSEMBLY and explicit human confirmation)
+  ...(["run_script", "script_ui"] as const).flatMap(
+    (id): ToolCapabilityEntry[] => [
+      {
+        id,
+        capability: "render",
+        allowedPhases: ["P06_ASSEMBLY"],
+        requiresHumanConfirmation: true,
+        evidenceStatus: "documentada",
+        validationMethod: "effectcraft_command_guard",
+      },
+      {
+        id: `effectcraft_${id}`,
+        capability: "render",
+        allowedPhases: ["P06_ASSEMBLY"],
+        requiresHumanConfirmation: true,
+        evidenceStatus: "documentada",
+        validationMethod: "effectcraft_command_guard",
+      },
+    ],
+  ),
+];
+
+export const SOUNDCRAFT_MCP_CAPABILITIES: readonly ToolCapabilityEntry[] = [
+  // Read-only SoundCraft 0.8.0 inspection tools (bare and prefixed)
+  ...([
+    "inspect_session",
+    "parity",
+    "screenshot",
+  ] as const).flatMap(
+    (id): ToolCapabilityEntry[] => [
+      {
+        id,
+        capability: "read",
+        allowedPhases: "ALL",
+        requiresHumanConfirmation: false,
+        evidenceStatus: "documentada",
+      },
+      {
+        id: `soundcraft_${id}`,
+        capability: "read",
+        allowedPhases: "ALL",
+        requiresHumanConfirmation: false,
+        evidenceStatus: "documentada",
+      },
+    ],
+  ),
+  // Prefixed read-only tools that share names
+  ...([
+    "list_commands",
+    "ui_inspect",
+  ] as const).map(
+    (id): ToolCapabilityEntry => ({
+      id: `soundcraft_${id}`,
+      capability: "read",
+      allowedPhases: "ALL",
+      requiresHumanConfirmation: false,
+      evidenceStatus: "documentada",
+    }),
+  ),
+  // Headless multitrack audio operations (gated to P06_ASSEMBLY)
+  ...([
+    "execute",
+    "new_session",
+    "open_session",
+    "save_session",
+    "import_audio",
+    "bounce_mix",
+  ] as const).flatMap(
+    (id): ToolCapabilityEntry => [
+      {
+        id,
+        capability: "render",
+        allowedPhases: ["P06_ASSEMBLY"],
+        requiresHumanConfirmation: false,
+        evidenceStatus: "documentada",
+        validationMethod: "soundcraft_command_guard",
+      },
+      {
+        id: `soundcraft_${id}`,
+        capability: "render",
+        allowedPhases: ["P06_ASSEMBLY"],
+        requiresHumanConfirmation: false,
+        evidenceStatus: "documentada",
+        validationMethod: "soundcraft_command_guard",
+      },
+    ],
+  ),
+  // Prefixed batch tool for SoundCraft
+  {
+    id: "soundcraft_batch",
+    capability: "render",
+    allowedPhases: ["P06_ASSEMBLY"],
+    requiresHumanConfirmation: false,
+    evidenceStatus: "documentada",
+    validationMethod: "soundcraft_command_guard",
+  },
+  // Desktop bridge UI controls (require active P06_ASSEMBLY + human confirmation)
+  ...(["ui_set", "menu_invoke", "click", "drag", "key"] as const).flatMap(
+    (id): ToolCapabilityEntry[] => [
+      {
+        id,
+        capability: "render",
+        allowedPhases: ["P06_ASSEMBLY"],
+        requiresHumanConfirmation: true,
+        evidenceStatus: "documentada",
+      },
+      {
+        id: `soundcraft_${id}`,
+        capability: "render",
+        allowedPhases: ["P06_ASSEMBLY"],
+        requiresHumanConfirmation: true,
+        evidenceStatus: "documentada",
+      },
+    ],
+  ),
+];
+
 export const DEFAULT_CAPABILITIES: readonly ToolCapabilityEntry[] = [
   {
     id: "read",
@@ -132,6 +340,8 @@ export const DEFAULT_CAPABILITIES: readonly ToolCapabilityEntry[] = [
     validationMethod: "state_machine",
   },
   ...FILMCRAFT_MCP_CAPABILITIES,
+  ...EFFECTCRAFT_MCP_CAPABILITIES,
+  ...SOUNDCRAFT_MCP_CAPABILITIES,
 ];
 
 export function buildCapabilityCatalog(

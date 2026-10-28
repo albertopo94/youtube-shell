@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -10,15 +11,44 @@ const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
 
 const sha256 = (path: string) => createHash("sha256").update(readFileSync(join(ROOT, path))).digest("hex");
 
-test("the lock pins both upstreams to an exact reviewed commit", () => {
+test("the lock pins all upstreams (youtube, pi, filmcraft, effectcraft, soundcraft) to an exact reviewed commit", () => {
   assert.equal(lock.schema, "youtube-shell.upstream-lock/v1");
-  for (const name of ["youtube", "pi"]) {
+  const expectedUpstreams = ["youtube", "pi", "filmcraft", "effectcraft", "soundcraft"] as const;
+  for (const name of expectedUpstreams) {
     const u = lock.upstreams[name];
     assert.ok(u, `missing upstream ${name}`);
     assert.match(u.reviewed.commit, /^[0-9a-f]{40}$/, `${name}: reviewed.commit must be a full SHA`);
     assert.ok(Array.isArray(u.affects_us) && u.affects_us.length > 0, `${name}: affects_us must list paths`);
+    if (name !== "youtube") {
+      assert.match(u.reviewed.version, /^\d+\.\d+\.\d+$/, `${name}: reviewed.version must be semver`);
+    }
   }
-  assert.match(lock.upstreams.pi.reviewed.version, /^\d+\.\d+\.\d+$/);
+});
+
+test("media engine binaries (filmcraft-cli, effectcraft-cli, soundcraft-cli) match reviewed version when installed locally", () => {
+  const engines = [
+    { name: "filmcraft", bin: "filmcraft-cli" },
+    { name: "effectcraft", bin: "effectcraft-cli" },
+    { name: "soundcraft", bin: "soundcraft-cli" },
+  ] as const;
+
+  for (const { name, bin } of engines) {
+    const expectedVersion = lock.upstreams[name]?.reviewed?.version;
+    assert.ok(expectedVersion, `missing reviewed version for ${name}`);
+
+    const res = spawnSync(bin, ["--version"], { encoding: "utf8" });
+    if (res.error) {
+      // If binary is not installed in the current environment (e.g. CI without macOS/Rust tools), skip check gracefully
+      continue;
+    }
+    const output = (res.stdout || "") + (res.stderr || "");
+    const versionPattern = new RegExp(`\\b${expectedVersion.replace(/\./g, "\\.")}\\b`);
+    assert.match(
+      output,
+      versionPattern,
+      `binary ${bin} output ("${output.trim()}") does not match reviewed version ${expectedVersion}`,
+    );
+  }
 });
 
 test("every mirrored file still matches the reviewed upstream bytes", () => {

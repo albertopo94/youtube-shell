@@ -545,6 +545,189 @@ function verifyFilmcraftCall(
   return { ok: true };
 }
 
+const BLOCKED_EFFECTCRAFT_COMMANDS = new Set([
+  "prefs.set",
+  "prefs.reset",
+  "app.quit",
+  "system.exec",
+]);
+
+function verifyEffectcraftCommandStep(
+  id: string,
+  params: Record<string, unknown> | null | undefined,
+): { ok: true } | { ok: false; reason: string } {
+  if (id && BLOCKED_EFFECTCRAFT_COMMANDS.has(id)) {
+    return {
+      ok: false,
+      reason: `Operación bloqueada: el comando de EffectCraft "${id}" no está permitido en el flujo controlado.`,
+    };
+  }
+  if (params && typeof params === "object") {
+    for (const key of ["path", "file", "project", "footage", "out", "template"] as const) {
+      const pathVal = params[key];
+      if (typeof pathVal === "string") {
+        const safe = isSafeEvidencePath(pathVal);
+        if (!safe.ok) {
+          return { ok: false, reason: `Operación bloqueada en EffectCraft (${id || key}): ${safe.reason}` };
+        }
+        if ((CANONICAL_FILES as readonly string[]).includes(pathVal) || pathVal.endsWith(".md")) {
+          return {
+            ok: false,
+            reason: `Operación bloqueada en EffectCraft (${id || key}): no puede sobrescribir documentos Markdown ("${pathVal}").`,
+          };
+        }
+      }
+    }
+  }
+  return { ok: true };
+}
+
+function verifyEffectcraftCall(
+  toolName: string,
+  input: Record<string, unknown>,
+): { ok: true } | { ok: false; reason: string } {
+  const cmdId = String(input.id ?? input.command ?? toolName);
+  if (BLOCKED_EFFECTCRAFT_COMMANDS.has(cmdId)) {
+    return {
+      ok: false,
+      reason: `Operación bloqueada: el comando de EffectCraft "${cmdId}" no está permitido en el flujo controlado.`,
+    };
+  }
+
+  for (const key of ["path", "file", "project", "footage", "out", "template"] as const) {
+    const pathVal = input[key];
+    if (typeof pathVal === "string") {
+      const safe = isSafeEvidencePath(pathVal);
+      if (!safe.ok) {
+        return { ok: false, reason: `Operación bloqueada en EffectCraft (${toolName}): ${safe.reason}` };
+      }
+      if ((CANONICAL_FILES as readonly string[]).includes(pathVal) || pathVal.endsWith(".md")) {
+        return {
+          ok: false,
+          reason: `Operación bloqueada en EffectCraft (${toolName}): no puede sobrescribir documentos Markdown ("${pathVal}").`,
+        };
+      }
+    }
+  }
+
+  const params = (input.params as Record<string, unknown> | null | undefined) ?? undefined;
+  const paramCheck = verifyEffectcraftCommandStep(cmdId, params);
+  if (!paramCheck.ok) return paramCheck;
+
+  if (
+    toolName === "command_batch" ||
+    toolName === "batch" ||
+    toolName === "effectcraft_command_batch" ||
+    toolName === "effectcraft_batch"
+  ) {
+    const steps = Array.isArray(input.steps)
+      ? input.steps
+      : Array.isArray(input.commands)
+      ? input.commands
+      : [];
+    if (steps.length === 0 && Array.isArray(input.steps)) {
+      return { ok: false, reason: "Operación bloqueada: batch requiere al menos un paso." };
+    }
+    for (const step of steps) {
+      const stepId = String(step?.id ?? step?.command ?? "");
+      const stepParams = (step?.params as Record<string, unknown> | null | undefined) ?? step;
+      const check = verifyEffectcraftCommandStep(stepId, stepParams);
+      if (!check.ok) return check;
+    }
+  }
+
+  return { ok: true };
+}
+
+const BLOCKED_SOUNDCRAFT_COMMANDS = new Set([
+  "prefs.set",
+  "prefs.reset",
+  "app.quit",
+  "system.exec",
+]);
+
+function verifySoundcraftCommandStep(
+  id: string,
+  params: Record<string, unknown> | null | undefined,
+): { ok: true } | { ok: false; reason: string } {
+  if (id && BLOCKED_SOUNDCRAFT_COMMANDS.has(id)) {
+    return {
+      ok: false,
+      reason: `Operación bloqueada: el comando de SoundCraft "${id}" no está permitido en el flujo controlado.`,
+    };
+  }
+  if (params && typeof params === "object") {
+    for (const key of ["path", "file", "in", "bounce", "out", "session"] as const) {
+      const pathVal = params[key];
+      if (typeof pathVal === "string") {
+        const safe = isSafeEvidencePath(pathVal);
+        if (!safe.ok) {
+          return { ok: false, reason: `Operación bloqueada en SoundCraft (${id || key}): ${safe.reason}` };
+        }
+        if ((CANONICAL_FILES as readonly string[]).includes(pathVal) || pathVal.endsWith(".md")) {
+          return {
+            ok: false,
+            reason: `Operación bloqueada en SoundCraft (${id || key}): no puede sobrescribir documentos Markdown ("${pathVal}").`,
+          };
+        }
+      }
+    }
+  }
+  return { ok: true };
+}
+
+function verifySoundcraftCall(
+  toolName: string,
+  input: Record<string, unknown>,
+): { ok: true } | { ok: false; reason: string } {
+  const cmdId = String(input.id ?? input.cmd ?? input.command ?? toolName);
+  if (BLOCKED_SOUNDCRAFT_COMMANDS.has(cmdId)) {
+    return {
+      ok: false,
+      reason: `Operación bloqueada: el comando de SoundCraft "${cmdId}" no está permitido en el flujo controlado.`,
+    };
+  }
+
+  for (const key of ["path", "file", "in", "bounce", "out", "session"] as const) {
+    const pathVal = input[key];
+    if (typeof pathVal === "string") {
+      const safe = isSafeEvidencePath(pathVal);
+      if (!safe.ok) {
+        return { ok: false, reason: `Operación bloqueada en SoundCraft (${toolName}): ${safe.reason}` };
+      }
+      if ((CANONICAL_FILES as readonly string[]).includes(pathVal) || pathVal.endsWith(".md")) {
+        return {
+          ok: false,
+          reason: `Operación bloqueada en SoundCraft (${toolName}): no puede sobrescribir documentos Markdown ("${pathVal}").`,
+        };
+      }
+    }
+  }
+
+  const params = (input.params as Record<string, unknown> | null | undefined) ?? undefined;
+  const paramCheck = verifySoundcraftCommandStep(cmdId, params);
+  if (!paramCheck.ok) return paramCheck;
+
+  if (toolName === "batch" || toolName === "soundcraft_batch") {
+    const steps = Array.isArray(input.steps)
+      ? input.steps
+      : Array.isArray(input.commands)
+      ? input.commands
+      : [];
+    if (steps.length === 0 && Array.isArray(input.steps)) {
+      return { ok: false, reason: "Operación bloqueada: batch requiere al menos un paso." };
+    }
+    for (const step of steps) {
+      const stepId = String(step?.id ?? step?.cmd ?? step?.command ?? "");
+      const stepParams = (step?.params as Record<string, unknown> | null | undefined) ?? step;
+      const check = verifySoundcraftCommandStep(stepId, stepParams);
+      if (!check.ok) return check;
+    }
+  }
+
+  return { ok: true };
+}
+
 function extractPromptText(event: any): string {
   if (typeof event?.prompt === "string") return event.prompt;
   if (typeof event?.input === "string") return event.input;
@@ -1084,6 +1267,20 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
 
       if (cap.validationMethod === "filmcraft_command_guard") {
         const check = verifyFilmcraftCall(toolName, event.input ?? {});
+        if (!check.ok) {
+          return { block: true, reason: check.reason };
+        }
+      }
+
+      if (cap.validationMethod === "effectcraft_command_guard") {
+        const check = verifyEffectcraftCall(toolName, event.input ?? {});
+        if (!check.ok) {
+          return { block: true, reason: check.reason };
+        }
+      }
+
+      if (cap.validationMethod === "soundcraft_command_guard") {
+        const check = verifySoundcraftCall(toolName, event.input ?? {});
         if (!check.ok) {
           return { block: true, reason: check.reason };
         }
