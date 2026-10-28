@@ -860,9 +860,9 @@
       "classification": "deterministic_gate",
       "phases": ["GLOBAL", "P01_PACKAGING", "P02_RESEARCH", "P03_SCRIPT", "P05_ANIMATIC", "P06_ASSEMBLY"],
       "skill": "yts-orquestador",
-      "consumer": "skills/yts-orquestador/references/registro-tecnicas.md",
-      "enforcement": "checkTechniquesRegistryCoherence / contract-checker / check_contrato.sh",
-      "tests": ["test/contract-checker.test.ts"],
+      "consumer": "src/checks/framework-checker.ts",
+      "enforcement": "checkFrameworkIntegrity / checkIntegrityForAction (/yts-approve, /yts-approve-sheet, yts_transition, tool_call)",
+      "tests": ["test/framework-checker.test.ts", "test/pi-gate.test.ts", "test/contract-checker.test.ts"],
       "required_skill_terms": [
         "gobernanza-evidencia",
         "registro-tecnicas",
@@ -875,10 +875,10 @@
           "skills/yts-orquestador/references/gobernanza-evidencia.md",
           "skills/yts-orquestador/references/registro-tecnicas.md"
         ],
-        "required_evidence": "Verificación determinista de IDs únicos, enums válidos y cobertura de roles en techniques_registry_coherence."
+        "required_evidence": "Verificación determinista de integridad del framework: IDs únicos, enums canónicos, declaración de Verificador/Evidencia/Excepción en compuertas y cobertura en roles/skills."
       },
       "verification_scope": {
-        "deterministic_in_runtime": "checkTechniquesRegistryCoherence valida IDs sin duplicados, fundamentos, validaciones y fuerzas operativas canónicas.",
+        "deterministic_in_runtime": "checkFrameworkIntegrity valida IDs únicos, enums válidos y compuertas completas, bloqueando transiciones y aprobaciones en pi-extension.ts ante cualquier fallo.",
         "editorial_or_human_review": "El creador calibra el nivel de validación propia y decide la promoción de técnicas recomendadas a obligatorias o compuertas."
       }
     },

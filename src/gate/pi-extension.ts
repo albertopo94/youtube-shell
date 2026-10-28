@@ -11,6 +11,7 @@ import {
   approveAcceptanceSheet,
   approvePhase,
   blockPhase,
+  changeProductionMode,
   evaluate,
   isSafeEvidencePath,
   reopenPhase,
@@ -20,10 +21,10 @@ import {
   unblockPhase,
   type Evaluation,
 } from "../core/machine.ts";
-import { getPhase, PHASE_IDS } from "../core/phases.ts";
+import { getPhase, parseProductionMode, PHASE_IDS } from "../core/phases.ts";
 import { extractSection } from "../core/sections.ts";
 import type { CheckRun, Context, DeclaredEvidence, EffectiveStatus, PhaseId, Result } from "../core/types.ts";
-import { createFsReader, loadRegistry, registryPath, saveRegistry, scaffoldVideoDir } from "../store/fs-store.ts";
+import { createFsReader, loadRegistry, registryPath, saveRegistry, scaffoldVideoDir, syncStatusView } from "../store/fs-store.ts";
 import { CANONICAL_FILES, checkVideoContract } from "../checks/contract-checker.ts";
 import { checkFrameworkIntegrity, type FrameworkIntegrityReport } from "../checks/framework-checker.ts";
 import {
@@ -773,6 +774,17 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
     });
   }
 
+  function checkIntegrityForAction(actionName: string): { ok: true } | { ok: false; reason: string } {
+    const integrity = getFrameworkIntegrity();
+    if (integrity.result === "FAIL") {
+      return {
+        ok: false,
+        reason: `Operación bloqueada (${actionName}): la integridad del framework ha fallado (${integrity.checks[0]?.details ?? "técnicas inválidas"}).`,
+      };
+    }
+    return { ok: true };
+  }
+
   function refreshUi(ctx: any): void {
     if (!ctx || !ctx.hasUI) return;
     try {
@@ -957,7 +969,15 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         const reg = loadRegistry(ctx.cwd, { videoId: basename(ctx.cwd), now: nowFn() });
         const ev = evaluate(reg, reader);
         const summary = ev.phases.map((p) => `${p.id}: ${p.effective}`).join(" · ");
-        ctx.ui.notify(`${basename(ctx.cwd)} — ${summary} | Siguiente: ${ev.nextAction}`, "info");
+        const integrity = getFrameworkIntegrity();
+        const integrityAlert =
+          integrity.result === "FAIL"
+            ? ` | ⚠️ INTEGRIDAD DEL FRAMEWORK FALLÓ: ${integrity.checks[0]?.details}`
+            : "";
+        ctx.ui.notify(
+          `${basename(ctx.cwd)} — ${summary} | Siguiente: ${ev.nextAction}${integrityAlert}`,
+          integrity.result === "FAIL" ? "warning" : "info",
+        );
       },
     });
 
@@ -978,12 +998,9 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
           return;
         }
 
-        const integrity = getFrameworkIntegrity();
-        if (integrity.result === "FAIL") {
-          ctx.ui.notify(
-            `Aprobación bloqueada: la integridad del framework ha fallado (${integrity.checks[0]?.details ?? "técnicas inválidas"}).`,
-            "error",
-          );
+        const intCheck = checkIntegrityForAction("/yts-approve");
+        if (!intCheck.ok) {
+          ctx.ui.notify(intCheck.reason, "error");
           return;
         }
 
@@ -1050,6 +1067,59 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
       },
     });
 
+    pi.registerCommand("yts-mode", {
+      description:
+        "Consulta o selecciona el flujo audiovisual de la producción: audio_first, screen_first, speaker_first o music_first.",
+      handler: async (args: string, ctx: any) => {
+        const token = args.trim().toLowerCase();
+        const reader = createFsReader(ctx.cwd);
+        const reg = loadRegistry(ctx.cwd, { videoId: basename(ctx.cwd), now: nowFn() });
+
+        if (!token) {
+          const current =
+            reg.productionMode ?? "no fijado explícitamente (defaults a audio_first en fases tempranas)";
+          ctx.ui.notify(
+            `Flujo audiovisual actual: ${current}\nUso: /yts-mode <audio_first | screen_first | speaker_first | music_first>\n` +
+              `  - audio_first: Ensayos, divulgación y documentales (evidencia P05: scratch_track)\n` +
+              `  - screen_first: Tutoriales técnicos, software y programación (evidencia P05: screen_recording)\n` +
+              `  - speaker_first: Presentador a cámara, entrevistas y vlogs (evidencia P05: speaker_track)\n` +
+              `  - music_first: Relax, música, lofi y viajes (evidencia P05: music_bed)`,
+            "info",
+          );
+          return;
+        }
+
+        const mode = parseProductionMode(token);
+        if (!mode) {
+          ctx.ui.notify(
+            `Modo "${token}" no reconocido. Valores permitidos: audio_first, screen_first, speaker_first, music_first.`,
+            "error",
+          );
+          return;
+        }
+
+        const nowIso = nowFn();
+        const res = changeProductionMode(reg, mode, {
+          actor: { kind: "creator", channel: "pi-command" },
+          reader,
+          now: nowIso,
+        });
+
+        if (!res.ok) {
+          ctx.ui.notify(`No se pudo cambiar el flujo: ${res.reasons.join(" ")}`, "error");
+          return;
+        }
+
+        saveRegistry(ctx.cwd, res.registry);
+        syncStatusView(ctx.cwd, res.registry);
+        refreshUi(ctx);
+        ctx.ui.notify(
+          `Flujo audiovisual configurado a ${mode}. Vista 00-estado-produccion.md actualizada.`,
+          "info",
+        );
+      },
+    });
+
     pi.registerCommand("yts-link", {
       description: "Vincula la carpeta del video con la oficina de producción y el directorio del canal.",
       handler: async (args: string, ctx: any) => {
@@ -1110,12 +1180,9 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
           );
         }
 
-        const integrity = getFrameworkIntegrity();
-        if (integrity.result === "FAIL") {
-          ctx.ui.notify(
-            `Aprobación bloqueada: la integridad del framework ha fallado (${integrity.checks[0]?.details ?? "técnicas inválidas"}).`,
-            "error",
-          );
+        const intCheck = checkIntegrityForAction("/yts-approve-sheet");
+        if (!intCheck.ok) {
+          ctx.ui.notify(intCheck.reason, "error");
           return;
         }
         const sheetRel = args.trim() || "aceptacion.json";
@@ -1255,12 +1322,9 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
           cap.capability === "render" ||
           cap.capability === "state_control")
       ) {
-        const integrity = getFrameworkIntegrity();
-        if (integrity.result === "FAIL") {
-          return {
-            block: true,
-            reason: `Operación bloqueada: la integridad del framework ha fallado (${integrity.checks[0]?.details ?? "técnicas inválidas"}).`,
-          };
+        const intCheck = checkIntegrityForAction(toolName);
+        if (!intCheck.ok) {
+          return { block: true, reason: intCheck.reason };
         }
       }
 

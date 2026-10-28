@@ -524,6 +524,50 @@ export function reopenPhase(
   return { ok: true, registry: next };
 }
 
+export function changeProductionMode(
+  reg: Registry,
+  newMode: ProductionMode,
+  ctx: Context,
+): Result {
+  if (reg.productionMode === newMode) {
+    return { ok: true, registry: reg };
+  }
+
+  const p03 = reg.phases.P03_SCRIPT;
+  const p05 = reg.phases.P05_ANIMATIC;
+
+  if (p05?.status === "APROBADO") {
+    return {
+      ok: false,
+      reasons: [
+        `No se puede cambiar el flujo a "${newMode}" porque P05_ANIMATIC ya está aprobada con el flujo "${reg.productionMode ?? "audio_first"}". Para cambiar el modo, primero reabra P05_ANIMATIC formalmente.`,
+      ],
+    };
+  }
+
+  if (p03?.status === "APROBADO") {
+    return {
+      ok: false,
+      reasons: [
+        `No se puede cambiar el flujo a "${newMode}" porque P03_SCRIPT ya fue redactado y aprobado con el flujo "${reg.productionMode ?? "audio_first"}". Para cambiar el modo, reabra P03_SCRIPT formalmente.`,
+      ],
+    };
+  }
+
+  const next = structuredClone(reg);
+  next.productionMode = newMode;
+  next.updatedAt = ctx.now;
+  next.history.push({
+    at: ctx.now,
+    phase: "P01_PACKAGING",
+    event: "submit",
+    actor: ctx.actor.kind,
+    note: `Flujo audiovisual configurado a ${newMode}`,
+  });
+
+  return { ok: true, registry: next };
+}
+
 export function blockPhase(
   reg: Registry,
   id: PhaseId,

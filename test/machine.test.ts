@@ -4,6 +4,7 @@ import {
   approveAcceptanceSheet,
   approvePhase,
   blockPhase,
+  changeProductionMode,
   createRegistry,
   evaluate,
   reopenPhase,
@@ -389,5 +390,54 @@ test("submitting P05_ANIMATIC fails when mode is unselected or ambiguous in 00-e
   denied(
     submitPhase(rAmbiguous, "P05_ANIMATIC", { checks: [], evidence: [{ role: "scratch_track", path: "exports/scratch_track.bin" }] }, ctx(pAmbiguous)),
     /Selección ambigua en 00-estado-produccion\.md/i,
+  );
+});
+
+test("changeProductionMode allows setting mode before P03 and denies changes once P03 or P05 are approved", () => {
+  const project = new FakeProject();
+  let reg = createRegistry("vid", "2026-10-21T00:00:00Z");
+
+  // 1. Setting mode before P03 succeeds
+  reg = ok(changeProductionMode(reg, "screen_first", ctx(project)));
+  assert.equal(reg.productionMode, "screen_first");
+
+  // Setting same mode is no-op ok
+  reg = ok(changeProductionMode(reg, "screen_first", ctx(project)));
+
+  // Changing to speaker_first succeeds
+  reg = ok(changeProductionMode(reg, "speaker_first", ctx(project)));
+  assert.equal(reg.productionMode, "speaker_first");
+
+  // Advance through P03_SCRIPT APROBADO
+  reg = approveThrough(project, "P03_SCRIPT", reg);
+
+  // 2. Changing mode once P03_SCRIPT is approved is denied
+  denied(
+    changeProductionMode(reg, "screen_first", ctx(project)),
+    /No se puede cambiar el flujo.*porque P03_SCRIPT ya fue redactado y aprobado/,
+  );
+
+  // Advance through P05_ANIMATIC APROBADO
+  const project2 = new FakeProject();
+  let reg2 = approveThrough(project2, "P04_FACTCHECK");
+  reg2.productionMode = "speaker_first";
+  project2.fill("P05_ANIMATIC");
+  reg2 = ok(startPhase(reg2, "P05_ANIMATIC", ctx(project2)));
+  const evidenceRole = "speaker_track";
+  project2.files.set("exports/speaker_track.bin", "content");
+  reg2 = ok(
+    submitPhase(
+      reg2,
+      "P05_ANIMATIC",
+      { checks: [], evidence: [{ role: evidenceRole, path: "exports/speaker_track.bin" }] },
+      ctx(project2),
+    ),
+  );
+  reg2 = ok(approvePhase(reg2, "P05_ANIMATIC", {}, ctx(project2, CREATOR)));
+
+  // 3. Changing mode once P05_ANIMATIC is approved is denied
+  denied(
+    changeProductionMode(reg2, "music_first", ctx(project2)),
+    /No se puede cambiar el flujo.*porque P05_ANIMATIC ya está aprobada/,
   );
 });

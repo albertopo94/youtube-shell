@@ -16,7 +16,7 @@ import {
 } from "node:fs";
 import { basename, dirname, join, sep } from "node:path";
 import { createRegistry, evaluate, isSafeEvidencePath } from "../core/machine.ts";
-import { detectProductionMode } from "../core/phases.ts";
+import { detectProductionMode, isProductionMode, PRODUCTION_MODES } from "../core/phases.ts";
 import { detectWorkspaceLink } from "../core/context-resolver.ts";
 import { CONTRACT_VERSION, PHASE_IDS } from "../core/phases.ts";
 import { extractSection } from "../core/sections.ts";
@@ -167,6 +167,14 @@ export function validateRegistry(raw: unknown, expectedVideoId?: string): Regist
       actor.kind !== "creator"
     ) {
       throw new Error("Aprobación de hoja de aceptación inválida en el registro.");
+    }
+  }
+
+  if (obj.productionMode !== undefined) {
+    if (!isProductionMode(obj.productionMode)) {
+      throw new Error(
+        `Modo de producción inválido en el registro: "${String(obj.productionMode)}". Valores permitidos: ${PRODUCTION_MODES.join(", ")}.`,
+      );
     }
   }
 

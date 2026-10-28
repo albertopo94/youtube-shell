@@ -1064,6 +1064,30 @@ test("corrupt or invalid framework techniques registry fails closed and blocks t
   );
 });
 
+test("command /yts-mode displays, updates, and validates production mode on disk", async (t) => {
+  const { videoDir } = setupTempVideo(t);
+  const h = createPiHarness({ videoDir });
+
+  // 1. /yts-mode without args displays info
+  await h.invokeCommand("yts-mode", "");
+  assert.ok(h.notifications.some((n) => n.level === "info" && n.message.includes("Flujo audiovisual actual")));
+
+  // 2. /yts-mode with invalid token reports error
+  await h.invokeCommand("yts-mode", "modo_inventado");
+  assert.ok(h.notifications.some((n) => n.level === "error" && n.message.includes("no reconocido")));
+
+  // 3. /yts-mode screen_first sets mode, updates registry, and synchronizes 00-estado-produccion.md
+  await h.invokeCommand("yts-mode", "screen_first");
+  assert.ok(h.notifications.some((n) => n.level === "info" && n.message.includes("screen_first")));
+
+  const reg = loadRegistry(videoDir, { videoId: "01-video", now: "2026-10-24T12:00:00Z" });
+  assert.equal(reg.productionMode, "screen_first");
+
+  const statusContent = readFileSync(join(videoDir, "00-estado-produccion.md"), "utf8");
+  assert.match(statusContent, /\[x\]\s*Screen-First/);
+  assert.match(statusContent, /\[ \]\s*Audio-First/);
+});
+
 
 
 

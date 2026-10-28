@@ -21,6 +21,31 @@ export interface EvidenceRoleDefinition {
   description: string;
 }
 
+export const PRODUCTION_MODES: readonly ProductionMode[] = [
+  "audio_first",
+  "screen_first",
+  "speaker_first",
+  "music_first",
+] as const;
+
+export const VALID_PRODUCTION_MODES = new Set<string>(PRODUCTION_MODES);
+
+export function isProductionMode(val: unknown): val is ProductionMode {
+  return typeof val === "string" && VALID_PRODUCTION_MODES.has(val);
+}
+
+export function parseProductionMode(raw: string): ProductionMode | undefined {
+  const norm = raw.trim().toLowerCase().replace(/[-_\s]+/g, "_");
+  if (VALID_PRODUCTION_MODES.has(norm)) {
+    return norm as ProductionMode;
+  }
+  if (norm === "audio" || norm === "1") return "audio_first";
+  if (norm === "screen" || norm === "action" || norm === "2") return "screen_first";
+  if (norm === "speaker" || norm === "aroll" || norm === "a_roll" || norm === "3") return "speaker_first";
+  if (norm === "music" || norm === "ambient" || norm === "4") return "music_first";
+  return undefined;
+}
+
 export const P05_EVIDENCE_BY_MODE: Record<ProductionMode, EvidenceRoleDefinition> = {
   audio_first: {
     primaryRole: "scratch_track",

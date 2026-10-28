@@ -84,6 +84,11 @@ test("a corrupt or tampered registry fails closed instead of resetting", (t) => 
   writeFileSync(registryPath(video), JSON.stringify(approvedWithoutRecord));
   assert.throws(() => loadRegistry(video, opts), /APROBADO/);
 
+  const invalidModeReg = createRegistry("01-video", "x") as any;
+  invalidModeReg.productionMode = "modo_inexistente";
+  writeFileSync(registryPath(video), JSON.stringify(invalidModeReg));
+  assert.throws(() => loadRegistry(video, opts), /Modo de producción inválido/);
+
   saveRegistry(video, createRegistry("otro-video", "x"));
   assert.throws(() => loadRegistry(video, opts), /otro-video/);
 });
