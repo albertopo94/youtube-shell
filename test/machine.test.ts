@@ -26,6 +26,9 @@ class FakeProject implements ArtifactReader {
     const c = this.files.get(refKey(ref));
     return c === undefined ? { ok: false as const, reason: `no existe ${refKey(ref)}` } : { ok: true as const, hash: `h:${c}` };
   }
+  readContent(file: string): string | undefined {
+    return this.files.get(file);
+  }
   /** Fill every document and evidence a phase needs. */
   fill(id: PhaseId, tag = "v1") {
     for (const d of getPhase(id).documents) {
@@ -315,4 +318,44 @@ test("only the creator can approve a pre-render acceptance sheet, binding its pa
     approvedAt: "2026-10-24T01:00:00Z",
     actor: CREATOR,
   });
+});
+
+test("production modes adapt required evidence in P05_ANIMATIC (screen_first, speaker_first, music_first, audio_first)", () => {
+  const modes = [
+    { mode: "screen_first" as const, role: "screen_recording", file: "capture.mp4" },
+    { mode: "speaker_first" as const, role: "speaker_track", file: "aroll.mp4" },
+    { mode: "music_first" as const, role: "music_bed", file: "beat.wav" },
+    { mode: "audio_first" as const, role: "scratch_track", file: "voice.wav" },
+  ];
+
+  for (const { mode, role, file } of modes) {
+    const project = new FakeProject();
+    let reg = approveThrough(project, "P04_FACTCHECK");
+    project.fill("P05_ANIMATIC");
+    reg.productionMode = mode;
+    reg = ok(startPhase(reg, "P05_ANIMATIC", ctx(project)));
+
+    project.files.set(file, "content");
+
+    // Denies wrong evidence role for this mode
+    denied(
+      submitPhase(reg, "P05_ANIMATIC", { checks: [], evidence: [{ role: "wrong_role", path: file }] }, ctx(project)),
+      /Rol de evidencia no declarado/,
+    );
+
+    // Accepts correct evidence role for this mode
+    const subRes = submitPhase(reg, "P05_ANIMATIC", { checks: [], evidence: [{ role, path: file }] }, ctx(project));
+    const subReg = ok(subRes);
+    assert.equal(subReg.productionMode, mode);
+  }
+
+  // Also verify alias support (e.g. action_draft for screen_first)
+  const projectAlias = new FakeProject();
+  let regAlias = approveThrough(projectAlias, "P04_FACTCHECK");
+  projectAlias.fill("P05_ANIMATIC");
+  regAlias.productionMode = "screen_first";
+  regAlias = ok(startPhase(regAlias, "P05_ANIMATIC", ctx(projectAlias)));
+  projectAlias.files.set("draft.mp4", "content");
+  const aliasRes = submitPhase(regAlias, "P05_ANIMATIC", { checks: [], evidence: [{ role: "action_draft", path: "draft.mp4" }] }, ctx(projectAlias));
+  ok(aliasRes);
 });

@@ -25,6 +25,7 @@ import { extractSection } from "../core/sections.ts";
 import type { CheckRun, Context, DeclaredEvidence, EffectiveStatus, PhaseId, Result } from "../core/types.ts";
 import { createFsReader, loadRegistry, registryPath, saveRegistry, scaffoldVideoDir } from "../store/fs-store.ts";
 import { CANONICAL_FILES, checkVideoContract } from "../checks/contract-checker.ts";
+import { checkFrameworkIntegrity, type FrameworkIntegrityReport } from "../checks/framework-checker.ts";
 import {
   evaluateMasterAcceptance,
   measureMasterFile,
@@ -41,6 +42,8 @@ export type EvaluationResult = Evaluation;
 export interface YoutubeShellExtensionOptions {
   extraCapabilities?: readonly ToolCapabilityEntry[];
   now?: () => string;
+  techniquesPath?: string;
+  rolesDir?: string;
 }
 
 const DEFAULT_PKG_VERSION = (() => {
@@ -248,7 +251,16 @@ function executeAgentTransition(
   videoDir: string,
   input: Record<string, unknown>,
   nowIso: string,
+  frameworkIntegrity?: FrameworkIntegrityReport,
 ): Result {
+  if (frameworkIntegrity && frameworkIntegrity.result === "FAIL") {
+    return {
+      ok: false,
+      reasons: [
+        `Transición bloqueada: la integridad del framework ha fallado (${frameworkIntegrity.checks[0]?.details ?? "técnicas inválidas"}).`,
+      ],
+    };
+  }
   const action = String(input.action ?? "");
   const phase = input.phase;
   if (!isPhaseId(phase)) {
@@ -754,6 +766,13 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
   const nowFn = options.now ?? (() => new Date().toISOString());
   let activeWorkMode: WorkMode = "production";
 
+  function getFrameworkIntegrity(): FrameworkIntegrityReport {
+    return checkFrameworkIntegrity({
+      techniquesPath: options.techniquesPath,
+      rolesDir: options.rolesDir,
+    });
+  }
+
   function refreshUi(ctx: any): void {
     if (!ctx || !ctx.hasUI) return;
     try {
@@ -811,9 +830,14 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
       },
       async execute(_toolCallId: string, _params: Record<string, unknown>, _signal: unknown, _onUpdate: unknown, ctx: any) {
         const report = checkVideoContract(ctx.cwd);
+        const integrity = getFrameworkIntegrity();
+        const combined = {
+          ...report,
+          framework_integrity: integrity,
+        };
         return {
-          content: [{ type: "text", text: JSON.stringify(report, null, 2) }],
-          details: report,
+          content: [{ type: "text", text: JSON.stringify(combined, null, 2) }],
+          details: combined,
         };
       },
     });
@@ -894,7 +918,7 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
             isError: true,
           };
         }
-        const res = executeAgentTransition(ctx.cwd, params, nowFn());
+        const res = executeAgentTransition(ctx.cwd, params, nowFn(), getFrameworkIntegrity());
         if (!res.ok) {
           return {
             content: [{ type: "text", text: `Transición denegada: ${res.reasons.join(" ")}` }],
@@ -1208,6 +1232,20 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         };
       }
 
+      if (
+        (cap.capability === "write_artifact" ||
+          cap.capability === "render" ||
+          cap.capability === "state_control")
+      ) {
+        const integrity = getFrameworkIntegrity();
+        if (integrity.result === "FAIL") {
+          return {
+            block: true,
+            reason: `Operación bloqueada: la integridad del framework ha fallado (${integrity.checks[0]?.details ?? "técnicas inválidas"}).`,
+          };
+        }
+      }
+
       const nowIso = nowFn();
       let reg;
       let ev;
@@ -1243,7 +1281,7 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
       }
 
       if (toolName === "yts_transition") {
-        const check = executeAgentTransition(ctx.cwd, event.input ?? {}, nowIso);
+        const check = executeAgentTransition(ctx.cwd, event.input ?? {}, nowIso, getFrameworkIntegrity());
         if (!check.ok) {
           return {
             block: true,

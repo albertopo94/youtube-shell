@@ -1,7 +1,9 @@
 import { PREAMBLE } from "./sections.ts";
-import type { PhaseId } from "./types.ts";
+import type { PhaseId, ProductionMode } from "./types.ts";
 
 export const CONTRACT_VERSION = 1;
+
+export type { ProductionMode };
 
 export interface PhaseDocumentSpec {
   file: string;
@@ -11,6 +13,81 @@ export interface PhaseDocumentSpec {
 export interface PhaseEvidenceSpec {
   role: string;
   description: string;
+}
+
+export interface EvidenceRoleDefinition {
+  primaryRole: string;
+  aliases: string[];
+  description: string;
+}
+
+export const P05_EVIDENCE_BY_MODE: Record<ProductionMode, EvidenceRoleDefinition> = {
+  audio_first: {
+    primaryRole: "scratch_track",
+    aliases: ["scratch_track", "radio_edit", "scratch_voice"],
+    description: "Locución de prueba / radio edit",
+  },
+  screen_first: {
+    primaryRole: "screen_recording",
+    aliases: ["screen_recording", "screencast_raw", "action_draft"],
+    description: "Grabación preliminar de pantalla / captura de acción",
+  },
+  speaker_first: {
+    primaryRole: "speaker_track",
+    aliases: ["speaker_track", "a_roll_take", "presenter_audio"],
+    description: "Toma de referencia o A-roll de presentador",
+  },
+  music_first: {
+    primaryRole: "music_bed",
+    aliases: ["music_bed", "soundtrack_draft", "ambient_track"],
+    description: "Pista musical guía / maqueta sonora",
+  },
+};
+
+export function detectProductionMode(content: string): ProductionMode {
+  const match = /Flujo Audiovisual seleccionado:\*\*\s*(.+)$/im.exec(content);
+  if (match) {
+    const line = match[1];
+    if (/\[x\]\s*(Screen-First|Action-First)/i.test(line)) return "screen_first";
+    if (/\[x\]\s*(Speaker-First|A-Roll)/i.test(line)) return "speaker_first";
+    if (/\[x\]\s*(Music-First|Ambient)/i.test(line)) return "music_first";
+    if (/\[x\]\s*Audio-First/i.test(line)) return "audio_first";
+  }
+
+  const directMatch = /\*\*(Modo de producci[oó]n|Flujo audiovisual):\*\*\s*`?([A-Za-z_-]+)`?/i.exec(content);
+  if (directMatch) {
+    const val = directMatch[2].toLowerCase();
+    if (val.includes("screen") || val.includes("action")) return "screen_first";
+    if (val.includes("speaker") || val.includes("roll")) return "speaker_first";
+    if (val.includes("music") || val.includes("ambient")) return "music_first";
+    if (val.includes("audio")) return "audio_first";
+  }
+
+  return "audio_first";
+}
+
+export function getPhaseEvidence(
+  id: PhaseId,
+  mode: ProductionMode = "audio_first",
+): PhaseEvidenceSpec[] {
+  if (id === "P05_ANIMATIC") {
+    const spec = P05_EVIDENCE_BY_MODE[mode] ?? P05_EVIDENCE_BY_MODE.audio_first;
+    return [{ role: spec.primaryRole, description: spec.description }];
+  }
+  return getPhase(id).evidence;
+}
+
+export function isAllowedEvidenceRole(
+  phaseId: PhaseId,
+  role: string,
+  mode: ProductionMode = "audio_first",
+): boolean {
+  if (phaseId === "P05_ANIMATIC") {
+    const spec = P05_EVIDENCE_BY_MODE[mode] ?? P05_EVIDENCE_BY_MODE.audio_first;
+    return spec.aliases.includes(role);
+  }
+  const def = getPhase(phaseId);
+  return def.evidence.some((e) => e.role === role);
 }
 
 export interface PhaseDefinition {

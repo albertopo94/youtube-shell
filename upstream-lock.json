@@ -6,8 +6,8 @@
       "role": "Domain knowledge (layer 3): phases, templates, contract checker, pilot measurement",
       "reviewed": {
         "ref": "main",
-        "commit": "098a99d2a83bfdd5e05786a1f7c30e959383a33a",
-        "committed_at": "2026-10-28T09:38:40Z",
+        "commit": "bb3438e6c5bcc418e1649aba7bea41c9daf47901",
+        "committed_at": "2026-10-28T14:20:38Z",
         "reviewed_on": "2026-10-28"
       },
       "affects_us": [
@@ -149,7 +149,7 @@
         },
         {
           "upstream_path": "_framework/compatibilidad-consumidores.md",
-          "upstream_sha256": "5e0ea5c78fb9570f88c2733a799eee9d706bfa169342d6cc3c45444e53fc31fd",
+          "upstream_sha256": "00e296317c69491ea8e51c3fe5b5e318a7c578a1728e2ba2b7d15357e8ee19b9",
           "local_target": "upstream-lock.json",
           "role": "consumer_contract"
         },

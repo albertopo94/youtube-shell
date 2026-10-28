@@ -1,6 +1,6 @@
 {
   "schema": "youtube-shell.framework-map/v1",
-  "upstream_commit": "098a99d2a83bfdd5e05786a1f7c30e959383a33a",
+  "upstream_commit": "bb3438e6c5bcc418e1649aba7bea41c9daf47901",
   "source_inventory": [
     {
       "upstream_path": "AGENTS.md",
@@ -880,6 +880,64 @@
       "verification_scope": {
         "deterministic_in_runtime": "checkTechniquesRegistryCoherence valida IDs sin duplicados, fundamentos, validaciones y fuerzas operativas canónicas.",
         "editorial_or_human_review": "El creador calibra el nivel de validación propia y decide la promoción de técnicas recomendadas a obligatorias o compuertas."
+      }
+    },
+    {
+      "id": "MODES-01",
+      "title": "Selección del Flujo Audiovisual y Evidencia Adaptable por Modo",
+      "source": {
+        "file": "_framework/roles/04-direccion-y-edicion.md",
+        "section": "Metodología: Selección del Flujo Audiovisual según el Género"
+      },
+      "classification": "deterministic_gate",
+      "phases": ["GLOBAL", "P05_ANIMATIC", "P06_ASSEMBLY"],
+      "skill": "yts-direccion-edicion",
+      "consumer": "src/core/machine.ts",
+      "enforcement": "detectProductionMode / getPhaseEvidence / submitPhase",
+      "tests": ["test/machine.test.ts", "test/context-resolver.test.ts"],
+      "required_skill_terms": [
+        "Audio-First",
+        "Screen-First",
+        "Speaker-First"
+      ],
+      "reference_policy": {
+        "level": "mandatory",
+        "when": "En P05_ANIMATIC y P06_ASSEMBLY para validar la evidencia según el modo de producción seleccionado (scratch_track, screen_recording, speaker_track, music_bed).",
+        "references": ["00-estado-produccion.md", "03-storyboard-y-edicion.md"],
+        "required_evidence": "Evidencia binaria que coincida con el modo activo (scratch_track para audio_first, screen_recording para screen_first, speaker_track para speaker_first, music_bed para music_first)."
+      },
+      "verification_scope": {
+        "deterministic_in_runtime": "submitPhase valida que el rol entregado corresponda a los roles y alias autorizados para el modo de producción detectado.",
+        "editorial_or_human_review": "El creador selecciona el flujo adecuado al género antes del montaje y valida el ritmo en animatic."
+      }
+    },
+    {
+      "id": "CONV-01",
+      "title": "Arquitectura de Conversión y Madurez del Canal",
+      "source": {
+        "file": "_framework/roles/03-guion-y-narrativa.md",
+        "section": "6. Arquitectura de Conversión: El CTA como el Siguiente Paso Más Útil"
+      },
+      "classification": "editorial_check",
+      "phases": ["P03_SCRIPT"],
+      "skill": "yts-guion-narrativa",
+      "consumer": "skills/yts-guion-narrativa/SKILL.md",
+      "enforcement": "Revisión editorial de guion / Principio del Give / Filtro Anti-CPG",
+      "tests": ["test/framework-map.test.ts"],
+      "required_skill_terms": [
+        "Siguiente Paso Más Útil",
+        "Desatascador Narrativo",
+        "Anti-CPG"
+      ],
+      "reference_policy": {
+        "level": "conditional",
+        "when": "Al redactar el cierre, llamadas a la acción, enlaces o integración de productos/servicios en el guion.",
+        "references": ["02-guion.md", "01-packaging.md"],
+        "required_evidence": "Mención verbal orgánica en la locución y propuesta de enlaces en descripción coherente con el arquetipo y madurez del canal."
+      },
+      "verification_scope": {
+        "deterministic_in_runtime": "Verificación estructural de bloques en script_block_ids y mención en guion antes de factcheck.",
+        "editorial_or_human_review": "Evaluación por el creador del Unbiased Expert Test y adecuación del CTA a la etapa de vida del canal."
       }
     }
   ]

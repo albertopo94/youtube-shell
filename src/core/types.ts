@@ -37,6 +37,7 @@ export type FingerprintResult =
 
 export interface ArtifactReader {
   fingerprint(ref: ArtifactRef): FingerprintResult;
+  readContent?(file: string): string | undefined;
 }
 
 export interface CheckRun {
@@ -110,12 +111,19 @@ export interface AcceptanceSheetApproval {
   actor: { kind: "creator"; channel: string };
 }
 
+export type ProductionMode =
+  | "audio_first"
+  | "screen_first"
+  | "speaker_first"
+  | "music_first";
+
 export interface Registry {
   schemaVersion: 1;
   contractVersion: 1;
   videoId: string;
   createdAt: string;
   updatedAt: string;
+  productionMode?: ProductionMode;
   phases: Record<PhaseId, PhaseRecord>;
   history: HistoryEntry[];
   workspaceLink?: WorkspaceLink;

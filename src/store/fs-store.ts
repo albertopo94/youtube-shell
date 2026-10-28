@@ -16,6 +16,7 @@ import {
 } from "node:fs";
 import { basename, dirname, join, sep } from "node:path";
 import { createRegistry, evaluate, isSafeEvidencePath } from "../core/machine.ts";
+import { detectProductionMode } from "../core/phases.ts";
 import { detectWorkspaceLink } from "../core/context-resolver.ts";
 import { CONTRACT_VERSION, PHASE_IDS } from "../core/phases.ts";
 import { extractSection } from "../core/sections.ts";
@@ -88,6 +89,15 @@ export function createFsReader(videoDir: string): ArtifactReader {
         return { ok: false, reason: sec.reason };
       }
       return { ok: true, hash: sha256Hex(Buffer.from(sec.text, "utf8")) };
+    },
+    readContent(file: string): string | undefined {
+      try {
+        const target = join(videoDir, file);
+        if (existsSync(target)) {
+          return readFileSync(target, "utf8");
+        }
+      } catch {}
+      return undefined;
     },
   };
 }
@@ -244,6 +254,19 @@ export function syncStatusView(videoDir: string, reg: Registry): void {
   }
 
   let content = readFileSync(statusFile, "utf8");
+  if (reg.productionMode) {
+    const mode = reg.productionMode;
+    content = content.replace(
+      /(-\s*\*\*Flujo Audiovisual seleccionado:\*\*\s*)(.+)$/m,
+      (_, prefix) => {
+        const af = mode === "audio_first" ? "[x] Audio-First" : "[ ] Audio-First";
+        const sf = mode === "screen_first" ? "[x] Screen-First" : "[ ] Screen-First";
+        const sp = mode === "speaker_first" ? "[x] Speaker-First" : "[ ] Speaker-First";
+        const mf = mode === "music_first" ? "[x] Music-First" : "[ ] Music-First";
+        return `${prefix}${af} / ${sf} / ${sp} / ${mf}`;
+      },
+    );
+  }
   content = content.replace(
     /(\*\*Estado actual:\*\*\s*)`[^`]+`/,
     `$1\`${overall}\``,

@@ -1,4 +1,13 @@
-import { CONTRACT_VERSION, getPhase, PHASE_IDS, PHASES } from "./phases.ts";
+import {
+  CONTRACT_VERSION,
+  detectProductionMode,
+  getPhase,
+  getPhaseEvidence,
+  isAllowedEvidenceRole,
+  P05_EVIDENCE_BY_MODE,
+  PHASE_IDS,
+  PHASES,
+} from "./phases.ts";
 import type {
   Actor,
   ArtifactReader,
@@ -229,19 +238,33 @@ export function submitPhase(reg: Registry, id: PhaseId, input: SubmitInput, ctx:
     }
   }
 
-  const requiredRoles = new Set(def.evidence.map((e) => e.role));
-  const seenRoles = new Set<string>();
+  let detectedMode: ProductionMode = "audio_first";
+  if (typeof ctx.reader.readContent === "function") {
+    const text = ctx.reader.readContent("00-estado-produccion.md");
+    if (text) detectedMode = detectProductionMode(text);
+  }
+  const mode = reg.productionMode ?? detectedMode;
+
+  const expectedEvidence = getPhaseEvidence(id, mode);
+  const seenPrimaryRoles = new Set<string>();
 
   for (const item of input.evidence) {
-    if (!requiredRoles.has(item.role)) {
-      reasons.push(`Rol de evidencia no declarado en el contrato de ${id}: "${item.role}".`);
+    if (!isAllowedEvidenceRole(id, item.role, mode)) {
+      reasons.push(
+        `Rol de evidencia no declarado en el contrato de ${id} para el modo ${mode}: "${item.role}".`,
+      );
       continue;
     }
-    if (seenRoles.has(item.role)) {
-      reasons.push(`Rol de evidencia duplicado: "${item.role}".`);
+
+    const primaryRole = id === "P05_ANIMATIC"
+      ? (P05_EVIDENCE_BY_MODE[mode]?.primaryRole ?? item.role)
+      : item.role;
+
+    if (seenPrimaryRoles.has(primaryRole)) {
+      reasons.push(`Rol de evidencia duplicado para ${primaryRole}: "${item.role}".`);
       continue;
     }
-    seenRoles.add(item.role);
+    seenPrimaryRoles.add(primaryRole);
 
     const safe = isSafeEvidencePath(item.path);
     if (!safe.ok) {
@@ -257,8 +280,8 @@ export function submitPhase(reg: Registry, id: PhaseId, input: SubmitInput, ctx:
     }
   }
 
-  for (const spec of def.evidence) {
-    if (!seenRoles.has(spec.role)) {
+  for (const spec of expectedEvidence) {
+    if (!seenPrimaryRoles.has(spec.role)) {
       reasons.push(`Falta evidencia obligatoria "${spec.role}" (${spec.description}).`);
     }
   }
@@ -302,6 +325,7 @@ export function submitPhase(reg: Registry, id: PhaseId, input: SubmitInput, ctx:
   }
 
   const next = structuredClone(reg);
+  next.productionMode = mode;
   next.phases[id].status = "PENDIENTE_APROBACION";
   next.phases[id].submission = {
     submittedAt: ctx.now,

@@ -16,6 +16,8 @@ interface HarnessOptions {
   hasUI?: boolean;
   confirmResult?: boolean;
   extraCapabilities?: ToolCapabilityEntry[];
+  techniquesPath?: string;
+  rolesDir?: string;
 }
 
 /**
@@ -67,6 +69,8 @@ function createPiHarness(opts: HarnessOptions) {
 
   const ext = createYoutubeShellExtension({
     extraCapabilities: opts.extraCapabilities,
+    techniquesPath: opts.techniquesPath,
+    rolesDir: opts.rolesDir,
   });
   ext(pi);
 
@@ -999,6 +1003,49 @@ test("read_only consultation blocks yts_transition at tool_call and direct execu
     phase: "P01_PACKAGING",
   });
   assert.equal(prodSubmit.blocked, false);
+});
+
+test("corrupt or invalid framework techniques registry fails closed and blocks transitions and mutations in the runtime", async (t) => {
+  const { root, videoDir } = setupTempVideo(t);
+  const badTechPath = join(root, "bad-registro-tecnicas.md");
+  writeFileSync(
+    badTechPath,
+    [
+      "| ID | Técnica | Fundamento | Validación Propia | Fuerza Operativa | Ámbito | Ubicación | Fuente | Próxima Acción |",
+      "| :--- | :--- | :---: | :---: | :---: | :--- | :--- | :--- | :--- |",
+      "| **`GATE-001`** | Inválida | CONTRATO_ROTO | SIN_PROBAR | **FUERZA_ERRONEA** | Ámbito | Ubicación | Fuente | Acción |",
+    ].join("\n"),
+    "utf8",
+  );
+
+  const h = createPiHarness({
+    videoDir,
+    techniquesPath: badTechPath,
+  });
+
+  // 1. Tool call hook blocks yts_transition when framework integrity fails
+  const transBlock = await h.invokeTool("yts_transition", { action: "start", phase: "P01_PACKAGING" });
+  assert.equal(transBlock.blocked, true);
+  assert.match(transBlock.reason, /integridad del framework ha fallado/);
+
+  // 2. Direct execute of yts_transition also returns error without mutating registry
+  assert.equal(existsSync(registryPath(videoDir)), false);
+  const transitionTool = h.tools.get("yts_transition");
+  const directOut = await transitionTool.execute(
+    "tc-1",
+    { action: "start", phase: "P01_PACKAGING" },
+    undefined,
+    undefined,
+    { cwd: videoDir, hasUI: true },
+  );
+  assert.equal(directOut.isError, true);
+  assert.match(directOut.content[0].text, /integridad del framework ha fallado/);
+  assert.equal(existsSync(registryPath(videoDir)), false);
+
+  // 3. Mutating write tools are also blocked
+  const writeBlock = await h.invokeTool("write", { path: "01-packaging.md", content: "hack" });
+  assert.equal(writeBlock.blocked, true);
+  assert.match(writeBlock.reason, /integridad del framework ha fallado/);
 });
 
 

@@ -3,7 +3,7 @@ import { dirname, join, resolve, sep } from "node:path";
 import type { Evaluation } from "./machine.ts";
 import { getPhase, type PhaseDefinition } from "./phases.ts";
 import { PREAMBLE } from "./sections.ts";
-import type { PhaseId, Registry, WorkspaceLink } from "./types.ts";
+import type { PhaseId, ProductionMode, Registry, WorkspaceLink } from "./types.ts";
 
 export type WorkMode = "read_only" | "production";
 
@@ -298,6 +298,7 @@ export interface Layer3Resolution {
   officeFiles: Layer3FileStatus[];
   channelFiles: Layer3FileStatus[];
   frameworkReferences: Layer3FileStatus[];
+  productionMode: ProductionMode;
 }
 
 export function resolveLayer3References(
@@ -310,10 +311,14 @@ export function resolveLayer3References(
   const frameworkReferences: Layer3FileStatus[] = [
     "contingencia-y-politicas-sensibles.md",
     "herramientas-y-apis.md",
+    "gobernanza-evidencia.md",
+    "registro-tecnicas.md",
   ].map((name) => {
     const full = join(refDir, name);
     return { name, path: full, exists: existsSync(full) };
   });
+
+  const productionMode: ProductionMode = reg?.productionMode ?? "audio_first";
 
   let link = reg?.workspaceLink;
   if (!link) {
@@ -346,6 +351,7 @@ export function resolveLayer3References(
     officeFiles,
     channelFiles,
     frameworkReferences,
+    productionMode,
   };
 }
 
@@ -464,6 +470,13 @@ export function buildThreeLayerPrompt(resolved: ResolvedWorkflowContext): string
     }
   }
 
+  const prodModeLabels: Record<ProductionMode, string> = {
+    audio_first: "Audio-First (la voz es la columna vertebral; evidencia P05: scratch_track)",
+    screen_first: "Screen-First / Action-First (la interacción en pantalla manda; evidencia P05: screen_recording)",
+    speaker_first: "Speaker-First (presentador a cámara A-roll; evidencia P05: speaker_track)",
+    music_first: "Music-First / Ambient (la música/atmósfera dicta el ritmo; evidencia P05: music_bed)",
+  };
+
   return [
     "[youtube-shell — Gobernanza y Persona]",
     "[Capa 1 — Orquestador Permanente]",
@@ -478,6 +491,7 @@ export function buildThreeLayerPrompt(resolved: ResolvedWorkflowContext): string
     "",
     "[Capa 2 — Playbook de Fase Activa]",
     `Fase objetivo: ${resolved.targetPhase} — ${resolved.phaseDefinition.name}`,
+    `Flujo audiovisual activo: ${prodModeLabels[resolved.layer3.productionMode] ?? resolved.layer3.productionMode}`,
     `Skill asignada: ${resolved.playbook.skill} (${resolved.playbook.role})`,
     `Foco de la fase: ${resolved.playbook.summary}`,
     `Superficie editable permitida: ${resolved.editableTargets.join("; ")}`,
