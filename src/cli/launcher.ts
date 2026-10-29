@@ -273,7 +273,10 @@ export function formatLauncherHelp(): string {
     "Comandos dentro de la sesión interactiva:",
     "  /yts-init                    Inicializar plantillas 00..06 y registro en la carpeta actual",
     "  /yts-status                  Ver panel de estado de las 7 fases y siguiente acción",
+    "  /yts-mode [modo]             Ver o cambiar modo de producción (audio_first, screen_first, etc.)",
+    "  /yts-link <ruta>             Vincular carpeta al _framework/ upstream",
     "  /yts-approve <FASE> [nota]   Aprobar fase en PENDIENTE_APROBACION (exclusivo creador)",
+    "  /yts-approve-sheet <F> <h>   Aprobar animatic/edición mediante hoja de cálculo",
     "  /yts-reject <FASE> <nota>    Devolver fase a EN_CURSO con cambios solicitados",
   ].join("\n");
 }
