@@ -35,3 +35,31 @@ Para no duplicar números de versión ni perder rastro de qué versión exacta c
 | `1` | Hay commits upstream en rutas listadas en `affects_us`. | Revisar el diff, adaptar skills/código y actualizar `upstream-lock.json` y `_framework/compatibilidad-consumidores.md`. |
 | `2` | No se pudo consultar (API fallando o sin token). | Reintentar con `GITHUB_TOKEN` o `gh auth token`; no declarar alineación sin la comprobación. |
 | `3` | El commit revisado del lock **todavía no está publicado** en el remoto. | Publicar la rama de la oficina (`git push` en `albertopo94/youtube`); mientras tanto la alineación no es verificable fuera de esta máquina. |
+
+## Motores de medios: la guarda es la superficie, no la versión
+
+`filmcraft-cli`, `effectcraft-cli` y `soundcraft-cli` se actualizan en la máquina del creador cada
+vez que `storytold` publica una versión nueva. Por eso el harness **no** exige que la versión
+instalada sea igual a la revisada: eso pondría el build en rojo por una rutina válida.
+
+Lo que sí debe seguir siendo verdad es que `src/gate/capabilities.ts` describe la superficie que el
+motor realmente ofrece. `npm test` consulta `tools/list` por MCP a cada binario instalado
+(~150 ms por motor) y compara:
+
+| Situación | Comportamiento | Por qué |
+| :--- | :--- | :--- |
+| El catálogo afirma una tool que el motor ya no expone | **Corta el build** | El gate estaría garantizando fase y capacidad sobre algo que no existe. |
+| El motor expone una tool que el catálogo no lista | **Advertencia** | El catálogo es allowlist: la tool desconocida queda bloqueada (falla cerrado). Se pierde capacidad, no seguridad. |
+| Versión instalada distinta de la revisada | **Advertencia** | Esperado: los CLIs se actualizan al ritmo de `storytold`. |
+| `mcp_surface_sha256` del lock distinto del leído en vivo | **Advertencia** | La superficie gobernada cambió; revisar y actualizar el lock. |
+
+### Tras actualizar un motor
+
+```bash
+npm run engines:surface   # imprime tools y el hash de superficie de cada CLI instalado
+```
+
+Volcar esos valores en `upstream-lock.json` (`reviewed.version`, `.tag`, `.commit`,
+`.committed_at`, `.mcp_surface_sha256`) y, si aparecieron tools nuevas, catalogarlas en
+`src/gate/capabilities.ts` con su fase y su confirmación humana. El commit de los tags está en la
+tabla de arriba; el diff de `affects_us` lo reporta `npm run upstreams:check`.

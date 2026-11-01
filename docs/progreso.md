@@ -18,14 +18,14 @@ Orden de trabajo de [brief-lector.md §12.5](brief-lector.md). Se actualiza en c
 
 ## 2. Dónde nos quedamos (Handoff para la próxima sesión)
 
-- **Versión actual:** `0.12.0` (`137/137` tests en verde con `npm test` y `npm run smoke`).
+- **Versión actual:** `0.13.0` (`137/137` tests en verde con `npm test` y `npm run smoke`).
 - **Upstreams fijados en [`upstream-lock.json`](../upstream-lock.json):**
   - `albertopo94/youtube`: commit `af32db882f54eb0aba1d84bf50f0f644c5d6eede` (`2026-11-01T17:49:32Z`, `v0.7.2-alineacion-epistemica-y-criterio-outliers`, con las 8 plantillas `00..06` + `entregable-final.md` espejadas en `mirrored` y las 16 fuentes normativas/consolidadas bloqueadas con SHA-256 en `normative_sources` incluyendo `gobernanza-evidencia.md` y `registro-tecnicas.md`).
   - `earendil-works/pi`: versión revisada `v1.4.0` (`4a080252f06caf63a525d7873c5d94d3c23887e0`, `2026-10-21T22:29:13Z`, auditada retrocompatible en todas las 14 APIs de extensiones consumidas).
-  - `storytold/filmcraft`: versión revisada `0.9.0` (`4a69a038d32761f604b3c7e4845b21fb40b3cbe4`), 17 herramientas MCP catalogadas.
-  - `storytold/effectcraft`: versión revisada `0.11.1` (`2a01226894c6bc58ae4fadcc24a10198d693acaa`), 27 herramientas MCP catalogadas con guardas de ejecución.
-  - `storytold/soundcraft`: versión revisada `0.8.0` (`2578ea69a388395ddadb6394d7b4ab40f21aa670`), 17 herramientas MCP catalogadas acotadas a `P06_ASSEMBLY`.
-- **Estado de Git:** `main` local en `v0.12.0`; comando `youtube-shell` enlazado globalmente en `/Users/albertmac11/.local/bin/youtube-shell` mediante `npm link`.
+  - `storytold/filmcraft`: versión revisada `0.15.0` (`94ceaa91a58e3e18ebe5676c10befa56759c9ceb`), 17 herramientas MCP verificadas contra el binario instalado (`mcp_surface_sha256`).
+  - `storytold/effectcraft`: versión revisada `0.19.0` (`afa3c938f6d7f2fd8688e9cd6f58dba0c606b1b4`), 27 herramientas MCP verificadas contra el binario instalado, incluido `list_commands` que estaba sin catalogar.
+  - `storytold/soundcraft`: versión revisada `0.15.0` (`a97ce7556c5362718e8bcab5349477381ff3fb65`), 17 herramientas MCP verificadas contra el binario instalado, acotadas a `P06_ASSEMBLY`.
+- **Estado de Git:** `main` local en `v0.13.0`; comando `youtube-shell` enlazado globalmente en `/Users/albertmac11/.local/bin/youtube-shell` mediante `npm link`.
 
 ---
 
