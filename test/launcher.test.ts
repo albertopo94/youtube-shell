@@ -11,6 +11,7 @@ import {
   prepareIsolatedHome,
   resolveAgentHome,
   resolvePiBinary,
+  verifyHarnessPreflight,
 } from "../src/cli/launcher.ts";
 
 const ROOT = join(import.meta.dirname, "..");
@@ -197,3 +198,18 @@ test("bin/youtube-shell.mjs responds to --help and --version", () => {
   assert.match(verOut, /^youtube-shell \d+\.\d+\.\d+/m);
   assert.match(verOut, /^home (isolated|link|custom) /m);
 });
+
+test("verifyHarnessPreflight validates extension and all 5 role skills and detects NOT_TRIGGERED when missing", (t) => {
+  const okRes = verifyHarnessPreflight(ROOT);
+  assert.equal(okRes.ok, true);
+
+  const brokenRoot = mkdtempSync(join(tmpdir(), "yts-preflight-broken-"));
+  t.after(() => rmSync(brokenRoot, { recursive: true, force: true }));
+
+  const failRes = verifyHarnessPreflight(brokenRoot);
+  assert.equal(failRes.ok, false);
+  if (!failRes.ok) {
+    assert.match(failRes.reason, /NOT_TRIGGERED/);
+  }
+});
+

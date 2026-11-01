@@ -31,6 +31,38 @@ export interface AgentHomeResolution {
 const SHARED_CREDENTIAL_FILES = ["auth.json", "models.json", "models-store.json", "mcp.json"] as const;
 const SAFE_SETTINGS_KEYS = ["defaultProvider", "defaultModel", "defaultThinkingLevel"] as const;
 
+export const REQUIRED_SKILL_NAMES = [
+  "yts-orquestador",
+  "yts-packaging-miniaturas",
+  "yts-investigacion-ideas",
+  "yts-guion-narrativa",
+  "yts-direccion-edicion",
+] as const;
+
+export function verifyHarnessPreflight(
+  packageRoot: string,
+): { ok: true; extensionPath: string; skillPaths: string[] } | { ok: false; reason: string } {
+  const extensionPath = join(packageRoot, "src", "gate", "pi-extension.ts");
+  if (!existsSync(extensionPath)) {
+    return {
+      ok: false,
+      reason: `NOT_TRIGGERED: no existe la extensión del harness en "${extensionPath}".`,
+    };
+  }
+  const skillPaths: string[] = [];
+  for (const skillName of REQUIRED_SKILL_NAMES) {
+    const skillFile = join(packageRoot, "skills", skillName, "SKILL.md");
+    if (!existsSync(skillFile)) {
+      return {
+        ok: false,
+        reason: `NOT_TRIGGERED: falta la skill obligatoria "${skillName}" en "${skillFile}".`,
+      };
+    }
+    skillPaths.push(skillFile);
+  }
+  return { ok: true, extensionPath, skillPaths };
+}
+
 function isPiSubcommand(token: string): token is PiSubcommand {
   return (PI_SUBCOMMANDS as readonly string[]).includes(token);
 }
@@ -273,6 +305,8 @@ export function formatLauncherHelp(): string {
     "Comandos dentro de la sesión interactiva:",
     "  /yts-init                    Inicializar plantillas 00..06 y registro en la carpeta actual",
     "  /yts-status                  Ver panel de estado de las 7 fases y siguiente acción",
+    "  /yts-audit [run-id]          Ver informe de aseguramiento y observabilidad de la ejecución",
+    "  /yts-runs                    Listar el historial de ejecuciones registradas en .youtube-shell/runs/",
     "  /yts-mode [modo]             Ver o cambiar modo de producción (audio_first, screen_first, etc.)",
     "  /yts-link <ruta>             Vincular carpeta al _framework/ upstream",
     "  /yts-approve <FASE> [nota]   Aprobar fase en PENDIENTE_APROBACION (exclusivo creador)",

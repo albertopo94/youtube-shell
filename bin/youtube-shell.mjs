@@ -14,6 +14,7 @@ const {
   prepareIsolatedHome,
   resolveAgentHome,
   resolvePiBinary,
+  verifyHarnessPreflight,
 } = await import("../src/cli/launcher.ts");
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -70,6 +71,14 @@ if (home.mode === "isolated" || home.mode === "custom") {
     targetDir: home.dir,
     candidateSourceDirs: [join(homedir, ".pi", "agent")],
   });
+}
+
+if (!parsed.piSubcommand) {
+  const preflight = verifyHarnessPreflight(PACKAGE_ROOT);
+  if (!preflight.ok) {
+    process.stderr.write(`Error de integridad pre-vuelo: ${preflight.reason}\n`);
+    process.exit(1);
+  }
 }
 
 const invocation = buildPiInvocation({

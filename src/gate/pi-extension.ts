@@ -8,10 +8,19 @@ import {
   type WorkMode,
 } from "../core/context-resolver.ts";
 import {
+  buildExpectedChecksForPhase,
+  evaluateRunAssurance,
+  formatRunAuditReport,
+  recordReferenceReadInAttestation,
+  type RunIncident,
+  type RunManifest,
+} from "../core/assurance.ts";
+import {
   approveAcceptanceSheet,
   approvePhase,
   blockPhase,
   changeProductionMode,
+  createRegistry,
   evaluate,
   isSafeEvidencePath,
   reopenPhase,
@@ -25,6 +34,15 @@ import { getPhase, parseProductionMode, PHASE_IDS } from "../core/phases.ts";
 import { extractSection } from "../core/sections.ts";
 import type { CheckRun, Context, DeclaredEvidence, EffectiveStatus, PhaseId, Result } from "../core/types.ts";
 import { createFsReader, loadRegistry, registryPath, saveRegistry, scaffoldVideoDir, syncStatusView } from "../store/fs-store.ts";
+import {
+  appendRunEvent,
+  createRunRecord,
+  finalizeRunRecord,
+  listRunManifests,
+  loadRunManifest,
+  sanitizeToolInputForLedger,
+  saveRunManifest,
+} from "../store/run-ledger.ts";
 import { CANONICAL_FILES, checkVideoContract } from "../checks/contract-checker.ts";
 import { checkFrameworkIntegrity, type FrameworkIntegrityReport } from "../checks/framework-checker.ts";
 import {
@@ -45,6 +63,7 @@ export interface YoutubeShellExtensionOptions {
   now?: () => string;
   techniquesPath?: string;
   rolesDir?: string;
+  packageRoot?: string;
 }
 
 const DEFAULT_PKG_VERSION = (() => {
@@ -208,6 +227,7 @@ export function renderStartupPanel(
     "",
     `${ANSI_CYAN}[Commands]${ANSI_RESET}`,
     `  • /yts-init                  • /yts-status`,
+    `  • /yts-audit [run-id]        • /yts-runs`,
     `  • /yts-approve <FASE>        • /yts-reject <FASE> <nota>`,
     `  • /yts-approve-sheet         • /yts-link <oficina> [canal]`,
   ];
@@ -766,6 +786,189 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
   const catalog = buildCapabilityCatalog(options.extraCapabilities);
   const nowFn = options.now ?? (() => new Date().toISOString());
   let activeWorkMode: WorkMode = "production";
+  let currentRun: {
+    videoDir: string;
+    manifest: RunManifest;
+    recordedToolCallIds: Set<string>;
+  } | null = null;
+
+  function ensureOrGetActiveRun(videoDir: string, nowIso: string, promptText = ""): RunManifest | null {
+    if (currentRun && currentRun.videoDir === videoDir && !currentRun.manifest.finishedAt) {
+      return currentRun.manifest;
+    }
+    try {
+      const reader = createFsReader(videoDir);
+      const hasRegistry =
+        existsSync(registryPath(videoDir)) || existsSync(join(videoDir, "00-estado-produccion.md"));
+      let reg;
+      let regCorruptError: string | undefined;
+      try {
+        reg = loadRegistry(videoDir, { videoId: basename(videoDir), now: nowIso });
+      } catch (err) {
+        regCorruptError = err instanceof Error ? err.message : String(err);
+        reg = createRegistry(basename(videoDir) || "video", nowIso);
+      }
+      const ev = evaluate(reg, reader);
+      const resolvedWorkflow = resolveWorkflowContext({
+        videoDir,
+        promptText: promptText || "Operación directa de herramienta",
+        reg,
+        evaluation: ev,
+        hasRegistry: hasRegistry || activeWorkMode === "production",
+      });
+      if (activeWorkMode === "read_only") {
+        resolvedWorkflow.workMode = "read_only";
+      }
+      const manifest = createRunRecord({
+        videoDir,
+        startedAt: nowIso,
+        promptText,
+        resolvedWorkflow,
+        promptDelivered: false,
+        packageRoot: options.packageRoot,
+      });
+      if (regCorruptError) {
+        manifest.incidents.push({
+          at: nowIso,
+          kind: "integrity_failure",
+          summary: regCorruptError,
+        });
+      }
+      saveRunManifest(videoDir, manifest);
+      appendRunEvent(videoDir, manifest.runId, {
+        at: nowIso,
+        type: "run_started",
+        phase: manifest.targetPhase,
+        workMode: manifest.workMode,
+        details: { implicit: true },
+      });
+      currentRun = { videoDir, manifest, recordedToolCallIds: new Set() };
+      return manifest;
+    } catch {
+      return null;
+    }
+  }
+
+  function recordCheckExecutionInRun(
+    videoDir: string,
+    phase: PhaseId,
+    check: CheckRun,
+    nowIso: string,
+    artifactHash?: string,
+  ): void {
+    const manifest = ensureOrGetActiveRun(videoDir, nowIso);
+    if (!manifest) return;
+    let existing = manifest.checks.find((c) => c.check_id === check.id);
+    if (!existing) {
+      existing = {
+        check_id: check.id,
+        expected: getPhase(manifest.targetPhase).checks.includes(check.id),
+        executed: true,
+        verdict: check.result,
+        verified_by: check.verifiedBy,
+        details: check.details,
+        evidence: {
+          ...(artifactHash ? { artifact_hash: artifactHash } : {}),
+          phase,
+        },
+      };
+      manifest.checks.push(existing);
+    } else {
+      existing.executed = true;
+      existing.verdict = check.result;
+      existing.verified_by = check.verifiedBy;
+      existing.details = check.details;
+      existing.evidence = {
+        ...(artifactHash ? { artifact_hash: artifactHash } : {}),
+        phase,
+      };
+    }
+    if (check.result === "FAIL" || check.result === "NOT_EVALUABLE") {
+      manifest.incidents.push({
+        at: nowIso,
+        kind: "check_failed",
+        summary: `${check.id}: ${check.result} (${check.details ?? "sin detalle"})`,
+      });
+    }
+    saveRunManifest(videoDir, manifest);
+    appendRunEvent(videoDir, manifest.runId, {
+      at: nowIso,
+      type: "check_executed",
+      phase,
+      workMode: manifest.workMode,
+      details: {
+        check_id: check.id,
+        verdict: check.result,
+        verified_by: check.verifiedBy ?? "runtime",
+        ...(artifactHash ? { artifact_hash: artifactHash } : {}),
+      },
+    });
+  }
+
+  function recordCompletedToolInRun(
+    videoDir: string,
+    toolCallId: string | undefined,
+    toolName: string,
+    input: Record<string, unknown> | undefined,
+    isError: boolean,
+    durationMs: number | undefined,
+    nowIso: string,
+    errorReason?: string,
+  ): void {
+    const manifest = ensureOrGetActiveRun(videoDir, nowIso);
+    if (!manifest || !currentRun) return;
+    const dedupKey = toolCallId ? `${toolName}:${toolCallId}` : "";
+    if (dedupKey && currentRun.recordedToolCallIds.has(dedupKey)) {
+      return;
+    }
+    if (dedupKey) {
+      currentRun.recordedToolCallIds.add(dedupKey);
+    }
+
+    const targetPath = typeof input?.path === "string" ? input.path : undefined;
+    manifest.actions.completedTools.push({
+      ...(toolCallId ? { toolCallId } : {}),
+      toolName,
+      at: nowIso,
+      ...(durationMs !== undefined ? { durationMs } : {}),
+      isError,
+      ...(targetPath ? { targetPath } : {}),
+    });
+
+    if (isError) {
+      manifest.incidents.push({
+        at: nowIso,
+        kind: "tool_error",
+        summary: `${toolName}: ${errorReason ?? "la herramienta devolvió error"}`,
+      });
+    } else if (toolName === "read" && targetPath) {
+      const matched = recordReferenceReadInAttestation(manifest.context, videoDir, targetPath);
+      if (matched) {
+        appendRunEvent(videoDir, manifest.runId, {
+          at: nowIso,
+          type: "reference_read",
+          phase: manifest.targetPhase,
+          workMode: manifest.workMode,
+          toolName: "read",
+          toolCallId,
+          details: { path: targetPath },
+        });
+      }
+    }
+
+    saveRunManifest(videoDir, manifest);
+    appendRunEvent(videoDir, manifest.runId, {
+      at: nowIso,
+      type: "tool_completed",
+      phase: manifest.targetPhase,
+      workMode: manifest.workMode,
+      toolName,
+      toolCallId,
+      isError,
+      durationMs,
+      details: sanitizeToolInputForLedger(toolName, input),
+    });
+  }
 
   function getFrameworkIntegrity(): FrameworkIntegrityReport {
     return checkFrameworkIntegrity({
@@ -820,10 +1023,21 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         type: "object",
         properties: {},
       },
-      async execute(_toolCallId: string, _params: Record<string, unknown>, _signal: unknown, _onUpdate: unknown, ctx: any) {
+      async execute(toolCallId: string, params: Record<string, unknown>, _signal: unknown, _onUpdate: unknown, ctx: any) {
+        const startedMs = Date.now();
+        const nowIso = nowFn();
         const reader = createFsReader(ctx.cwd);
-        const reg = loadRegistry(ctx.cwd, { videoId: basename(ctx.cwd), now: nowFn() });
+        const reg = loadRegistry(ctx.cwd, { videoId: basename(ctx.cwd), now: nowIso });
         const ev = evaluate(reg, reader);
+        recordCompletedToolInRun(
+          ctx.cwd,
+          toolCallId,
+          "yts_status",
+          params,
+          false,
+          Date.now() - startedMs,
+          nowIso,
+        );
         return {
           content: [{ type: "text", text: JSON.stringify(ev, null, 2) }],
           details: ev,
@@ -840,13 +1054,37 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         type: "object",
         properties: {},
       },
-      async execute(_toolCallId: string, _params: Record<string, unknown>, _signal: unknown, _onUpdate: unknown, ctx: any) {
+      async execute(toolCallId: string, params: Record<string, unknown>, _signal: unknown, _onUpdate: unknown, ctx: any) {
+        const startedMs = Date.now();
+        const nowIso = nowFn();
         const report = checkVideoContract(ctx.cwd);
         const integrity = getFrameworkIntegrity();
         const combined = {
           ...report,
           framework_integrity: integrity,
         };
+        const manifest = ensureOrGetActiveRun(ctx.cwd, nowIso);
+        const phase = manifest?.targetPhase ?? "P01_PACKAGING";
+        const expectedSet = new Set(getPhase(phase).checks);
+        for (const c of report.checks) {
+          if (expectedSet.has(c.id)) {
+            recordCheckExecutionInRun(ctx.cwd, phase, {
+              id: c.id,
+              result: c.result,
+              details: c.details,
+              verifiedBy: "runtime",
+            }, nowIso);
+          }
+        }
+        recordCompletedToolInRun(
+          ctx.cwd,
+          toolCallId,
+          "yts_check_contract",
+          params,
+          false,
+          Date.now() - startedMs,
+          nowIso,
+        );
         return {
           content: [{ type: "text", text: JSON.stringify(combined, null, 2) }],
           details: combined,
@@ -867,12 +1105,24 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         },
         required: ["masterPath", "acceptanceSheetPath"],
       },
-      async execute(_toolCallId: string, params: Record<string, unknown>, _signal: unknown, _onUpdate: unknown, ctx: any) {
+      async execute(toolCallId: string, params: Record<string, unknown>, _signal: unknown, _onUpdate: unknown, ctx: any) {
+        const startedMs = Date.now();
+        const nowIso = nowFn();
         const masterRel = String(params.masterPath ?? "");
         const sheetRel = String(params.acceptanceSheetPath ?? "");
         const safeMaster = isSafeEvidencePath(masterRel);
         const safeSheet = isSafeEvidencePath(sheetRel);
         if (!safeMaster.ok || !safeSheet.ok) {
+          recordCompletedToolInRun(
+            ctx.cwd,
+            toolCallId,
+            "yts_measure_master",
+            params,
+            true,
+            Date.now() - startedMs,
+            nowIso,
+            "Ruta de master o de hoja de aceptación inválida.",
+          );
           return {
             content: [{ type: "text", text: "Ruta de master o de hoja de aceptación inválida." }],
             isError: true,
@@ -880,6 +1130,27 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         }
         const measured = measureMasterFile(join(ctx.cwd, masterRel));
         if (!measured.ok) {
+          recordCheckExecutionInRun(
+            ctx.cwd,
+            "P06_ASSEMBLY",
+            {
+              id: "master_measurement",
+              result: "NOT_EVALUABLE",
+              details: measured.reason,
+              verifiedBy: "runtime",
+            },
+            nowIso,
+          );
+          recordCompletedToolInRun(
+            ctx.cwd,
+            toolCallId,
+            "yts_measure_master",
+            params,
+            true,
+            Date.now() - startedMs,
+            nowIso,
+            measured.reason,
+          );
           return {
             content: [{ type: "text", text: measured.reason }],
             details: { result: "NOT_EVALUABLE", reason: measured.reason },
@@ -891,6 +1162,29 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
           ? (JSON.parse(readFileSync(sheetFull, "utf8")) as AcceptanceSheet)
           : null;
         const report = evaluateMasterAcceptance(measured.metrics, sheet);
+        const reader = createFsReader(ctx.cwd);
+        const masterFp = reader.fingerprint({ file: masterRel });
+        recordCheckExecutionInRun(
+          ctx.cwd,
+          "P06_ASSEMBLY",
+          {
+            id: "master_measurement",
+            result: report.result,
+            details: report.checks.map((c) => `${c.id}=${c.result}`).join(", "),
+            verifiedBy: "runtime",
+          },
+          nowIso,
+          masterFp.ok ? masterFp.hash : undefined,
+        );
+        recordCompletedToolInRun(
+          ctx.cwd,
+          toolCallId,
+          "yts_measure_master",
+          params,
+          false,
+          Date.now() - startedMs,
+          nowIso,
+        );
         return {
           content: [{ type: "text", text: JSON.stringify(report, null, 2) }],
           details: report,
@@ -920,26 +1214,113 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         },
         required: ["action", "phase"],
       },
-      async execute(_toolCallId: string, params: Record<string, unknown>, _signal: unknown, _onUpdate: unknown, ctx: any) {
+      async execute(toolCallId: string, params: Record<string, unknown>, _signal: unknown, _onUpdate: unknown, ctx: any) {
+        const startedMs = Date.now();
+        const nowIso = nowFn();
         if (activeWorkMode === "read_only") {
           const reason =
             "Modo de solo lectura activo (consulta/auditoría): no se permiten transiciones de fase en este turno.";
+          const manifest = ensureOrGetActiveRun(ctx.cwd, nowIso);
+          if (manifest) {
+            manifest.actions.blockedTools.push({
+              toolCallId,
+              toolName: "yts_transition",
+              at: nowIso,
+              reason,
+            });
+            manifest.incidents.push({
+              at: nowIso,
+              kind: "transition_denied",
+              summary: `yts_transition: ${reason}`,
+            });
+            saveRunManifest(ctx.cwd, manifest);
+            appendRunEvent(ctx.cwd, manifest.runId, {
+              at: nowIso,
+              type: "tool_blocked",
+              phase: manifest.targetPhase,
+              workMode: manifest.workMode,
+              toolName: "yts_transition",
+              toolCallId,
+              details: { reason },
+            });
+          }
           return {
             content: [{ type: "text", text: `Transición denegada: ${reason}` }],
             details: { ok: false, reasons: [reason] },
             isError: true,
           };
         }
-        const res = executeAgentTransition(ctx.cwd, params, nowFn(), getFrameworkIntegrity());
+        const res = executeAgentTransition(ctx.cwd, params, nowIso, getFrameworkIntegrity());
         if (!res.ok) {
+          const reasonText = res.reasons.join(" ");
+          const manifest = ensureOrGetActiveRun(ctx.cwd, nowIso);
+          if (manifest) {
+            manifest.incidents.push({
+              at: nowIso,
+              kind: "transition_denied",
+              summary: `yts_transition(${String(params.action)} ${String(params.phase)}): ${reasonText}`,
+            });
+            saveRunManifest(ctx.cwd, manifest);
+          }
+          recordCompletedToolInRun(
+            ctx.cwd,
+            toolCallId,
+            "yts_transition",
+            params,
+            true,
+            Date.now() - startedMs,
+            nowIso,
+            reasonText,
+          );
           return {
-            content: [{ type: "text", text: `Transición denegada: ${res.reasons.join(" ")}` }],
+            content: [{ type: "text", text: `Transición denegada: ${reasonText}` }],
             details: res,
             isError: true,
           };
         }
         saveRegistry(ctx.cwd, res.registry);
         const ev = evaluate(res.registry, createFsReader(ctx.cwd));
+        const targetPhase = isPhaseId(params.phase) ? params.phase : "P01_PACKAGING";
+        const manifest = ensureOrGetActiveRun(ctx.cwd, nowIso);
+        if (manifest) {
+          manifest.targetPhase = targetPhase;
+          if (manifest.checks.length === 0 || manifest.checks[0]?.evidence?.phase !== targetPhase) {
+            manifest.checks = buildExpectedChecksForPhase(targetPhase);
+          }
+          const phaseEval = ev.phases.find((p) => p.id === targetPhase);
+          manifest.phaseStatusAtEnd = phaseEval?.effective;
+          if (params.action === "submit") {
+            manifest.phaseSubmitted = true;
+            const sub = res.registry.phases[targetPhase].submission;
+            const firstArtifactHash = sub?.artifacts[0]?.hash;
+            for (const chk of sub?.checks ?? []) {
+              recordCheckExecutionInRun(ctx.cwd, targetPhase, chk, nowIso, firstArtifactHash);
+            }
+          }
+          saveRunManifest(ctx.cwd, manifest);
+          appendRunEvent(ctx.cwd, manifest.runId, {
+            at: nowIso,
+            type: "phase_transition",
+            phase: targetPhase,
+            workMode: manifest.workMode,
+            toolName: "yts_transition",
+            toolCallId,
+            details: {
+              action: String(params.action),
+              phase: targetPhase,
+              effectiveStatus: phaseEval?.effective,
+            },
+          });
+        }
+        recordCompletedToolInRun(
+          ctx.cwd,
+          toolCallId,
+          "yts_transition",
+          params,
+          false,
+          Date.now() - startedMs,
+          nowIso,
+        );
         refreshUi(ctx);
         return {
           content: [{ type: "text", text: `Fase ${String(params.phase)} actualizada. Siguiente: ${ev.nextAction}` }],
@@ -977,6 +1358,71 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         ctx.ui.notify(
           `${basename(ctx.cwd)} — ${summary} | Siguiente: ${ev.nextAction}${integrityAlert}`,
           integrity.result === "FAIL" ? "warning" : "info",
+        );
+      },
+    });
+
+    pi.registerCommand("yts-audit", {
+      description:
+        "Muestra el informe de aseguramiento y observabilidad de la última ejecución (o de un run-id específico).",
+      handler: async (args: string, ctx: any) => {
+        const targetId = args.trim();
+        let manifest: RunManifest | undefined;
+        if (targetId) {
+          manifest = loadRunManifest(ctx.cwd, targetId);
+          if (!manifest) {
+            ctx.ui.notify(`No se encontró la ejecución "${targetId}" en .youtube-shell/runs/.`, "error");
+            return;
+          }
+        } else if (currentRun && currentRun.videoDir === ctx.cwd) {
+          manifest = currentRun.manifest;
+        } else {
+          const all = listRunManifests(ctx.cwd);
+          manifest = all.at(-1);
+        }
+
+        if (!manifest) {
+          ctx.ui.notify(
+            "No hay ejecuciones registradas todavía en .youtube-shell/runs/. Inicia un turno o usa /yts-init.",
+            "warning",
+          );
+          return;
+        }
+
+        const assurance = evaluateRunAssurance(manifest);
+        manifest.status = assurance.status;
+        manifest.statusReason = assurance.reason;
+        manifest.assurance = assurance;
+        saveRunManifest(ctx.cwd, manifest);
+
+        const report = formatRunAuditReport(manifest);
+        const level =
+          assurance.status === "PASSED" || assurance.status === "NOT_APPLICABLE"
+            ? "info"
+            : assurance.status === "FAILED" ||
+              assurance.status === "BLOCKED" ||
+              assurance.status === "ABORTED"
+            ? "error"
+            : "warning";
+        ctx.ui.notify(report, level);
+      },
+    });
+
+    pi.registerCommand("yts-runs", {
+      description: "Lista el historial de ejecuciones registradas en .youtube-shell/runs/ con su estado de aseguramiento.",
+      handler: async (_args: string, ctx: any) => {
+        const runs = listRunManifests(ctx.cwd);
+        if (runs.length === 0) {
+          ctx.ui.notify("No existen ejecuciones registradas en .youtube-shell/runs/.", "info");
+          return;
+        }
+        const rows = runs.slice(-10).map((m) => {
+          const a = m.assurance ?? evaluateRunAssurance(m);
+          return `${m.runId} · ${a.status} · ${m.targetPhase} (${m.workMode}) · ${a.satisfiedCount}/${a.totalControls} controles · ${m.startedAt}`;
+        });
+        ctx.ui.notify(
+          [`Historial de ejecuciones (${runs.length} total):`, ...rows].join("\n"),
+          "info",
         );
       },
     });
@@ -1256,16 +1702,25 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
 
     pi.on("before_agent_start", async (event: any, ctx: any) => {
       const nowIso = nowFn();
+      if (currentRun && currentRun.videoDir === ctx.cwd && !currentRun.manifest.finishedAt) {
+        finalizeRunRecord(ctx.cwd, currentRun.manifest, {
+          finishedAt: nowIso,
+          aborted: false,
+        });
+        currentRun = null;
+      }
+
       const reader = createFsReader(ctx.cwd);
       const hasRegistry =
         existsSync(registryPath(ctx.cwd)) || existsSync(join(ctx.cwd, "00-estado-produccion.md"));
       const reg = loadRegistry(ctx.cwd, { videoId: basename(ctx.cwd), now: nowIso });
       const ev = evaluate(reg, reader);
       const activeWorkPhases = ev.phases.filter((p) => p.canWork).map((p) => p.id);
+      const promptText = extractPromptText(event);
 
       const resolvedWorkflow = resolveWorkflowContext({
         videoDir: ctx.cwd,
-        promptText: extractPromptText(event),
+        promptText,
         reg,
         evaluation: ev,
         hasRegistry,
@@ -1286,35 +1741,129 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
       pi.setActiveTools?.(allowedTools);
 
       const governanceBlock = buildThreeLayerPrompt(resolvedWorkflow);
+      const promptHash = sha256Text(governanceBlock);
+
+      const manifest = createRunRecord({
+        videoDir: ctx.cwd,
+        startedAt: nowIso,
+        promptText,
+        resolvedWorkflow,
+        allowedTools,
+        promptDelivered: true,
+        promptHash,
+        packageRoot: options.packageRoot,
+      });
+
+      const integrity = getFrameworkIntegrity();
+      if (integrity.result === "FAIL") {
+        manifest.incidents.push({
+          at: nowIso,
+          kind: "integrity_failure",
+          summary: integrity.checks[0]?.details ?? "Fallo de integridad del framework",
+        });
+      }
+
+      saveRunManifest(ctx.cwd, manifest);
+      appendRunEvent(ctx.cwd, manifest.runId, {
+        at: nowIso,
+        type: "run_started",
+        phase: manifest.targetPhase,
+        workMode: manifest.workMode,
+        details: {
+          requestKind: manifest.requestKind,
+          assignedSkill: manifest.assignedSkill,
+          allowedToolsCount: allowedTools.length,
+        },
+      });
+      appendRunEvent(ctx.cwd, manifest.runId, {
+        at: nowIso,
+        type: "context_attested",
+        phase: manifest.targetPhase,
+        workMode: manifest.workMode,
+        details: {
+          skill: manifest.context.expectedSkill.name,
+          skillExists: manifest.context.expectedSkill.exists,
+          skillSha256: manifest.context.expectedSkill.sha256,
+          mandatoryRefs: manifest.context.mandatoryReferences.map((r) => ({
+            file: r.targetFile,
+            exists: r.exists,
+            sha256: r.sha256,
+          })),
+          promptHash,
+        },
+      });
+      currentRun = { videoDir: ctx.cwd, manifest, recordedToolCallIds: new Set() };
+
       return {
         systemPrompt: `${String(event.systemPrompt ?? "")}\n\n${governanceBlock}`,
       };
     });
 
     pi.on("tool_call", async (event: any, ctx: any) => {
+      const nowIso = nowFn();
       const toolName = String(event.toolName ?? "");
+      const toolCallId = typeof event.toolCallId === "string" ? event.toolCallId : undefined;
+      const manifest = ensureOrGetActiveRun(ctx.cwd, nowIso);
+
+      if (manifest) {
+        if (!manifest.actions.attemptedTools.includes(toolName)) {
+          manifest.actions.attemptedTools.push(toolName);
+        }
+        appendRunEvent(ctx.cwd, manifest.runId, {
+          at: nowIso,
+          type: "tool_attempted",
+          phase: manifest.targetPhase,
+          workMode: manifest.workMode,
+          toolName,
+          toolCallId,
+          details: sanitizeToolInputForLedger(toolName, event.input),
+        });
+      }
+
+      const denyAndRecord = (reason: string, incidentKind: RunIncident["kind"] = "tool_blocked") => {
+        if (manifest) {
+          manifest.actions.blockedTools.push({
+            ...(toolCallId ? { toolCallId } : {}),
+            toolName,
+            at: nowIso,
+            reason,
+          });
+          manifest.incidents.push({
+            at: nowIso,
+            kind: incidentKind,
+            summary: `${toolName}: ${reason}`,
+          });
+          saveRunManifest(ctx.cwd, manifest);
+          appendRunEvent(ctx.cwd, manifest.runId, {
+            at: nowIso,
+            type: "tool_blocked",
+            phase: manifest.targetPhase,
+            workMode: manifest.workMode,
+            toolName,
+            toolCallId,
+            details: { reason, incidentKind },
+          });
+        }
+        return { block: true, reason };
+      };
+
       if (toolName === "bash") {
-        return {
-          block: true,
-          reason:
-            "Operación bloqueada: el shell arbitrario (bash) no está expuesto durante el flujo de producción controlado.",
-        };
+        return denyAndRecord(
+          "Operación bloqueada: el shell arbitrario (bash) no está expuesto durante el flujo de producción controlado.",
+        );
       }
 
       const cap = catalog.get(toolName);
       if (!cap) {
-        return {
-          block: true,
-          reason: `Operación bloqueada: la herramienta "${toolName}" no está registrada en el catálogo de capacidades de youtube-shell.`,
-        };
+        return denyAndRecord(
+          `Operación bloqueada: la herramienta "${toolName}" no está registrada en el catálogo de capacidades de youtube-shell.`,
+        );
       }
 
       if (activeWorkMode === "read_only" && !isReadOnlyCapability(cap)) {
-        return {
-          block: true,
-          reason:
-            "Operación bloqueada: modo de solo lectura activo (consulta/auditoría); no se permiten escrituras, ediciones ni transiciones de fase en este turno.",
-        };
+        return denyAndRecord(
+          "Operación bloqueada: modo de solo lectura activo (consulta/auditoría); no se permiten escrituras, ediciones ni transiciones de fase en este turno.",
+        );
       }
 
       if (
@@ -1324,11 +1873,10 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
       ) {
         const intCheck = checkIntegrityForAction(toolName);
         if (!intCheck.ok) {
-          return { block: true, reason: intCheck.reason };
+          return denyAndRecord(intCheck.reason, "integrity_failure");
         }
       }
 
-      const nowIso = nowFn();
       let reg;
       let ev;
       try {
@@ -1337,38 +1885,36 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         ev = evaluate(reg, reader);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        return {
-          block: true,
-          reason: `Operación bloqueada: fallo al verificar el registro de estado (${msg}).`,
-        };
+        return denyAndRecord(
+          `Operación bloqueada: fallo al verificar el registro de estado (${msg}).`,
+          "integrity_failure",
+        );
       }
 
       const activeWorkPhases = ev.phases.filter((p) => p.canWork).map((p) => p.id);
 
       if (cap.allowedPhases === "ANY_ACTIVE" && activeWorkPhases.length === 0) {
-        return {
-          block: true,
-          reason: `Operación bloqueada: "${toolName}" requiere al menos una fase EN_CURSO activa. Siguiente acción permitida: ${ev.nextAction}`,
-        };
+        return denyAndRecord(
+          `Operación bloqueada: "${toolName}" requiere al menos una fase EN_CURSO activa. Siguiente acción permitida: ${ev.nextAction}`,
+        );
       }
 
       if (
         Array.isArray(cap.allowedPhases) &&
         !cap.allowedPhases.some((phaseId) => activeWorkPhases.includes(phaseId))
       ) {
-        return {
-          block: true,
-          reason: `Operación bloqueada: "${toolName}" solo está permitida en ${cap.allowedPhases.join(", ")}. Siguiente acción permitida: ${ev.nextAction}`,
-        };
+        return denyAndRecord(
+          `Operación bloqueada: "${toolName}" solo está permitida en ${cap.allowedPhases.join(", ")}. Siguiente acción permitida: ${ev.nextAction}`,
+        );
       }
 
       if (toolName === "yts_transition") {
         const check = executeAgentTransition(ctx.cwd, event.input ?? {}, nowIso, getFrameworkIntegrity());
         if (!check.ok) {
-          return {
-            block: true,
-            reason: `Operación bloqueada: ${check.reasons.join(" ")}`,
-          };
+          return denyAndRecord(
+            `Operación bloqueada: ${check.reasons.join(" ")}`,
+            "transition_denied",
+          );
         }
       }
 
@@ -1381,28 +1927,28 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
           nowIso,
         );
         if (!check.ok) {
-          return { block: true, reason: check.reason };
+          return denyAndRecord(check.reason);
         }
       }
 
       if (cap.validationMethod === "filmcraft_command_guard") {
         const check = verifyFilmcraftCall(toolName, event.input ?? {});
         if (!check.ok) {
-          return { block: true, reason: check.reason };
+          return denyAndRecord(check.reason);
         }
       }
 
       if (cap.validationMethod === "effectcraft_command_guard") {
         const check = verifyEffectcraftCall(toolName, event.input ?? {});
         if (!check.ok) {
-          return { block: true, reason: check.reason };
+          return denyAndRecord(check.reason);
         }
       }
 
       if (cap.validationMethod === "soundcraft_command_guard") {
         const check = verifySoundcraftCall(toolName, event.input ?? {});
         if (!check.ok) {
-          return { block: true, reason: check.reason };
+          return denyAndRecord(check.reason);
         }
       }
 
@@ -1414,24 +1960,62 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
 
       if (needsConfirm) {
         if (!ctx.hasUI) {
-          return {
-            block: true,
-            reason: `Operación bloqueada: "${toolName}" requiere confirmación humana explícita y la sesión actual no tiene interfaz interactiva (hasUI=false).`,
-          };
+          return denyAndRecord(
+            `Operación bloqueada: "${toolName}" requiere confirmación humana explícita y la sesión actual no tiene interfaz interactiva (hasUI=false).`,
+          );
         }
         const ok = await ctx.ui.confirm(
           `Confirmación requerida: ${toolName}`,
           `¿Autoriza al agente a ejecutar "${toolName}" en ${basename(ctx.cwd)}?`,
         );
         if (!ok) {
-          return {
-            block: true,
-            reason: `Operación cancelada por el creador al solicitar confirmación para "${toolName}".`,
-          };
+          return denyAndRecord(
+            `Operación cancelada por el creador al solicitar confirmación para "${toolName}".`,
+          );
         }
       }
 
+      if (manifest) {
+        saveRunManifest(ctx.cwd, manifest);
+      }
       return undefined;
+    });
+
+    pi.on("tool_result", async (event: any, ctx: any) => {
+      const nowIso = nowFn();
+      const toolName = String(event?.toolName ?? "");
+      const toolCallId = typeof event?.toolCallId === "string" ? event.toolCallId : undefined;
+      const isError = Boolean(event?.isError);
+      const input = (event?.input as Record<string, unknown> | undefined) ?? undefined;
+      recordCompletedToolInRun(ctx.cwd, toolCallId, toolName, input, isError, undefined, nowIso);
+      return undefined;
+    });
+
+    pi.on("tool_execution_end", async (event: any, ctx: any) => {
+      const nowIso = nowFn();
+      const toolName = String(event?.toolName ?? "");
+      const toolCallId = typeof event?.toolCallId === "string" ? event.toolCallId : undefined;
+      const isError = Boolean(event?.isError);
+      const durationMs = typeof event?.durationMs === "number" ? event.durationMs : undefined;
+      recordCompletedToolInRun(ctx.cwd, toolCallId, toolName, undefined, isError, durationMs, nowIso);
+    });
+
+    pi.on("agent_settled", async (event: any, ctx: any) => {
+      if (!currentRun || currentRun.videoDir !== ctx.cwd) return;
+      const nowIso = nowFn();
+      let phaseStatusAtEnd = currentRun.manifest.phaseStatusAtEnd;
+      try {
+        const reader = createFsReader(ctx.cwd);
+        const reg = loadRegistry(ctx.cwd, { videoId: basename(ctx.cwd), now: nowIso });
+        const ev = evaluate(reg, reader);
+        phaseStatusAtEnd = ev.phases.find((p) => p.id === currentRun!.manifest.targetPhase)?.effective;
+      } catch {}
+      finalizeRunRecord(ctx.cwd, currentRun.manifest, {
+        finishedAt: nowIso,
+        aborted: Boolean(event?.aborted),
+        phaseStatusAtEnd,
+      });
+      currentRun = null;
     });
   };
 }
