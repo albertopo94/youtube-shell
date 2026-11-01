@@ -25,3 +25,13 @@ Para no duplicar números de versión ni perder rastro de qué versión exacta c
 
 - **Cambios internos nuestros** (lógica del motor de fases, tests propios, mensajes): no requieren consultar los repos externos; basta con que `npm test` pase en verde.
 - **Cuando quieras saber si los repos upstream cambiaron en algo que nos afecte:** ejecutá `npm run upstreams:check`. El script consulta solo las rutas listadas en `affects_us` e ignora el resto (por ejemplo, cambios en `mis-canales/` de `youtube`, paquetes ajenos a `coding-agent` en `pi`, o crates no vinculados a MCP/automation en los motores de `storytold`).
+- **Un subconjunto:** `node scripts/check-upstreams.mjs --only youtube` (o `--only pi,filmcraft`). CI usa esta bandera para dividir la compuerta: la deriva de `youtube` (la fuente del contrato de dominio) **corta el build**, y la de `pi` y los motores de medios queda en advertencia porque su superficie ya está fijada por los tests `api_used` y de versión de binario de `npm test`.
+
+**Códigos de salida de `scripts/check-upstreams.mjs`:**
+
+| Código | Significado | Qué hacer |
+| :---: | :--- | :--- |
+| `0` | Nada que nos afecte desde el commit revisado. | Nada. |
+| `1` | Hay commits upstream en rutas listadas en `affects_us`. | Revisar el diff, adaptar skills/código y actualizar `upstream-lock.json` y `_framework/compatibilidad-consumidores.md`. |
+| `2` | No se pudo consultar (API fallando o sin token). | Reintentar con `GITHUB_TOKEN` o `gh auth token`; no declarar alineación sin la comprobación. |
+| `3` | El commit revisado del lock **todavía no está publicado** en el remoto. | Publicar la rama de la oficina (`git push` en `albertopo94/youtube`); mientras tanto la alineación no es verificable fuera de esta máquina. |
