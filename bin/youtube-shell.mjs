@@ -27,6 +27,39 @@ if (parsed.help) {
   process.exit(0);
 }
 
+if (parsed.runs) {
+  const { listRunManifests } = await import("../src/store/run-ledger.ts");
+  const { formatObservedRunsReport } = await import("../src/core/assurance.ts");
+  const runs = listRunManifests(process.cwd());
+  process.stdout.write(`${formatObservedRunsReport(runs)}\n`);
+  process.exit(0);
+}
+
+if (parsed.audit) {
+  const { listRunManifests, loadRunManifest, saveRunManifest } = await import(
+    "../src/store/run-ledger.ts"
+  );
+  const { evaluateRunAssurance, formatRunAuditReport } = await import("../src/core/assurance.ts");
+  const manifest = parsed.auditRunId
+    ? loadRunManifest(process.cwd(), parsed.auditRunId)
+    : listRunManifests(process.cwd()).at(-1);
+  if (!manifest) {
+    process.stderr.write(
+      parsed.auditRunId
+        ? `No se encontró la ejecución "${parsed.auditRunId}" en .youtube-shell/runs/.\n`
+        : "No existen ejecuciones registradas en .youtube-shell/runs/.\n",
+    );
+    process.exit(1);
+  }
+  const assurance = evaluateRunAssurance(manifest);
+  manifest.status = assurance.status;
+  manifest.statusReason = assurance.reason;
+  manifest.assurance = assurance;
+  saveRunManifest(process.cwd(), manifest);
+  process.stdout.write(`${formatRunAuditReport(manifest)}\n`);
+  process.exit(0);
+}
+
 const homedir = getHomedir();
 const home = resolveAgentHome({
   args: { link: parsed.link, home: parsed.home },

@@ -213,3 +213,52 @@ test("verifyHarnessPreflight validates extension and all 5 role skills and detec
   }
 });
 
+test("bin/youtube-shell.mjs supports --runs and --audit [run-id] outside the Pi TUI with aggregated observation summary", async (t) => {
+  const tmp = mkdtempSync(join(tmpdir(), "yts-cli-audit-"));
+  t.after(() => rmSync(tmp, { recursive: true, force: true }));
+
+  const { createFsReader, scaffoldVideoDir } = await import("../src/store/fs-store.ts");
+  const { evaluate } = await import("../src/core/machine.ts");
+  const { resolveWorkflowContext } = await import("../src/core/context-resolver.ts");
+  const { recordReferenceReadInAttestation } = await import("../src/core/assurance.ts");
+  const { createRunRecord, finalizeRunRecord } = await import("../src/store/run-ledger.ts");
+
+  const now = "2026-11-01T14:00:00Z";
+  const { registry: reg } = scaffoldVideoDir(tmp, { now });
+  const evaluation = evaluate(reg, createFsReader(tmp));
+  const resolved = resolveWorkflowContext({
+    videoDir: tmp,
+    evaluation,
+    userPrompt: "Diseña las opciones de título y miniatura de P01",
+  });
+  const manifest = createRunRecord({
+    videoDir: tmp,
+    startedAt: now,
+    promptText: "Diseña las opciones de título y miniatura de P01",
+    promptDelivered: true,
+    resolvedWorkflow: resolved,
+  });
+  recordReferenceReadInAttestation(
+    manifest.context,
+    join(ROOT, "skills", "yts-packaging-miniaturas", "SKILL.md"),
+    tmp,
+  );
+  finalizeRunRecord(tmp, manifest, now);
+
+  const binPath = join(ROOT, "bin", "youtube-shell.mjs");
+  const runsOut = execFileSync(process.execPath, [binPath, "--runs"], {
+    cwd: tmp,
+    encoding: "utf8",
+  });
+  assert.match(runsOut, new RegExp(manifest.runId));
+  assert.match(runsOut, /Resumen de observación/i);
+
+  const auditOut = execFileSync(process.execPath, [binPath, "--audit", manifest.runId], {
+    cwd: tmp,
+    encoding: "utf8",
+  });
+  assert.match(auditOut, /Informe de Ejecución \(youtube-shell\)/);
+  assert.match(auditOut, new RegExp(manifest.runId));
+});
+
+

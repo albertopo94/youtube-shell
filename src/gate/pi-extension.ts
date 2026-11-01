@@ -10,6 +10,7 @@ import {
 import {
   buildExpectedChecksForPhase,
   evaluateRunAssurance,
+  formatObservedRunsReport,
   formatRunAuditReport,
   recordReferenceReadInAttestation,
   type RunIncident,
@@ -1416,14 +1417,7 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
           ctx.ui.notify("No existen ejecuciones registradas en .youtube-shell/runs/.", "info");
           return;
         }
-        const rows = runs.slice(-10).map((m) => {
-          const a = m.assurance ?? evaluateRunAssurance(m);
-          return `${m.runId} · ${a.status} · ${m.targetPhase} (${m.workMode}) · ${a.satisfiedCount}/${a.totalControls} controles · ${m.startedAt}`;
-        });
-        ctx.ui.notify(
-          [`Historial de ejecuciones (${runs.length} total):`, ...rows].join("\n"),
-          "info",
-        );
+        ctx.ui.notify(formatObservedRunsReport(runs), "info");
       },
     });
 

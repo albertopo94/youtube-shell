@@ -18,6 +18,9 @@ export interface ParsedLauncherArgs {
   help: boolean;
   version: boolean;
   link: boolean;
+  runs: boolean;
+  audit: boolean;
+  auditRunId?: string;
   home?: string;
   piSubcommand?: PiSubcommand;
   passthrough: string[];
@@ -71,6 +74,9 @@ export function parseLauncherArgs(argv: readonly string[]): ParsedLauncherArgs {
   let help = false;
   let version = false;
   let link = false;
+  let runs = false;
+  let audit = false;
+  let auditRunId: string | undefined;
   let home: string | undefined;
   let piSubcommand: PiSubcommand | undefined;
   let seenPositional = false;
@@ -88,6 +94,23 @@ export function parseLauncherArgs(argv: readonly string[]): ParsedLauncherArgs {
     }
     if (arg === "--link") {
       link = true;
+      continue;
+    }
+    if (arg === "--runs") {
+      runs = true;
+      continue;
+    }
+    if (arg === "--audit") {
+      audit = true;
+      if (i + 1 < argv.length && !argv[i + 1].startsWith("-")) {
+        auditRunId = argv[++i];
+      }
+      continue;
+    }
+    if (arg.startsWith("--audit=")) {
+      audit = true;
+      const val = arg.slice("--audit=".length);
+      if (val) auditRunId = val;
       continue;
     }
     if (arg === "--home" && i + 1 < argv.length) {
@@ -112,6 +135,9 @@ export function parseLauncherArgs(argv: readonly string[]): ParsedLauncherArgs {
     help,
     version,
     link,
+    runs,
+    audit,
+    auditRunId,
     home,
     piSubcommand,
     passthrough,
@@ -297,10 +323,12 @@ export function formatLauncherHelp(): string {
     "  youtube-shell <mcp|auth|config|list|install|remove|update> [args...]",
     "",
     "Opciones de youtube-shell:",
-    "  --home <dir>   Usar un directorio de agente personalizado",
-    "  --link         Usar directamente ~/.pi/agent sin aislar el home",
-    "  -v, --version  Mostrar versión de youtube-shell, pi y ruta del home activo",
-    "  -h, --help     Mostrar esta ayuda",
+    "  --home <dir>      Usar un directorio de agente personalizado",
+    "  --link            Usar directamente ~/.pi/agent sin aislar el home",
+    "  --runs            Listar historial y resumen agregado de ejecuciones en la carpeta actual",
+    "  --audit [run-id]  Mostrar el informe de aseguramiento de la última ejecución o de run-id",
+    "  -v, --version     Mostrar versión de youtube-shell, pi y ruta del home activo",
+    "  -h, --help        Mostrar esta ayuda",
     "",
     "Comandos dentro de la sesión interactiva:",
     "  /yts-init                    Inicializar plantillas 00..06 y registro en la carpeta actual",

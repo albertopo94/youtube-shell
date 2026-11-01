@@ -964,6 +964,87 @@ export function evaluateRunAssurance(manifest: RunManifest): AssuranceEvaluation
   };
 }
 
+export interface ObservedRunsSummary {
+  totalRuns: number;
+  statusCounts: Record<string, number>;
+  unreadSkillProductionRuns: string[];
+  unreadMandatoryReferenceRuns: string[];
+  missingApplicationEvidenceRuns: string[];
+  blockedToolCount: number;
+  failedCheckCount: number;
+}
+
+export function summarizeObservedRuns(manifests: readonly RunManifest[]): ObservedRunsSummary {
+  const statusCounts: Record<string, number> = {};
+  const unreadSkillProductionRuns: string[] = [];
+  const unreadMandatoryReferenceRuns: string[] = [];
+  const missingApplicationEvidenceRuns: string[] = [];
+  let blockedToolCount = 0;
+  let failedCheckCount = 0;
+
+  for (const m of manifests) {
+    const assurance = m.assurance ?? evaluateRunAssurance(m);
+    statusCounts[assurance.status] = (statusCounts[assurance.status] ?? 0) + 1;
+    if (m.workMode === "production" && !m.context.expectedSkill.readByAgent) {
+      unreadSkillProductionRuns.push(m.runId);
+    }
+    if (
+      m.workMode === "production" &&
+      m.context.mandatoryReferences.some((r) => r.exists && !r.readByAgent)
+    ) {
+      unreadMandatoryReferenceRuns.push(m.runId);
+    }
+    if (
+      m.workMode === "production" &&
+      m.context.applicationEvidence &&
+      !m.context.applicationEvidence.verified
+    ) {
+      missingApplicationEvidenceRuns.push(m.runId);
+    }
+    blockedToolCount += m.incidents.filter((i) => i.kind === "tool_blocked").length;
+    failedCheckCount += m.checks.filter(
+      (c) => c.result === "FAIL" || c.result === "NOT_EVALUABLE",
+    ).length;
+  }
+
+  return {
+    totalRuns: manifests.length,
+    statusCounts,
+    unreadSkillProductionRuns,
+    unreadMandatoryReferenceRuns,
+    missingApplicationEvidenceRuns,
+    blockedToolCount,
+    failedCheckCount,
+  };
+}
+
+export function formatObservedRunsReport(manifests: readonly RunManifest[]): string {
+  if (manifests.length === 0) {
+    return "No existen ejecuciones registradas en .youtube-shell/runs/.";
+  }
+  const rows = manifests.map((m) => {
+    const a = m.assurance ?? evaluateRunAssurance(m);
+    return `${m.runId} · ${a.status} · ${m.targetPhase} (${m.workMode}) · ${a.satisfiedCount}/${a.totalControls} controles · ${m.startedAt}`;
+  });
+  const summary = summarizeObservedRuns(manifests);
+  const statusBreakdown = Object.entries(summary.statusCounts)
+    .map(([st, count]) => `${st}: ${count}`)
+    .join(", ");
+
+  return [
+    `Historial de ejecuciones (${summary.totalRuns} total):`,
+    ...rows,
+    "",
+    "Resumen de observación:",
+    `- Distribución de estados: ${statusBreakdown || "ninguno"}`,
+    `- Runs de producción sin lectura de skill asignada: ${summary.unreadSkillProductionRuns.length}`,
+    `- Runs de producción con referencias obligatorias no leídas: ${summary.unreadMandatoryReferenceRuns.length}`,
+    `- Runs de producción con evidencia de aplicación incompleta: ${summary.missingApplicationEvidenceRuns.length}`,
+    `- Llamadas a herramientas bloqueadas por la compuerta: ${summary.blockedToolCount}`,
+    `- Verificaciones fallidas o no evaluables: ${summary.failedCheckCount}`,
+  ].join("\n");
+}
+
 export function formatRunAuditReport(manifest: RunManifest): string {
   const assurance = manifest.assurance ?? evaluateRunAssurance(manifest);
   const modeLabel =
@@ -972,6 +1053,7 @@ export function formatRunAuditReport(manifest: RunManifest): string {
       : `Producción (${manifest.activation.productionMode})`;
 
   const lines: string[] = [
+    "Informe de Ejecución (youtube-shell)",
     `Ejecución ${manifest.runId}`,
     `${assurance.status}`,
     "",
