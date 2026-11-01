@@ -46,12 +46,12 @@ export const PHASE_PLAYBOOKS: Record<PhaseId, PhasePlaybook> = {
       "banco-de-titulos.md y referentes.md (si existen en el canal/oficina, para alinear ángulos y estilo visual)",
     ],
     requiredDeliverableEvidence:
-      "Secciones §1 (Estrategia Psicológica y Promesa de Trama), §2 (5 opciones de título numeradas y justificación), §3 (Miniatura A, B y C con ficha técnica) y §4 (Control de Calidad Pre-Guion) completas en 01-packaging.md.",
+      "Secciones §1 (Estrategia Psicológica y Promesa de Trama), §2 (5 opciones de título numeradas con su palanca de la caja de heurística declarada por candidato y justificación del recomendado), §3 (Miniatura A, B y C con ficha técnica) y §4 (Control de Calidad Pre-Guion) completas en 01-packaging.md.",
     verificationBoundary: {
       runtimeDeterministic:
-        "packaging_structure valida 5 títulos numerados, encabezados de Miniatura A/B/C y sección §4 sin marcadores de plantilla vacíos.",
+        "packaging_structure valida 5 títulos numerados, encabezados de Miniatura A/B/C y sección §4 sin marcadores de plantilla vacíos. La declaración de palanca por título queda bajo comprobación editorial.",
       humanEditorial:
-        "El creador evalúa que los 5 ángulos sean genuinamente distintos y que las 3 miniaturas funcionen visualmente en el feed antes de /yts-approve P01_PACKAGING.",
+        "El creador evalúa que los 5 candidatos usen palancas genuinamente distintas de la caja de heurística, que estén justificados para el tema/público y que las 3 miniaturas funcionen visualmente en el feed antes de /yts-approve P01_PACKAGING.",
     },
   },
   P02_RESEARCH: {
@@ -94,12 +94,12 @@ export const PHASE_PLAYBOOKS: Record<PhaseId, PhasePlaybook> = {
       "skills/yts-orquestador/references/contingencia-y-politicas-sensibles.md (para léxico blindado YMYL y matización de estudios en modelos animales)",
     ],
     requiredDeliverableEvidence:
-      "Modo de progresión declarado en cabecera, tabla §0 (Puerta de Correspondencia del Arranque), §1 (Puerta de Control Editorial y Congruencia Promesa-Contenido) y bloques ### [Bxx] con timecodes MM:SS - MM:SS en 02-guion.md.",
+      "Modo de progresión declarado en cabecera, técnica de apertura elegida (caja de 5) y decisión de Roadmap de Compromiso Mental (usado/no usado/prohibido) en [B01], tabla §0 (Puerta de Correspondencia del Arranque), §1 (Puerta de Control Editorial y Congruencia Promesa-Contenido) y bloques ### [Bxx] con timecodes MM:SS - MM:SS en 02-guion.md.",
     verificationBoundary: {
       runtimeDeterministic:
-        "script_block_ids exige la sección Puerta de Control Editorial, identificadores únicos [Bxx] y timecodes MM:SS válidos sin marcadores vacíos.",
+        "script_block_ids exige la sección Puerta de Control Editorial, identificadores únicos [Bxx] y timecodes MM:SS válidos sin marcadores vacíos. La elección de apertura y Roadmap queda bajo comprobación editorial.",
       humanEditorial:
-        "El creador juzga la fuerza del arranque, el cumplimiento real de la promesa y la calidad dramática de la voz antes de /yts-approve P03_SCRIPT.",
+        "El creador juzga la fuerza del arranque, la coherencia de la apertura elegida con el formato, el cumplimiento real de la promesa y la calidad dramática de la voz antes de /yts-approve P03_SCRIPT.",
     },
   },
   P04_FACTCHECK: {

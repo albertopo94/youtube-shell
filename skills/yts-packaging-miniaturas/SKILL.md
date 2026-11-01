@@ -13,7 +13,7 @@ license: MIT
 ## 1. Compuertas y Requisitos Obligatorios [COMPUERTA / OBLIGATORIA]
 1. **Packaging antes del guion [COMPUERTA]:** Ningún guion (`P03_SCRIPT`) comienza sin packaging aprobado por el creador. El packaging define la **Promesa de Trama (*Plot Promise*)** que los primeros 30 segundos del guion deben honrar.
 2. **Cinco ángulos de título candidatos (`packaging_structure`) [COMPUERTA]:**
-   - Proponer 5 títulos numerados en `01-packaging.md` que exploren **palancas psicológicas distintas** (dolor directo, paradoja contraintuitiva, pregunta en bucle abierto, contraste temporal o mecanismo oculto).
+   - Proponer 5 títulos numerados en `01-packaging.md` que exploren **palancas psicológicas distintas**, elegidas de la **caja completa de palancas de título** (sección 2: *caja de heurística de apertura de bucles*): autoridad, guías para principiantes, actualidad, arrepentimiento, tendencias, números, contraste, afirmación contraintuitiva, superlativos, retos imposibles, cuestionamiento de convenciones, preguntas, viajes transformadores, insider information, listas, etc. Los 5 candidatos **deben ser diferentes entre sí** y cada uno declara qué palanca utiliza y por qué encaja con el tema y el público. No repetir el mismo patrón en los 5: la caja existe para forzar variedad.
    - Redactar la **justificación del título recomendado** (deseo al que apela, bucle que abre y encaje con la campaña del canal).
    - Priorizar legibilidad inmediata en móvil (lo decisivo al inicio; ~55 caracteres como heurística orientativa, nunca camisa de fuerza).
    - **Proporción y veracidad de la promesa:** comprobar que el título promete algo que el video realmente entrega y no presenta como trivial un desarrollo extenso (ni viceversa).
@@ -27,6 +27,32 @@ license: MIT
 ## 2. Heurísticas de Diseño y Pruebas Recomendadas [RECOMENDADA]
 
 > **Gobernanza:** Las siguientes técnicas son heurísticas contrastadas de packaging. Se catalogan como **`[RECOMENDADA]`** conforme a `_framework/gobernanza-evidencia.md` y `_framework/registro-tecnicas.md`.
+
+### Caja de Heurística: Palancas para Abrir Bucles Más Fuertes (no es taxonomía cerrada)
+> **Doctrina rectora:** el título es un bucle abierto: abre una pregunta que **solo se cierra dentro del video**. No hace falta que nombre el tema exacto (puede apuntar cerca, siempre que el video pague la pregunta que abrió; el clickbait que no paga, no). La palanca que genera el clic debe colgar del **deseo ancho o dolor preexistente** (Schwartz); el mecanismo se revela dentro. Todo título se elige como **hipótesis a validar**, no por aplicar la primera palanca disponible.
+
+Caja de referencia completa (cada palanca es una hipótesis, no una ley; las nuevas se van agregando):
+
+| Palanca | Mecanismo | Miniatura que empareja |
+| :--- | :--- | :--- |
+| *Insider Information* | Conocimiento de adentro | Story |
+| *Authority* | Respaldo de credencial reconocible | Story / Novelty |
+| *Beginners* | Guía total para empezar desde cero | Result |
+| *Timeliness (actualidad)* | Anclaje al momento del calendario | Novelty |
+| *Regrets (arrepentimiento)* | Confesión con costo pagado | Story |
+| *Trend Jacking (tendencias)* | Ola de un tema de actualidad | Novelty / Moment |
+| *Numbers (números)* | Dato concreto e impactante | Result |
+| *Contrast (contraste)* | Yuxtaposición extrema | Transformation |
+| *Counterintuitive (contraintuitivo)* | Afirmación contraintuitiva | Story / Novelty |
+| *Superlatives (superlativos)* | El máximo de su categoría | Result / Moment |
+| *Impossible Challenge (reto imposible)* | Resultado en duda | Story |
+| *Challenging Convention (cuestionar convenciones)* | Cuestionar una creencia instalada | Story |
+| *Extreme* | Grados máximos | Novelty |
+| *Ask a Question (pregunta)* | Pregunta explícita, respuesta dentro | Story |
+| *Exciting Journey (viaje transformador)* | Proceso transformador | Transformation |
+| *List* | Inventario enumerable | Result |
+
+**Prohibido:** llenar los 5 candidatos con variantes de una sola palanca. La comprobación de la compuerta `packaging_structure` exige 5 títulos numerados distintos, y el creador verifica en la aprobación que las palancas realmente se diferencian y que cada una está justificada en `01-packaging.md`.
 
 ### Los 5 Arquetipos de Curiosidad de Miniatura (Mecanismos Psicológicos)
 Al diseñar los conceptos de miniatura, emparejar el visual con el arquetipo que mejor explote la brecha de curiosidad de la historia:

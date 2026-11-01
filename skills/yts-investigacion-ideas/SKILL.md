@@ -24,7 +24,8 @@ license: MIT
 > **Gobernanza:** Las siguientes técnicas son heurísticas contrastadas de investigación y validación de audiencia. Se catalogan como **`[RECOMENDADA]`** conforme a `_framework/gobernanza-evidencia.md` y `_framework/registro-tecnicas.md`.
 
 ### Detección Metodológica de Outliers
-- **Contexto Temporal y Mediana Reciente (Ventana 3 a 6 Meses):** No comparar únicamente vistas totales contra suscriptores (un video antiguo acumula vistas pasivas por años). El outlier real se identifica contrastando las visualizaciones del video contra la **mediana de videos comparables publicados por ese mismo canal en los últimos 3 a 6 meses**.
+- **Contexto Temporal y Mediana Reciente (Ventana 3 a 6 Meses) — CRITERIO PRINCIPAL:** No comparar únicamente vistas totales contra suscriptores (un video antiguo acumula vistas pasivas por años). La anomalía de rendimiento se detecta **únicamente** contrastando las visualizaciones del video contra la **mediana de videos comparables publicados por ese mismo canal en los últimos 3 a 6 meses** (misma duración/formato). Este es el criterio principal y obligatorio para declarar un outlier.
+- **Ratio visitas/suscriptores — SEÑAL AUXILIAR:** el ratio simple de visitas/suscriptores se registra como **dato contextual auxiliar** (orienta sobre el alcance fuera de la base de suscriptores), pero **nunca** es el criterio de detección del outlier: un video antiguo infla ese ratio por acumulación pasiva. Registrarlo sin jerarquizarlo frente a la mediana reciente revierte al método antiguo y queda prohibido.
 - **Filtro de Desglose de Formato (Long-form vs. Shorts):** Al auditar canales competidores en YouTube o herramientas públicas (Viewstats), verificar si sus millones de visitas provienen de Shorts o de formato largo. Un canal con métricas infladas por Shorts no sirve como modelo de retención ni empaque para producciones en formato largo.
 - **Relatibilidad Universal sobre Volumen Bruto:** Preferir modelar un outlier de 8M sobre un concepto universalmente reconocible (dinero, café, hábitos cotidianos, mascotas) que uno de 20M sobre un tecnicismo incomprensible fuera de su micro-nicho.
 
@@ -44,7 +45,7 @@ Antes de avanzar una idea de video, pasarla por los 7 filtros de descarte:
 
 ### Barrido DFS Híbrido y Superficies de Descubrimiento
 - Generar lista semilla (*Seed List*) en lenguaje de síntoma/deseo.
-- Guiar la exploración en ventana de incógnito, registrar ratio visitas/suscriptores de outliers y ramificar por *Up Next* antes de hacer *backtracking*.
+- Guiar la exploración en ventana de incógnito, **identificar los outliers contrastando su rendimiento contra la mediana reciente (3–6 meses) del canal en el mismo formato (criterio principal)** y registrar el ratio visitas/suscriptores únicamente como dato auxiliar, y ramificar por *Up Next* antes de hacer *backtracking*.
 - Incluir **evidencia negativa** (videos que fracasaron con el mismo formato) para aislar trampas de ejecución.
 - Evaluar la **estrategia editorial por superficie** (`[Hipótesis Editorial]`, no pesos internos fijos): Inicio (*Browse*), Sugeridos (*Up Next*), Búsqueda y Shorts.
 

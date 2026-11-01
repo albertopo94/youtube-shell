@@ -16,6 +16,7 @@ license: MIT
    - Todo bloque de locución debe declararse como encabezado de nivel 3 (`### [B01_...] — Título`) con su ventana temporal estimada (`MM:SS - MM:SS`) y superar la **Puerta de Control Editorial** (`## 1. Puerta de Control Editorial`). El verificador determinista `script_block_ids` rechaza el envío si faltan bloques identificables.
 2. **Puerta de Correspondencia del Arranque (`## 0` de `02-guion.md`) [COMPUERTA]:**
    - Responder **por escrito** en la tabla `## 0. Puerta de Correspondencia del Arranque` de `02-guion.md` las 4 comprobaciones antes de cerrar guion y storyboard (primera imagen, primera frase, ventana de arranque del formato y cumplir/superar la promesa).
+   - Declarar en `[B01]` la **técnica de apertura elegida de la caja de 5 opciones** (pregunta imposible de ignorar, dato que rompe creencias, escenario hipotético, promesa directa/demostración inmediata o inmersión atmosférica) y, para formatos de autoridad/ensayo, la **decisión de Roadmap de Compromiso Mental (Spoiler Intro)**: usado, no usado o prohibido por misterio/narrativa, con una línea de justificación. El `script_block_ids` no la verifica (juicio editorial), pero su ausencia deja el entregable incompleto para el creador.
 3. **Puerta de Congruencia Promesa ➜ Contenido (Linter de Alineación) [COMPUERTA]:**
    - Responder afirmativamente a las 5 preguntas de congruencia (título, miniatura, entrega real, validación temprana en 5-30s o segundo cero en Shorts, y ausencia de promesas sin respaldo). Si alguna respuesta es NO, el guion se corrige antes de avanzar.
 4. **Puerta de Protección de la Satisfacción Acumulada (Payoff) [OBLIGATORIA]:**
@@ -31,8 +32,16 @@ license: MIT
 > **Gobernanza:** Las siguientes técnicas son heurísticas contrastadas de narrativa y retención. Se catalogan como **`[RECOMENDADA]`** conforme a `_framework/gobernanza-evidencia.md` y `_framework/registro-tecnicas.md`.
 
 - **[GUI-001] La Prueba de la Servilleta / Anclas Visuales:** validar que la historia cuenta con elementos visuales, diagramas o anclas tangibles indispensables para el medio video, evitando ensayos abstractos de texto.
-- **Caja de Herramientas de Intros y Aperturas:**
+- **Caja de Herramientas de Aperturas — 5 técnicas opcionales (elegir según formato, no es lista obligatoria):**
+  1. *La Pregunta Imposible de Ignorar:* genera incógnita o tensión cognitiva directa (*"¿Qué pasaría si...?"*).
+  2. *El Dato que Rompe Creencias:* expone un hecho o estadística sorprendente que contradice el sentido común de la audiencia.
+  3. *El Escenario Hipotético:* sitúa al espectador en una circunstancia vívida que apela a su experiencia cotidiana (*"Imagina que te despiertas mañana y..."*).
+  4. *La Promesa Directa / Demostración Inmediata:* expone de frente el resultado o solución que se obtendrá al final del video (correcta en tutoriales y consultas directas, donde la respuesta temprana es el valor).
+  5. *Inmersión Atmosférica / Enigma Narrativo:* para relatos de ficción, historias o relax, arranca sumergiendo al espectador en el ambiente sonoro y el contexto dramático sin estridencias.
+- **Caja de Herramientas de Intros y Aperturas (alineación, autoridad y compromiso mental) — aplicable a formatos de Autoridad, Negocios, Divulgación, Ensayo o media/larga duración; en Ficción, Cuentos para Dormir, Sátira, Misterio o Tutoriales Ágiles, forzar *Unfair Edge* o *Roadmap* rompe la inmersión (ahí prima la atmósfera, el enigma o la acción inmediata):**
   - *Reafirmar la Promesa:* en el segundo cero, confirmar de inmediato con audio y video que el espectador está en el lugar correcto.
+  - *Unfair Edge Statement:* en una frase memorable, clavar la autoridad o ventaja injusta única (*"Sé esto porque pasé los últimos 3 meses leyendo los 50 papers originales de Oxford sobre..."*). Prohibidas las interrupciones institucionales o autopromoción en los primeros 45 s: la autoridad se demuestra con el rigor de las fuentes, no con eslóganes del canal.
+  - *Roadmap de Compromiso Mental ("Spoiler Intro"):* en videos largos o explicaciones complejas (15–40 min), enumerar de forma lógica y rápida los hitos del video (*"Te voy a mostrar exactamente cómo configurar X, qué error arruina el 90% de los intentos, y el método exacto para resolver Y"*) para que el espectador concluya que esto es todo lo que necesita saber. **Prohibido en relatos, misterio o ficción:** revelar lo que viene destruye la intriga y el factor sorpresa.
   - *Frontloading:* adelantar un destello de la mejor calidad, datos o animación en los primeros compases.
   - *Estructura R.A.I.N.Y. (<45 s en videos largos, <10 s en formatos dinámicos):*
     - **R (Result):** adelantar el resultado o pregunta irresistible que se resolverá.
