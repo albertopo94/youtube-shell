@@ -165,6 +165,18 @@
           "upstream_sha256": "c1d579529b6c0b7adb6ae9d1aa0402efd4c487d7e84532bfe11d691d5ef41b66",
           "local_target": "skills/yts-orquestador/references/registro-tecnicas.md",
           "role": "mirrored_reference"
+        },
+        {
+          "upstream_path": "_framework/scripts/check-contrato.sh",
+          "upstream_sha256": "3cac27e19b624ff2693b6ddf00570094755d753445ac58ebcac44c1fd87e1962",
+          "local_target": "src/checks/contract-checker.ts",
+          "role": "ported_runtime_checker"
+        },
+        {
+          "upstream_path": "_framework/referencias/evidencia-piloto/medicion-master-piloto.md",
+          "upstream_sha256": "d4c92f8f6c1ecb4d7a684132b266578c0c7acb36977ce1c3e64336e29586cdb3",
+          "local_target": "src/checks/media-measurement.ts",
+          "role": "ported_runtime_measurement"
         }
       ]
     },

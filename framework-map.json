@@ -2243,7 +2243,7 @@
       "application": "instruction",
       "evidence": "skill 'Reglas obligatorias de gobernanza' §6 (Ciclo Macro y Watch Time Share) + test/pi-gate.test.ts",
       "status": "complete",
-      "source_sha256": "7b8b21f51c0d9e9ce937347cd4158f65a760b2978b3ad146c2dfff4617e064bc",
+      "source_sha256": "5d1fba0e8567d3aae7923e2fdddf66475caca15249ca65cf2e8bed5252b25da5",
       "consumer_sha256": "f0a2409f9f3ad8ed40fc3a214e3d4f8b0c61ab2ded0c29a90018a9b11faa8c12",
       "activation_trigger": "GLOBAL / P07_CLOSE",
       "application_evidence": "skill 'Reglas obligatorias de gobernanza' §6 (Ciclo Macro y Watch Time Share) + test/pi-gate.test.ts",

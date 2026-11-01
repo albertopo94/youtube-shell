@@ -356,6 +356,38 @@ test("every atomic learning consumer_sha256 matches the actual destination file 
   }
 });
 
+test("every atomic learning source_sha256 matches the reviewed upstream hash in upstream-lock.json", () => {
+  const map = loadFrameworkMap();
+  const lock = JSON.parse(readFileSync(join(ROOT, "upstream-lock.json"), "utf8")) as {
+    upstreams: {
+      youtube: {
+        mirrored: Record<string, { source: string; sha256: string }>;
+        normative_sources: Array<{ upstream_path: string; upstream_sha256: string }>;
+      };
+    };
+  };
+  const shaByUpstreamPath = new Map<string, string>();
+  for (const m of Object.values(lock.upstreams.youtube.mirrored)) {
+    shaByUpstreamPath.set(m.source, m.sha256);
+  }
+  for (const entry of lock.upstreams.youtube.normative_sources) {
+    shaByUpstreamPath.set(entry.upstream_path, entry.upstream_sha256);
+  }
+
+  for (const l of map.atomic_learnings) {
+    const expectedSha = shaByUpstreamPath.get(l.source.file);
+    assert.ok(
+      expectedSha,
+      `${l.learning_id}: source.file ${l.source.file} must be tracked with SHA-256 in upstream-lock.json`,
+    );
+    assert.equal(
+      l.source_sha256,
+      expectedSha,
+      `${l.learning_id}: source_sha256 drifted from upstream-lock.json entry for ${l.source.file}; review upstream changes and update source_sha256`,
+    );
+  }
+});
+
 test("every atomic learning destination exists and named evidence paths resolve on disk", () => {
   const map = loadFrameworkMap();
   for (const l of map.atomic_learnings) {
