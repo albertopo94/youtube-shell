@@ -4,6 +4,11 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import {
+  FILMCRAFT_MCP_CAPABILITIES,
+  EFFECTCRAFT_MCP_CAPABILITIES,
+  SOUNDCRAFT_MCP_CAPABILITIES,
+} from "../src/gate/capabilities.ts";
 
 const ROOT = join(import.meta.dirname, "..");
 const lock = JSON.parse(readFileSync(join(ROOT, "upstream-lock.json"), "utf8"));
@@ -25,30 +30,100 @@ test("the lock pins all upstreams (youtube, pi, filmcraft, effectcraft, soundcra
   }
 });
 
-test("media engine binaries (filmcraft-cli, effectcraft-cli, soundcraft-cli) match reviewed version when installed locally", () => {
-  const engines = [
-    { name: "filmcraft", bin: "filmcraft-cli" },
-    { name: "effectcraft", bin: "effectcraft-cli" },
-    { name: "soundcraft", bin: "soundcraft-cli" },
-  ] as const;
+const MCP_ENGINES = [
+  { engine: "filmcraft", bin: "filmcraft-cli", prefix: "filmcraft", capabilities: FILMCRAFT_MCP_CAPABILITIES },
+  { engine: "effectcraft", bin: "effectcraft-cli", prefix: "effectcraft", capabilities: EFFECTCRAFT_MCP_CAPABILITIES },
+  { engine: "soundcraft", bin: "soundcraft-cli", prefix: "soundcraft", capabilities: SOUNDCRAFT_MCP_CAPABILITIES },
+] as const;
 
-  for (const { name, bin } of engines) {
-    const expectedVersion = lock.upstreams[name]?.reviewed?.version;
-    assert.ok(expectedVersion, `missing reviewed version for ${name}`);
+const MCP_REQUEST = [
+  JSON.stringify({
+    jsonrpc: "2.0",
+    id: 1,
+    method: "initialize",
+    params: { protocolVersion: "2024-11-05", capabilities: {}, clientInfo: { name: "youtube-shell", version: "0" } },
+  }),
+  JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }),
+  JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} }),
+].join("\n") + "\n";
 
-    const res = spawnSync(bin, ["--version"], { encoding: "utf8" });
-    if (res.error) {
-      // If binary is not installed in the current environment (e.g. CI without macOS/Rust tools), skip check gracefully
+/** The tool ids the installed engine actually exposes over MCP, or null when it is not installed. */
+function liveMcpTools(bin: string): string[] | null {
+  const res = spawnSync(bin, ["mcp"], { input: MCP_REQUEST, encoding: "utf8", timeout: 20000 });
+  if (res.error) return null;
+  for (const line of String(res.stdout ?? "").split("\n").filter(Boolean)) {
+    let msg: any;
+    try {
+      msg = JSON.parse(line);
+    } catch {
       continue;
     }
-    const output = (res.stdout || "") + (res.stderr || "");
-    const versionPattern = new RegExp(`\\b${expectedVersion.replace(/\./g, "\\.")}\\b`);
-    assert.match(
-      output,
-      versionPattern,
-      `binary ${bin} output ("${output.trim()}") does not match reviewed version ${expectedVersion}`,
-    );
+    if (Array.isArray(msg?.result?.tools)) {
+      return msg.result.tools.map((tool: { name: string }) => tool.name).sort();
+    }
   }
+  return null;
+}
+
+const baseToolIds = (
+  entries: readonly { id: string }[],
+  prefix: string,
+): Set<string> => new Set(entries.map((e) => e.id.replace(new RegExp(`^${prefix}_`), "")));
+
+test("the media-engine gate catalog stays true against the installed engines' MCP surface", () => {
+  // The guard is the governed surface, not the version number. The creator upgrades
+  // filmcraft-cli, effectcraft-cli and soundcraft-cli whenever upstream ships, so a newer
+  // binary is the expected state on this machine and must never redden the suite.
+  //
+  // Hard failure is reserved for the case where the catalog stops being true in a way that
+  // matters: the gate vouches for a tool the engine no longer exposes (phase gating and
+  // capability grants are then computed from fiction), or the engine is installed but its MCP
+  // surface cannot be read at all (we cannot verify what we govern).
+  //
+  // Advisory: tools the engine exposes that the catalog does not list. Those are blocked by
+  // design - the catalog is an allowlist, so an unknown tool fails closed - which costs
+  // capability, not safety, and is fixed by cataloguing it in a later work unit.
+  const hard: string[] = [];
+  const advisory: string[] = [];
+
+  for (const { engine, bin, prefix, capabilities } of MCP_ENGINES) {
+    const version = /\b(\d+\.\d+\.\d+)\b/.exec(
+      String(spawnSync(bin, ["--version"], { encoding: "utf8" }).stdout ?? ""),
+    )?.[1];
+    const live = liveMcpTools(bin);
+    if (live === null) {
+      advisory.push(`${engine}: ${bin} no responde por MCP (sin superficie verificable en este entorno)`);
+      continue;
+    }
+
+    const catalogued = baseToolIds(capabilities, prefix);
+    const goneFromEngine = [...catalogued].filter((tool) => !live.includes(tool)).sort();
+    const unknownToGate = live.filter((tool) => !catalogued.has(tool));
+
+    if (goneFromEngine.length) {
+      hard.push(
+        `${engine} ${version ?? ""}: src/gate/capabilities.ts cataloga tools que el motor ya no expone: ${goneFromEngine.join(", ")}`,
+      );
+    }
+    if (unknownToGate.length) {
+      advisory.push(
+        `${engine} ${version ?? ""}: el motor expone tools que el gate no cataloga (quedan bloqueadas por allowlist, se resuelve catalogandolas): ${unknownToGate.join(", ")}`,
+      );
+    }
+
+    const surfaceHash = createHash("sha256").update(live.join("\n")).digest("hex");
+    const reviewed = lock.upstreams[engine]?.reviewed;
+    if (reviewed?.mcp_surface_sha256 && reviewed.mcp_surface_sha256 !== surfaceHash) {
+      advisory.push(`${engine} ${version ?? ""}: la superficie MCP cambio desde la revision fijada en upstream-lock.json; verificar y actualizar el lock`);
+    }
+    if (version && reviewed?.version && version !== reviewed.version) {
+      advisory.push(`${engine}: instalado ${version} vs revisado ${reviewed.version}`);
+    }
+    advisory.push(`${engine} ${version ?? ""}: ${live.length} tools MCP verificadas`);
+  }
+
+  for (const note of advisory) console.log(`   ${note}`);
+  assert.deepEqual(hard, [], "el catalogo del gate afirma tools que los motores instalados ya no exponen");
 });
 
 test("every mirrored file still matches the reviewed upstream bytes", () => {

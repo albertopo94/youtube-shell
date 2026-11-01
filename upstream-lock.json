@@ -6,8 +6,8 @@
       "role": "Domain knowledge (layer 3): phases, templates, contract checker, pilot measurement",
       "reviewed": {
         "ref": "main",
-        "commit": "af32db882f54eb0aba1d84bf50f0f644c5d6eede",
-        "committed_at": "2026-11-01T17:49:32Z",
+        "commit": "96371974d93688c7e10e706e612c7926d4faab43",
+        "committed_at": "2026-11-01T18:41:29Z",
         "reviewed_on": "2026-11-01",
         "evidence": "auditoria externa 12 (opinion de mi amiga.md): a67b1fe (revision 11: outliers por mediana reciente, campana unica matizada, delimitacion de ambitos en herramientas-y-apis), 46b53d4 (base v0.7.2) y ef7adf6/af32db8 (adopciones del consumidor) revisados contra skills, runtime y plantillas espejadas"
       },
@@ -150,9 +150,9 @@
         },
         {
           "upstream_path": "_framework/compatibilidad-consumidores.md",
-          "upstream_sha256": "111ea8c827e9d9abc52b572fc33229b0962a9c787dfe52714480212dce047ccb",
+          "upstream_sha256": "3750785719e1b96aa119072fd50f47126f31eaac3ea53481208f3e0f7ade190f",
           "local_target": "upstream-lock.json",
-          "role": "consumer_contract; consumer version declared: youtube-shell v0.12.0 (aligned 8/8 templates; outliers-by-recent-median, per-shot pacing boundary and mirrored tool-scope note adopted)"
+          "role": "consumer_contract; consumer version declared: youtube-shell v0.13.0 (aligned 8/8 templates; outliers-by-recent-median, per-shot pacing boundary, mirrored tool-scope note and media-engine MCP surface guard adopted)"
         },
         {
           "upstream_path": "_framework/gobernanza-evidencia.md",
@@ -206,12 +206,13 @@
       "binary": "filmcraft-cli",
       "role": "Media engine: non-linear timeline assembly and render (P05_ANIMATIC / P06_ASSEMBLY)",
       "reviewed": {
-        "version": "0.9.0",
-        "tag": "v0.9.0",
-        "commit": "4a69a038d32761f604b3c7e4845b21fb40b3cbe4",
-        "committed_at": "2026-10-18T01:43:10Z",
-        "reviewed_on": "2026-10-28",
-        "evidence": "local binary filmcraft-cli 0.9.0, 17 MCP tools cataloged"
+        "version": "0.15.0",
+        "tag": "v0.15.0",
+        "commit": "94ceaa91a58e3e18ebe5676c10befa56759c9ceb",
+        "committed_at": "2026-10-31T03:22:55Z",
+        "reviewed_on": "2026-11-01",
+        "evidence": "installed filmcraft-cli 0.15.0: MCP tools/list surface verified live against src/gate/capabilities.ts (17 tools, sha256 of the sorted tool ids recorded in mcp_surface_sha256). The governed surface is the guard; the creator upgrades these CLIs whenever upstream ships, so version drift alone is advisory (see docs/upstreams.md).",
+        "mcp_surface_sha256": "8c34b8aea24e5d5bea8c7cd3bbb497254dd05ac8cdeb485d895dac37c6c01a8e"
       },
       "affects_us": [
         "Cargo.toml",
@@ -225,12 +226,13 @@
       "binary": "effectcraft-cli",
       "role": "Media engine: motion graphics, overlays and kinetic text render (P06_ASSEMBLY)",
       "reviewed": {
-        "version": "0.11.1",
-        "tag": "v0.11.1",
-        "commit": "2a01226894c6bc58ae4fadcc24a10198d693acaa",
-        "committed_at": "2026-10-17T23:03:26Z",
-        "reviewed_on": "2026-10-28",
-        "evidence": "local binary effectcraft-cli 0.11.1, 27 MCP tools cataloged"
+        "version": "0.19.0",
+        "tag": "v0.19.0",
+        "commit": "afa3c938f6d7f2fd8688e9cd6f58dba0c606b1b4",
+        "committed_at": "2026-10-31T03:26:36Z",
+        "reviewed_on": "2026-11-01",
+        "evidence": "installed effectcraft-cli 0.19.0: MCP tools/list surface verified live against src/gate/capabilities.ts (27 tools, sha256 of the sorted tool ids recorded in mcp_surface_sha256). The governed surface is the guard; the creator upgrades these CLIs whenever upstream ships, so version drift alone is advisory (see docs/upstreams.md).",
+        "mcp_surface_sha256": "8f6edc23a291d84b61435f5cf497b22cc57c9bb6f9377e18bc9ee8c4ec21d7f2"
       },
       "affects_us": [
         "Cargo.toml",
@@ -244,12 +246,13 @@
       "binary": "soundcraft-cli",
       "role": "Media engine: multi-track audio mixing and stems bounce (P06_ASSEMBLY, experimental)",
       "reviewed": {
-        "version": "0.8.0",
-        "tag": "v0.8.0",
-        "commit": "2578ea69a388395ddadb6394d7b4ab40f21aa670",
-        "committed_at": "2026-10-17T21:16:15Z",
-        "reviewed_on": "2026-10-28",
-        "evidence": "local binary soundcraft-cli 0.8.0, 17 MCP tools cataloged"
+        "version": "0.15.0",
+        "tag": "v0.15.0",
+        "commit": "a97ce7556c5362718e8bcab5349477381ff3fb65",
+        "committed_at": "2026-10-31T02:59:18Z",
+        "reviewed_on": "2026-11-01",
+        "evidence": "installed soundcraft-cli 0.15.0: MCP tools/list surface verified live against src/gate/capabilities.ts (17 tools, sha256 of the sorted tool ids recorded in mcp_surface_sha256). The governed surface is the guard; the creator upgrades these CLIs whenever upstream ships, so version drift alone is advisory (see docs/upstreams.md).",
+        "mcp_surface_sha256": "6cd2c108ba656f5df01cbad7cdf957e36e69b8a1f4c92f7df491b835aefc4654"
       },
       "affects_us": [
         "Cargo.toml",

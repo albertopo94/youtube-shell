@@ -121,6 +121,17 @@ export const EFFECTCRAFT_MCP_CAPABILITIES: readonly ToolCapabilityEntry[] = [
       evidenceStatus: "documentada",
     }),
   ),
+  // Bare `list_commands` exists only in EffectCraft (verified against the live MCP tools/list
+  // surface of effectcraft-cli 0.19.0). Without this entry the gate blocks it, so the agent
+  // could not enumerate the engine's own commands even though they are read-only.
+  {
+    id: "list_commands",
+    capability: "read",
+    allowedPhases: "ALL",
+    requiresHumanConfirmation: false,
+    evidenceStatus: "probada",
+    validationMethod: "engine_mcp_surface_test",
+  },
   // Headless motion graphics & compositing operations (gated to P05_ANIMATIC / P06_ASSEMBLY)
   ...([
     "execute_command",

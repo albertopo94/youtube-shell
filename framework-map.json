@@ -1,6 +1,6 @@
 {
   "schema": "youtube-shell.framework-map/v2",
-  "upstream_commit": "af32db882f54eb0aba1d84bf50f0f644c5d6eede",
+  "upstream_commit": "96371974d93688c7e10e706e612c7926d4faab43",
   "source_inventory": [
     {
       "upstream_path": "AGENTS.md",
