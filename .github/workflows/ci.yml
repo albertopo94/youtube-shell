@@ -25,3 +25,29 @@ jobs:
 
       - name: Run end-to-end smoke test
         run: npm run smoke
+
+      # Auditoría 12 S8: la reconciliación upstream debe correr dentro de CI, no solo en la
+      # agenda semanal, para que una deriva del commit revisado no pueda declararse alineada.
+      # La fuente de conocimiento de dominio es compuerta dura: de ella viene el contrato.
+      - name: Check upstream drift for the domain knowledge source (hard gate)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          node scripts/check-upstreams.mjs --only youtube
+          code=$?
+          case "$code" in
+            0) echo "upstream youtube: sin cambios en rutas que nos afecten." ;;
+            1) echo "::error::albertopo94/youtube cambio en rutas que afectan a youtube-shell. Reconciliar upstream-lock.json y compatibilidad-consumidores.md antes de declarar alineacion (docs/upstreams.md)."; exit 1 ;;
+            3) echo "::warning::upstream-lock.json fija un commit de youtube que aun no esta publicado en el remoto; publica la rama de la oficina para que la alineacion sea verificable." ;;
+            *) echo "::warning::No se pudo consultar el upstream youtube (API no disponible). Ejecutar npm run upstreams:check manualmente antes de liberar." ;;
+          esac
+
+      # pi y los motores de medios publican constantemente y su superficie ya esta fijada por
+      # los tests api_used / version de binario de npm test, asi que su deriva es advertencia.
+      - name: Report drift in the runtime and media engines (advisory)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/check-upstreams.mjs --only pi,filmcraft,effectcraft,soundcraft \
+            || echo "::warning::pi o los motores de medios publicaron cambios por revisar; ver docs/upstreams.md y upstream-lock.json."

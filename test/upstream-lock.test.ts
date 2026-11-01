@@ -104,6 +104,40 @@ test("the pi peer range is derived from the reviewed version, never a second lit
   assert.equal(pkg.peerDependenciesMeta?.[lock.upstreams.pi.package]?.optional, true, "pi must stay an optional peer so `pi install` never pulls a second runtime");
 });
 
+test("the declared consumer version stays coherent across lock, package.json and the upstream compatibility document", () => {
+  // Auditoría 12 P1: the compatibility document used to claim the consumer was on an older
+  // version than package.json, so "aligned" was asserted from a stale document. The declared
+  // version now lives in the lock and is cross-checked here instead of being prose-only.
+  const contract = lock.upstreams.youtube.normative_sources.find(
+    (s: { upstream_path: string }) => s.upstream_path === "_framework/compatibilidad-consumidores.md",
+  );
+  assert.ok(contract, "compatibilidad-consumidores.md must be tracked in normative_sources");
+  const declared = /youtube-shell v(\d+\.\d+\.\d+)/.exec(String(contract.role));
+  assert.ok(declared, "the consumer_contract role must declare 'consumer version declared: youtube-shell vX.Y.Z'");
+  assert.equal(declared![1], pkg.version, "the version declared upstream must match package.json");
+
+  // When the office clone is available locally (creator machines), the compatibility document
+  // itself must declare the same consumer version and must not leave a pending consumer action.
+  const officeCandidates = [
+    process.env["YOUTUBE_OFFICE_ROOT"],
+    join(ROOT, "..", "youtube"),
+  ].filter(Boolean) as string[];
+  const compatPath = officeCandidates
+    .map((root) => join(root, "_framework", "compatibilidad-consumidores.md"))
+    .find((candidate) => existsSync(candidate));
+  if (!compatPath) return;
+
+  const compat = readFileSync(compatPath, "utf8");
+  assert.match(
+    compat,
+    new RegExp(`youtube-shell v${pkg.version.replace(/\./g, "\\.")}`),
+    `${compatPath} must declare the consumer at v${pkg.version}`,
+  );
+  const pending = /### Acción pendiente en el consumidor\r?\n\r?\n([^\n]+)/.exec(compat);
+  assert.ok(pending, "compatibilidad-consumidores.md must keep the pending-action section");
+  assert.match(pending![1], /^Ninguna pendiente/, `the upstream doc still reports a pending consumer action: ${pending![1]}`);
+});
+
 test("every pi API the extension touches is listed as reviewed", () => {
   const src = readFileSync(join(ROOT, "src", "gate", "pi-extension.ts"), "utf8");
   const used = new Set<string>();
