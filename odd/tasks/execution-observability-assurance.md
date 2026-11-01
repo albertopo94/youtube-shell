@@ -1,4 +1,4 @@
-# Execution Observability & Assurance (`youtube-shell` v0.14.0)
+# Execution Observability & Assurance (`youtube-shell` v0.14.0 → v0.15.0)
 
 Implementar la capa de observabilidad y aseguramiento de ejecución (*Execution Observability & Assurance*) propuesta en la auditoría de `control del flujo y los harness.md`, separada de la autoridad de producción (`.youtube-shell/registro.json`), con recibos de contexto/skills, bitácora de eventos y verificaciones por corrida, evaluador de aseguramiento, comando `/yts-audit`, niveles de garantía en `framework-map.json` y suite E2E determinista de los 9 escenarios del harness.
 
@@ -19,10 +19,10 @@ Implementar la capa de observabilidad y aseguramiento de ejecución (*Execution 
 - [x] **T3** (`S5`) — Inline (`4654597`): Construir la suite determinista E2E de los 9 escenarios de aseguramiento del harness en `test/assurance-harness.test.ts` (consulta `read_only`, inicio `P01`, bloqueo por fase incorrecta, referencia obligatoria/skill ausente → `DEGRADED`, cambio tras aprobación → `OBSOLETO`, `WARN`, `NOT_EVALUABLE`, interrupción/ejecución incompleta → `ABORTED`/`PARTIAL`, y reanudación).
 - [x] **T4** (`S6`) — Inline (`3a4c370`): Enriquecer `framework-map.json` (`atomic_learnings`) con `source_sha256`, `consumer_sha256`, `activation_trigger`, `application_evidence`, `guarantee_level` (`RUNTIME_ENFORCED`, `DELIVERED`, `OBSERVED`, `TESTED`, `HUMAN_JUDGED`, `REFERENCE_ONLY`), `test_type` y `last_reviewed`, y ampliar `test/framework-map.test.ts`.
 - [x] **T5** (`S1`–`S6`) — Inline (`5bba0f9`): Actualizar `package.json` (`0.14.0`), `README.md`, `docs/progreso.md`, `_framework/compatibilidad-consumidores.md` en `albertopo94/youtube` (`9120042`) y `upstream-lock.json`, verificar suite completa (`152/152`) + smoke + diferencial, commitear y publicar en GitHub.
-- [ ] **T6** (`S2`, `S3`, `S7`) — Inline: Cerrar Detalles 1, 4 y 5 en `src/core/assurance.ts` (exigir `readByAgent === true` para `"Skill leída"` en producción, añadir `inspectDeliverableApplicationEvidence` para evidencia en el entregable, y activar control reforzado por riesgo factual `ALTO` sobre `gobernanza-evidencia.md`) + tests en `test/run-ledger.test.ts` y `test/assurance-harness.test.ts`.
-- [ ] **T7** (`S6`, `S7`) — Inline: Cerrar Detalle 2 en `test/framework-map.test.ts` verificando que `source_sha256` de cada entrada de `atomic_learnings` coincida con el hash fijado en `upstream-lock.json`.
-- [ ] **T8** (`S5`, `S6`, `S7`) — Inline: Cerrar Detalle 3 en `src/cli/launcher.ts`, `bin/youtube-shell.mjs` y `test/launcher.test.ts` exponiendo `youtube-shell --audit [run-id]` y `youtube-shell --runs` con resumen agregado de sesiones reales observadas (`summarizeObservedRuns`).
-- [ ] **T9** (`S1`–`S7`) — Inline: Sincronizar versión `v0.15.0`, `README.md`, `docs/progreso.md`, `_framework/compatibilidad-consumidores.md` y `upstream-lock.json`, ejecutar `npm test` y `npm run smoke` en verde, y cerrar commits.
+- [x] **T6** (`S2`, `S3`, `S7`) — Inline (`b61ab58`): Cerrar Detalles 1, 4 y 5 en `src/core/assurance.ts` (exigir `readByAgent === true` para `"Skill leída"` en producción, añadir `inspectDeliverableApplicationEvidence` para evidencia en el entregable, y activar control reforzado por riesgo factual `ALTO` sobre `gobernanza-evidencia.md`) + tests en `test/run-ledger.test.ts` y `test/assurance-harness.test.ts`.
+- [x] **T7** (`S6`, `S7`) — Inline (`50287a1`): Cerrar Detalle 2 en `test/framework-map.test.ts` verificando que `source_sha256` de cada entrada de `atomic_learnings` coincida con el hash fijado en `upstream-lock.json`.
+- [x] **T8** (`S5`, `S6`, `S7`) — Inline (`aa46cfb`): Cerrar Detalle 3 en `src/cli/launcher.ts`, `bin/youtube-shell.mjs` y `test/launcher.test.ts` exponiendo `youtube-shell --audit [run-id]` y `youtube-shell --runs` con resumen agregado de sesiones reales observadas (`summarizeObservedRuns`).
+- [x] **T9** (`S1`–`S7`) — Inline: Sincronizar versión `v0.15.0`, `README.md`, `docs/progreso.md`, `_framework/compatibilidad-consumidores.md` y `upstream-lock.json`, ejecutar `npm test` y `npm run smoke` en verde, y cerrar commits.
 
 ## Log
 
