@@ -73,6 +73,11 @@ Toda herramienta debe evaluarse sobre cuatro evidencias técnicas verificables:
 
 ## 3. Lecciones Operativas de FilmCraft y EffectCraft en macOS Intel (Comprobadas en el Piloto)
 
+> **Delimitación de ámbitos de conocimiento:**
+> 1. *Metodología de dominio:* Principios audiovisuales generales (ritmo, planos, sonido, pacing) aplicables a cualquier editor de video; residen canónicamente en `_framework/roles/04-direccion-y-edicion.md`.
+> 2. *Conocimiento operativo de herramienta:* Las directivas siguientes son requisitos técnicos específicos de bajo nivel exclusivos de FilmCraft y EffectCraft; el agente las consulta **únicamente si el creador decide utilizar estos proveedores**.
+> 3. *Evidencia empírica del piloto:* Los datos de rendimiento (~12.6 fps) proceden de la bitácora del video piloto (`_framework/referencias/evidencia-piloto/medicion-master-piloto.md`) y documentan los límites observados en esta máquina concreta (macOS Intel x86_64).
+
 A partir de la ejecución técnica real del video piloto de 09:36 minutos en este entorno, se establecen estas reglas de ingeniería:
 
 1. **Orden Obligatorio de Inicialización:**

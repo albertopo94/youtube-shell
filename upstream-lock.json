@@ -6,9 +6,10 @@
       "role": "Domain knowledge (layer 3): phases, templates, contract checker, pilot measurement",
       "reviewed": {
         "ref": "main",
-        "commit": "bb3438e6c5bcc418e1649aba7bea41c9daf47901",
-        "committed_at": "2026-10-28T14:20:38Z",
-        "reviewed_on": "2026-10-28"
+        "commit": "af32db882f54eb0aba1d84bf50f0f644c5d6eede",
+        "committed_at": "2026-11-01T17:49:32Z",
+        "reviewed_on": "2026-11-01",
+        "evidence": "auditoria externa 12 (opinion de mi amiga.md): a67b1fe (revision 11: outliers por mediana reciente, campana unica matizada, delimitacion de ambitos en herramientas-y-apis), 46b53d4 (base v0.7.2) y ef7adf6/af32db8 (adopciones del consumidor) revisados contra skills, runtime y plantillas espejadas"
       },
       "affects_us": [
         "_framework/plantillas/pipeline-video-template/",
@@ -71,7 +72,7 @@
       "normative_sources": [
         {
           "upstream_path": "AGENTS.md",
-          "upstream_sha256": "944cfc574cf3bac0ab86f83e625a06298b937b275c9eb4db7cdb8a8468aa4c78",
+          "upstream_sha256": "3d706a1c74b0103fa6483fc91b5648ce312e44f6b5686ca5dbc03ffc716be44d",
           "local_target": "skills/yts-orquestador/SKILL.md",
           "role": "orchestrator_skill"
         },
@@ -107,7 +108,7 @@
         },
         {
           "upstream_path": "_framework/herramientas-y-apis.md",
-          "upstream_sha256": "6a120eeaf9ab5a62106185190c4273739c3eb6dbe6caaf2397a0b7b61be3dde3",
+          "upstream_sha256": "f8af502bb2b7669289151e3f8dd36baaa3d8a42781b95fda17e2ba9743324393",
           "local_target": "skills/yts-orquestador/references/herramientas-y-apis.md",
           "role": "mirrored_reference"
         },
@@ -149,9 +150,9 @@
         },
         {
           "upstream_path": "_framework/compatibilidad-consumidores.md",
-          "upstream_sha256": "00e296317c69491ea8e51c3fe5b5e318a7c578a1728e2ba2b7d15357e8ee19b9",
+          "upstream_sha256": "111ea8c827e9d9abc52b572fc33229b0962a9c787dfe52714480212dce047ccb",
           "local_target": "upstream-lock.json",
-          "role": "consumer_contract"
+          "role": "consumer_contract; consumer version declared: youtube-shell v0.12.0 (aligned 8/8 templates; outliers-by-recent-median, per-shot pacing boundary and mirrored tool-scope note adopted)"
         },
         {
           "upstream_path": "_framework/gobernanza-evidencia.md",
