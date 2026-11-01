@@ -116,3 +116,21 @@ L2 (2026-11-01, cierre) — Evidencia observada:
 - Pendiente del creador: publicar la rama de `albertopo94/youtube` (el lock fija `af32db8`, que hoy
   solo existe en el clon local → `check-upstreams.mjs` responde 3) y decidir la promoción de los
   motores de medios, que tiene ~190 commits por revisar en FilmCraft.
+
+L3 (2026-11-01, motores de medios) — El creador aclaró que actualiza filmcraft/effectcraft/soundcraft
+cada vez que `storytold` publica, así que la guarda de igualdad de versión era la guarda equivocada.
+- La nueva guarda lee `tools/list` por MCP de los binarios instalados y compara contra
+  `src/gate/capabilities.ts`: corte duro si el catálogo afirma una tool que el motor ya no expone;
+  advertencia si el motor expone tools no catalogadas (la allowlist las bloquea → capacidad perdida,
+  no inseguridad), por deriva de versión, o si cambia `mcp_surface_sha256`.
+- Hallazgo: EffectCraft 0.19.0 expone `list_commands` y nunca estuvo catalogado → el gate bloqueaba
+  una tool de solo lectura real. Catalogada (`a2495ac`→`528a0da`).
+- Verificación en vivo: filmcraft 17/17, effectcraft 27 (26 catalogadas + 1 hallada), soundcraft 17/17.
+- Lock promovido a las versiones que corren acá: filmcraft 0.15.0 `94ceaa9`, effectcraft 0.19.0
+  `afa3c93`, soundcraft 0.15.0 `a97ce75`, cada uno con `reviewed.mcp_surface_sha256`.
+- Evidencia de los dos caminos: (a) instalado 0.15.0 vs revisado 0.9.0 → `# pass 8 / # fail 0` con
+  aviso; (b) catálogo afirmando `tool_that_engine_dropped` → `not ok` con el nombre de la tool.
+- `npm run engines:surface` → exit 0, los 3 hashes coinciden con el lock.
+- `npm test` → `# tests 137 / # pass 137 / # fail 0`. Versión `0.13.0`. Commits `528a0da` `9681aa8`.
+- La guarda de coherencia de versión (T5/S8) funcionó de verdad: detectó que el documento de la
+  oficina seguía en v0.12.0 y obligó a re-ancorar (`9637197`, lock y mapa → ese commit).
