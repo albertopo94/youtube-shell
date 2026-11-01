@@ -105,7 +105,7 @@ El agente y el creador seleccionan el flujo en `00-estado-produccion.md` antes d
 - **Planificación Oración por Plano (*Sentence-to-Shot Planning*):** en Shorts dinámicos, cada frase del guion constituye un plano visual independiente sin tomas estáticas de más de 3 s.
 
 ### Las 4 Capas de Pulido Audiovisual
-1. **Pacing Visual:** por defecto ≤ 5 s por plano estático antes de aplicar un corte, B-roll o movimiento (*excepción permitida por empatía narrativa comprobada de 10-15 s si el personaje ya conectó con la audiencia*).
+1. **Pacing Visual:** por defecto ≤ 5 s por plano estático antes de aplicar un corte, B-roll o movimiento (*excepción permitida por empatía narrativa comprobada de 10-15 s si el personaje ya conectó con la audiencia*). **Frontera de verificación:** el medidor automático del master (`master_measurement`) reporta el ritmo **promedio** por segmento y, si la hoja de aceptación declara `pacing.maxShotSec`, el segmento más largo detectado; ambos son un **indicador macro aproximado** (la detección de cortes de FFmpeg no identifica cada corte editorial). El cumplimiento de la regla ≤5 s por plano individual es **revisión editorial humana** del creador en la tabla de escenas, no una métrica automática.
 2. **Cortes de Continuidad:** J-Cuts / L-Cuts de 0,5 a 1 s; corte oculto en barridos rápidos (*whip pan*) para empalmar tomas de acción IA.
 3. **Arquitectura de Audio Adaptable y Foley Táctil:**
    - **A1 Locución:** inteligibilidad y margen de pico seguro (cuando aplique).

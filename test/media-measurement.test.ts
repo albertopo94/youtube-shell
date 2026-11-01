@@ -152,6 +152,173 @@ test("pre-approved creative exception in acceptance sheet yields WARN instead of
   assert.equal(report.result, "WARN");
 });
 
+test("a long static segment fails the per-shot pacing limit even when the average is within threshold", () => {
+  // Auditoría 12 P2: muchos cortes cortos mantienen el promedio bajo el umbral, pero un plano
+  // congelado de 40s rompe la regla de duración máxima individual.
+  const manyCutsOneFreeze: MediaMetrics = {
+    ...PILOT_ARCHIVED_METRICS,
+    integratedLufs: -23.0,
+    truePeakDbtp: -3.0,
+    durationSec: 300,
+    visualSegments: 40, // promedio de 7.5s (dentro de maxAverageShotSec: 8)
+    maxSegmentSec: 40.2, // un plano estático congelado ~40s
+  };
+
+  const sheet: AcceptanceSheet = {
+    schemaVersion: 1,
+    videoId: "03-cortes-rapidos",
+    approvedBy: "creador",
+    approvedAt: "2026-10-21T10:00:00Z",
+    approvedBeforeRender: true,
+    loudness: { targetLufs: -23, toleranceLu: 2, maxTruePeakDbtp: -1.5 },
+    pacing: { maxAverageShotSec: 8.0, maxShotSec: 10.0 },
+  };
+
+  const report = evaluateMasterAcceptance(manyCutsOneFreeze, sheet);
+  const pacingCheck = report.checks.find((c) => c.id === "visual_pacing");
+  assert.equal(pacingCheck?.result, "FAIL");
+  assert.match(pacingCheck?.details ?? "", /40\.2/);
+  assert.match(pacingCheck?.details ?? "", /máximo por segmento|límite por segmento/i);
+  assert.match(pacingCheck?.details ?? "", /aproximaci|revisión editorial/i);
+  assert.equal(report.result, "FAIL");
+});
+
+test("the per-shot pacing limit passes when the longest detected segment is within maxShotSec", () => {
+  const evenPacing: MediaMetrics = {
+    ...PILOT_ARCHIVED_METRICS,
+    integratedLufs: -23.0,
+    truePeakDbtp: -3.0,
+    durationSec: 240,
+    visualSegments: 48, // promedio de 5s
+    maxSegmentSec: 6.5,
+  };
+
+  const sheet: AcceptanceSheet = {
+    schemaVersion: 1,
+    videoId: "04-ritmo-uniforme",
+    approvedBy: "creador",
+    approvedAt: "2026-10-21T10:00:00Z",
+    approvedBeforeRender: true,
+    loudness: { targetLufs: -23, toleranceLu: 2, maxTruePeakDbtp: -1.5 },
+    pacing: { maxAverageShotSec: 8.0, maxShotSec: 10.0 },
+  };
+
+  const report = evaluateMasterAcceptance(evenPacing, sheet);
+  const pacingCheck = report.checks.find((c) => c.id === "visual_pacing");
+  assert.equal(pacingCheck?.result, "PASS");
+  assert.match(pacingCheck?.details ?? "", /6\.5/);
+  assert.equal(report.result, "PASS");
+});
+
+test("a pre-approved pacing exception downgrades the per-shot violation to WARN", () => {
+  const contemplativeLongTake: MediaMetrics = {
+    ...PILOT_ARCHIVED_METRICS,
+    integratedLufs: -23.0,
+    truePeakDbtp: -3.0,
+    durationSec: 240,
+    visualSegments: 40, // promedio 6s
+    maxSegmentSec: 15.0,
+  };
+
+  const sheet: AcceptanceSheet = {
+    schemaVersion: 1,
+    videoId: "05-toma-contemplativa",
+    approvedBy: "creador",
+    approvedAt: "2026-10-21T10:00:00Z",
+    approvedBeforeRender: true,
+    loudness: { targetLufs: -23, toleranceLu: 2, maxTruePeakDbtp: -1.5 },
+    pacing: { maxAverageShotSec: 8.0, maxShotSec: 10.0 },
+    exceptions: {
+      pacing: {
+        reason: "Toma contemplativa de payoff emocional aprobada antes del render; la quietud visual es el recurso narrativo.",
+        approvedBy: "creador",
+      },
+    },
+  };
+
+  const report = evaluateMasterAcceptance(contemplativeLongTake, sheet);
+  const pacingCheck = report.checks.find((c) => c.id === "visual_pacing");
+  assert.equal(pacingCheck?.result, "WARN");
+  assert.equal(report.result, "WARN");
+});
+
+test("when no maxShotSec is declared the pacing verdict is average-based and the longest segment is reported as diagnostic with the approximation disclaimer", () => {
+  const fastAvg: MediaMetrics = {
+    ...PILOT_ARCHIVED_METRICS,
+    integratedLufs: -23.0,
+    truePeakDbtp: -3.0,
+    durationSec: 240,
+    visualSegments: 48, // promedio 5s
+    maxSegmentSec: 18.0,
+  };
+
+  const sheet: AcceptanceSheet = {
+    schemaVersion: 1,
+    videoId: "06-solo-promedio",
+    approvedBy: "creador",
+    approvedAt: "2026-10-21T10:00:00Z",
+    approvedBeforeRender: true,
+    loudness: { targetLufs: -23, toleranceLu: 2, maxTruePeakDbtp: -1.5 },
+    pacing: { maxAverageShotSec: 8.0 },
+  };
+
+  const report = evaluateMasterAcceptance(fastAvg, sheet);
+  const pacingCheck = report.checks.find((c) => c.id === "visual_pacing");
+  assert.equal(pacingCheck?.result, "PASS");
+  assert.match(pacingCheck?.details ?? "", /18\.0/);
+  assert.match(pacingCheck?.details ?? "", /revisión editorial/i);
+  assert.equal(report.result, "PASS");
+});
+
+test("measureMasterFile reports the longest detected segment from real ffmpeg pts_time output", (t) => {
+  const tmp = mkdtempSync(join(tmpdir(), "yts-media-"));
+  t.after(() => rmSync(tmp, { recursive: true, force: true }));
+
+  // 3s de rojo, corte duro a 1s, 2s de azul: el segmento más largo es el tramo azul (~2s).
+  const masterPath = join(tmp, "cut-master.mp4");
+  execFileSync(
+    "ffmpeg",
+    [
+      "-y",
+      "-f",
+      "lavfi",
+      "-i",
+      "color=c=red:s=320x180:r=24:d=1",
+      "-f",
+      "lavfi",
+      "-i",
+      "color=c=blue:s=320x180:r=24:d=2",
+      "-f",
+      "lavfi",
+      "-i",
+      "sine=frequency=440:sample_rate=48000:duration=3",
+      "-filter_complex",
+      "[0:v][1:v]concat=n=2:v=1:a=0[v]",
+      "-map",
+      "[v]",
+      "-map",
+      "2:a",
+      "-c:v",
+      "libx264",
+      "-pix_fmt",
+      "yuv420p",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "128k",
+      masterPath,
+    ],
+    { stdio: "ignore" },
+  );
+
+  const measured = measureMasterFile(masterPath);
+  assert.equal(measured.ok, true, measured.ok ? "" : measured.reason);
+  if (!measured.ok) return;
+
+  assert.ok(measured.metrics.maxSegmentSec >= 1.5 && measured.metrics.maxSegmentSec <= 2.5, `maxSegmentSec=${measured.metrics.maxSegmentSec}`);
+  assert.ok(measured.metrics.visualSegments >= 2);
+});
+
 test("measureMasterFile runs real ffprobe and ffmpeg (execFileSync, no shell) on a local MP4 and evaluates acceptance", (t) => {
   const tmp = mkdtempSync(join(tmpdir(), "yts-media-"));
   t.after(() => rmSync(tmp, { recursive: true, force: true }));

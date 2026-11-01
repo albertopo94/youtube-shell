@@ -16,6 +16,15 @@ export interface MediaMetrics {
   blackFrameCount: number;
   maxSilenceSec: number;
   visualSegments: number;
+  /**
+   * Longest detected interval between two consecutive FFmpeg scene cuts (or the
+   * file end). Scene detection at `scene>0.3` is a macro-level approximation, not
+   * a reliable editorial cut identification: a slow Ken Burns or a continuous
+   * animation may not fire the threshold at all, and a hard light flash may fire
+   * it without an editorial cut. The per-shot editorial rule (e.g. ≤5s static
+   * shot) therefore stays a human review item; this metric is a diagnostic signal.
+   */
+  maxSegmentSec: number;
   decodeErrors: number;
   /**
    * Optional timeline/stems evidence when exported from the editor.
@@ -51,6 +60,13 @@ export interface AcceptanceSheet {
   maxSilenceSec?: number;
   pacing?: {
     maxAverageShotSec: number;
+    /**
+     * Optional per-segment limit in seconds for the longest detected interval
+     * between cuts. When declared, the automatic verdict also enforces this cap;
+     * the editorial per-shot rule (duration of each individual static shot) is
+     * still a human review item, because FFmpeg scene detection is approximate.
+     */
+    maxShotSec?: number;
   };
   exceptions?: {
     loudness?: AcceptanceException;
@@ -90,6 +106,7 @@ export const PILOT_ARCHIVED_METRICS: MediaMetrics = {
   blackFrameCount: 0,
   maxSilenceSec: 0,
   visualSegments: 14,
+  maxSegmentSec: 120.5,
   decodeErrors: 0,
   declaredTimelineTracks: 1,
   hasMusicTrack: false,
@@ -225,6 +242,23 @@ function parseFfmpegMeasurement(
   const sceneMatches = stderr.match(/pts_time:/g);
   const visualSegments = (sceneMatches ? sceneMatches.length : 0) + 1;
 
+  // Longest gap between consecutive detected cuts (and to the file end).
+  const cutTimes: number[] = [];
+  for (const m of stderr.matchAll(/pts_time:(\d+(?:\.\d+)?)/g)) {
+    const t = Number(m[1]);
+    if (Number.isFinite(t) && t >= 0) cutTimes.push(t);
+  }
+  cutTimes.sort((a, b) => a - b);
+  let maxSegmentSec = 0;
+  if (cutTimes.length > 0) {
+    for (let i = 1; i < cutTimes.length; i++) {
+      maxSegmentSec = Math.max(maxSegmentSec, cutTimes[i] - cutTimes[i - 1]);
+    }
+    if (base.durationSec > 0) {
+      maxSegmentSec = Math.max(maxSegmentSec, base.durationSec - cutTimes[cutTimes.length - 1]);
+    }
+  }
+
   return {
     ok: true,
     metrics: {
@@ -241,6 +275,7 @@ function parseFfmpegMeasurement(
       blackFrameCount,
       maxSilenceSec,
       visualSegments,
+      maxSegmentSec,
       decodeErrors,
       ...base.timelineEvidence,
     },
@@ -432,7 +467,12 @@ export function evaluateMasterAcceptance(
     });
   }
 
-  // 7. Visual pacing
+  // 7. Visual pacing — average shot length plus (when declared) a per-segment cap.
+  // The automatic measurement is an approximation of macro-level rhythm: FFmpeg
+  // scene detection does not identify every editorial cut. The per-shot editorial
+  // rule (no static shot longer than N seconds without variation) remains a human
+  // review item; this check must never be read as proof that every individual
+  // shot respects that rule.
   if (sheet.pacing) {
     if (!(metrics.visualSegments > 0) || !(metrics.durationSec > 0)) {
       checks.push({
@@ -442,23 +482,40 @@ export function evaluateMasterAcceptance(
       });
     } else {
       const avgShotSec = metrics.durationSec / metrics.visualSegments;
-      if (avgShotSec <= sheet.pacing.maxAverageShotSec) {
+      const avgOk = avgShotSec <= sheet.pacing.maxAverageShotSec;
+      const hasShotCap = sheet.pacing.maxShotSec !== undefined && Number.isFinite(metrics.maxSegmentSec);
+      const shotOk = hasShotCap ? metrics.maxSegmentSec <= (sheet.pacing.maxShotSec as number) : true;
+      const avgLabel = `Promedio de ${avgShotSec.toFixed(2)}s por segmento (${metrics.visualSegments} segmentos en ${metrics.durationSec}s; umbral ${sheet.pacing.maxAverageShotSec}s)`;
+      const segmentLabel = `Segmento más largo detectado: ${metrics.maxSegmentSec.toFixed(1)}s`;
+      const disclaimer =
+        " La detección de cortes (FFmpeg scene>0.3) es un indicador macro aproximado, no una identificación fiable de cada corte editorial; la duración máxima individual por plano queda en revisión editorial humana.";
+      if (avgOk && shotOk) {
         checks.push({
           id: "visual_pacing",
           result: "PASS",
-          details: `Promedio de ${avgShotSec.toFixed(2)}s por segmento (${metrics.visualSegments} segmentos en ${metrics.durationSec}s; umbral ${sheet.pacing.maxAverageShotSec}s).`,
+          details: hasShotCap
+            ? `${avgLabel}; ${segmentLabel} dentro del máximo por segmento de ${sheet.pacing.maxShotSec}s.${disclaimer}`
+            : `${avgLabel}; ${segmentLabel} (sin umbral por segmento declarado: la duración individual por plano queda en revisión editorial humana).${disclaimer}`,
         });
       } else if (hasValidException(sheet.exceptions?.pacing)) {
         checks.push({
           id: "visual_pacing",
           result: "WARN",
-          details: `Promedio de ${avgShotSec.toFixed(2)}s supera el umbral por defecto (${sheet.pacing.maxAverageShotSec}s), con excepción creativa preaprobada: ${sheet.exceptions!.pacing!.reason}`,
+          details:
+            `${avgLabel}; ${segmentLabel}` +
+            (avgOk
+              ? ` supera el máximo por segmento de ${sheet.pacing.maxShotSec}s`
+              : ` supera el umbral promedio de ${sheet.pacing.maxAverageShotSec}s`) +
+            `, con excepción creativa preaprobada: ${sheet.exceptions!.pacing!.reason}.${disclaimer}`,
         });
       } else {
+        const failure = avgOk
+          ? `Segmento más largo de ${metrics.maxSegmentSec.toFixed(1)}s supera el máximo por segmento de ${sheet.pacing.maxShotSec}s (promedio de ${avgShotSec.toFixed(2)}s dentro del umbral de ${sheet.pacing.maxAverageShotSec}s)`
+          : `Promedio de ${avgShotSec.toFixed(2)}s por segmento supera el máximo de ${sheet.pacing.maxAverageShotSec}s${hasShotCap ? `; segmento más largo detectado: ${metrics.maxSegmentSec.toFixed(1)}s` : ""}`;
         checks.push({
           id: "visual_pacing",
           result: "FAIL",
-          details: `Promedio de ${avgShotSec.toFixed(2)}s por segmento supera el máximo de ${sheet.pacing.maxAverageShotSec}s sin excepción justificada.`,
+          details: `${failure}, sin excepción justificada.${disclaimer}`,
         });
       }
     }

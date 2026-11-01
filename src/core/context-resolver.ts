@@ -170,9 +170,9 @@ export const PHASE_PLAYBOOKS: Record<PhaseId, PhasePlaybook> = {
       "Tabla de Escenas (§3) con todos los [Bxx] y timecodes sin '← derivar', §4 Capas Obligatorias, 04-registro-recursos.md con licencias y costos verificados, aceptacion.json sellado con /yts-approve-sheet y archivo master medido por ffprobe/ffmpeg.",
     verificationBoundary: {
       runtimeDeterministic:
-        "script_storyboard_ids, resource_license_log y master_measurement (con verificación SHA-256 de /yts-approve-sheet) validan trazabilidad de bloques, licencias y parámetros técnicos del master.",
+        "script_storyboard_ids, resource_license_log y master_measurement (con verificación SHA-256 de /yts-approve-sheet) validan trazabilidad de bloques, licencias y parámetros técnicos del master. En el pacing, master_measurement evalúa el promedio de duración de segmento (indicador macro aproximado por detección de cortes FFmpeg scene>0.3) y, si la hoja declara pacing.maxShotSec, el segmento más largo detectado: no demuestra que cada plano individual respete la regla editorial de ≤5s.",
       humanEditorial:
-        "El creador inspecciona la narrativa visual, el diseño sonoro y la vigencia real de las licencias antes de /yts-approve P06_ASSEMBLY.",
+        "El creador inspecciona la narrativa visual, el diseño sonoro, la vigencia real de las licencias y la duración individual de cada plano estático (regla ≤5s con justificación creativa) antes de /yts-approve P06_ASSEMBLY.",
     },
   },
   P07_CLOSE: {
