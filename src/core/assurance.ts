@@ -45,10 +45,19 @@ export interface ReferenceAttestation {
   readByAgent: boolean;
 }
 
+export interface DeliverableApplicationEvidence {
+  expected: boolean;
+  verified: boolean;
+  targetFile: string;
+  summary: string;
+}
+
 export interface ContextAttestation {
   expectedSkill: SkillAttestation;
   mandatoryReferences: ReferenceAttestation[];
   conditionalReferences: ReferenceAttestation[];
+  applicationEvidence?: DeliverableApplicationEvidence;
+  highFactualRisk?: boolean;
   promptHash?: string;
 }
 
@@ -307,6 +316,143 @@ function resolveReferenceOnDisk(
   return { resolvedPath: fallback, ...st };
 }
 
+export function detectHighFactualRisk(videoDir: string): boolean {
+  const fuentesPath = join(videoDir, "06-fuentes-y-verificacion.md");
+  if (!existsSync(fuentesPath)) return false;
+  try {
+    const content = readFileSync(fuentesPath, "utf8");
+    if (/\[[xX]\]\s*(?:Zona Roja YMYL|Alto\b)/i.test(content)) {
+      return true;
+    }
+    return /(?:Nivel de riesgo factual|Riesgo factual|Grado de controversia o riesgo)[^\n]*:\s*(?:\*\*)?`?ALTO`?(?:\*\*)?\s*$/im.test(
+      content,
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function inspectDeliverableApplicationEvidence(
+  videoDir: string,
+  phase: PhaseId,
+): DeliverableApplicationEvidence {
+  const readSafe = (rel: string): string | undefined => {
+    const full = join(videoDir, rel);
+    if (!existsSync(full)) return undefined;
+    try {
+      return readFileSync(full, "utf8");
+    } catch {
+      return undefined;
+    }
+  };
+
+  switch (phase) {
+    case "P01_PACKAGING": {
+      const targetFile = "01-packaging.md";
+      const text = readSafe(targetFile);
+      if (!text) {
+        return { expected: true, verified: false, targetFile, summary: "01-packaging.md ausente" };
+      }
+      const hasTitles = /Opciones de T[íi]tulo/i.test(text);
+      const hasLevers = /(?:Palanca|Gatillo|Emoci[óo]n|Curiosidad|Miedo|Deseo|Contraste|Miniatura)/i.test(
+        text,
+      );
+      const verified = hasTitles && hasLevers;
+      return {
+        expected: true,
+        verified,
+        targetFile,
+        summary: verified
+          ? "Palancas de título y conceptos de miniatura documentados en 01-packaging.md"
+          : "Falta documentar opciones de título o palancas/conceptos de miniatura en 01-packaging.md",
+      };
+    }
+    case "P02_RESEARCH": {
+      const targetFile = "06-fuentes-y-verificacion.md";
+      const text = readSafe(targetFile);
+      if (!text) {
+        return {
+          expected: true,
+          verified: false,
+          targetFile,
+          summary: "06-fuentes-y-verificacion.md ausente",
+        };
+      }
+      const hasRisk = /Riesgo factual|R[ée]gimen de Verificaci[óo]n|Nivel de Riesgo Factual/i.test(
+        text,
+      );
+      const hasSources = /Parte 1|Fuentes|Barrido|mediana/i.test(text);
+      const verified = hasRisk && hasSources;
+      return {
+        expected: true,
+        verified,
+        targetFile,
+        summary: verified
+          ? "Riesgo factual y fuentes de Parte 1 documentados en 06-fuentes-y-verificacion.md"
+          : "Falta declarar riesgo factual o fuentes de Parte 1 en 06-fuentes-y-verificacion.md",
+      };
+    }
+    case "P03_SCRIPT": {
+      const targetFile = "02-guion.md";
+      const text = readSafe(targetFile);
+      if (!text) {
+        return { expected: true, verified: false, targetFile, summary: "02-guion.md ausente" };
+      }
+      const hasBlocks = /\[B01\]/.test(text);
+      const hasGate = /Puerta de Control Editorial|Apertura|Gancho/i.test(text);
+      const verified = hasBlocks && hasGate;
+      return {
+        expected: true,
+        verified,
+        targetFile,
+        summary: verified
+          ? "Bloques [Bxx] y Puerta de Control Editorial presentes en 02-guion.md"
+          : "Faltan bloques [B01] o Puerta de Control Editorial en 02-guion.md",
+      };
+    }
+    case "P04_FACTCHECK": {
+      const targetFile = "06-fuentes-y-verificacion.md";
+      const text = readSafe(targetFile);
+      const verified = Boolean(text && /Parte 2|Afirmaciones/i.test(text));
+      return {
+        expected: true,
+        verified,
+        targetFile,
+        summary: verified
+          ? "Parte 2 de verificación factual presente en 06-fuentes-y-verificacion.md"
+          : "Falta Parte 2 en 06-fuentes-y-verificacion.md",
+      };
+    }
+    case "P05_ANIMATIC":
+    case "P06_ASSEMBLY": {
+      const targetFile = "03-storyboard-y-edicion.md";
+      const text = readSafe(targetFile);
+      const verified = Boolean(text && /\[B01\]|Storyboard|Checklist/i.test(text));
+      return {
+        expected: true,
+        verified,
+        targetFile,
+        summary: verified
+          ? "Trazabilidad de bloques y storyboard presente en 03-storyboard-y-edicion.md"
+          : "Falta trazabilidad de storyboard en 03-storyboard-y-edicion.md",
+      };
+    }
+    case "P07_CLOSE": {
+      const targetFile = "entregable-final.md";
+      const text = readSafe(targetFile);
+      const verified = Boolean(text && /Paquete de Publicaci[óo]n|Aprendizajes/i.test(text));
+      return {
+        expected: true,
+        verified,
+        targetFile,
+        summary: verified
+          ? "Paquete de publicación y aprendizajes documentados en entregable-final.md"
+          : "Falta paquete de publicación o aprendizajes en entregable-final.md",
+      };
+    }
+  }
+}
+
 export interface BuildAttestationOptions {
   promptDelivered: boolean;
   promptHash?: string;
@@ -337,7 +483,6 @@ export function buildContextAttestation(
     (label) => {
       const targetFile = extractTargetFileFromReferenceLabel(label);
       const disk = resolveReferenceOnDisk(targetFile, resolved.videoDir, resolved, pkgRoot);
-      // In P06_ASSEMBLY, aceptacion.json is created during the phase before render; if not yet created at start, record reason
       return {
         label,
         targetFile,
@@ -353,20 +498,31 @@ export function buildContextAttestation(
     },
   );
 
+  const highFactualRisk = detectHighFactualRisk(resolved.videoDir);
+
   const conditionalReferences: ReferenceAttestation[] = resolved.playbook.conditionalReferences.map(
     (label) => {
       const targetFile = extractTargetFileFromReferenceLabel(label);
       const isFrameworkRef = targetFile.startsWith("skills/");
       const hasWorkspaceLink = Boolean(resolved.layer3.workspaceLink);
       const disk = resolveReferenceOnDisk(targetFile, resolved.videoDir, resolved, pkgRoot);
-      const applicable = isFrameworkRef ? true : hasWorkspaceLink && disk.exists;
-      const reason = isFrameworkRef
-        ? `Referencia normativa disponible para ${resolved.targetPhase}`
-        : !hasWorkspaceLink
-        ? "No aplicable: sin vínculo de oficina/canal (/yts-link)"
-        : disk.exists
-        ? "Aplicable: archivo detectado en oficina/canal vinculado"
-        : "No aplicable: archivo opcional no presente en oficina/canal";
+      const isGovRef = targetFile.includes("gobernanza-evidencia.md");
+      const applicable =
+        isGovRef && highFactualRisk
+          ? true
+          : isFrameworkRef
+          ? true
+          : hasWorkspaceLink && disk.exists;
+      const reason =
+        isGovRef && highFactualRisk
+          ? "Riesgo factual ALTO detectado en 06-fuentes-y-verificacion.md (verificación reforzada obligatoria)"
+          : isFrameworkRef
+          ? `Referencia normativa disponible para ${resolved.targetPhase}`
+          : !hasWorkspaceLink
+          ? "No aplicable: sin vínculo de oficina/canal (/yts-link)"
+          : disk.exists
+          ? "Aplicable: archivo detectado en oficina/canal vinculado"
+          : "No aplicable: archivo opcional no presente en oficina/canal";
 
       return {
         label,
@@ -383,10 +539,42 @@ export function buildContextAttestation(
     },
   );
 
+  // If factual risk is ALTO in P02_RESEARCH, P03_SCRIPT, or P04_FACTCHECK, ensure gobernanza-evidencia.md is tracked
+  if (
+    highFactualRisk &&
+    (resolved.targetPhase === "P02_RESEARCH" ||
+      resolved.targetPhase === "P03_SCRIPT" ||
+      resolved.targetPhase === "P04_FACTCHECK") &&
+    !conditionalReferences.some((r) => r.targetFile.includes("gobernanza-evidencia.md"))
+  ) {
+    const govTarget = "skills/yts-orquestador/references/gobernanza-evidencia.md";
+    const disk = resolveReferenceOnDisk(govTarget, resolved.videoDir, resolved, pkgRoot);
+    conditionalReferences.push({
+      label: `${govTarget} (verificación reforzada por riesgo factual ALTO)`,
+      targetFile: govTarget,
+      ...(disk.resolvedPath ? { resolvedPath: disk.resolvedPath } : {}),
+      kind: "conditional",
+      applicable: true,
+      reason:
+        "Riesgo factual ALTO detectado en 06-fuentes-y-verificacion.md (verificación reforzada obligatoria)",
+      exists: disk.exists,
+      ...(disk.sha256 ? { sha256: disk.sha256 } : {}),
+      deliveredInPrompt: options.promptDelivered,
+      readByAgent: false,
+    });
+  }
+
+  const applicationEvidence = inspectDeliverableApplicationEvidence(
+    resolved.videoDir,
+    resolved.targetPhase,
+  );
+
   return {
     expectedSkill,
     mandatoryReferences,
     conditionalReferences,
+    applicationEvidence,
+    highFactualRisk,
     ...(options.promptHash ? { promptHash: options.promptHash } : {}),
   };
 }
@@ -466,19 +654,38 @@ export function evaluateRunAssurance(manifest: RunManifest): AssuranceEvaluation
     satisfied: manifest.context.expectedSkill.exists,
   });
 
-  // 3. Skill read or delivered
+  // 3. Skill read (in production mode, a route in the prompt does NOT count as reading the skill)
   const skillReadSatisfied =
     manifest.workMode === "read_only"
       ? manifest.context.expectedSkill.deliveredInPrompt
-      : manifest.context.expectedSkill.readByAgent || manifest.context.expectedSkill.deliveredInPrompt;
+      : manifest.context.expectedSkill.readByAgent;
   controls.push({
     control: "Skill leída",
     result: manifest.context.expectedSkill.readByAgent
       ? "Verificado"
+      : manifest.workMode === "read_only"
+      ? "No requerida (modo lectura)"
       : manifest.context.expectedSkill.deliveredInPrompt
-      ? "Entregada en contexto (lectura explícita no observada)"
+      ? "No verificada (solo ruta en prompt)"
       : "No verificada",
     satisfied: skillReadSatisfied,
+  });
+
+  // 4. Deliverable application evidence
+  const appEv = manifest.context.applicationEvidence;
+  const appEvSatisfied =
+    manifest.workMode === "read_only" ? true : appEv ? appEv.verified : true;
+  controls.push({
+    control: "Evidencia de aplicación",
+    result:
+      manifest.workMode === "read_only"
+        ? "N/A (consulta)"
+        : !appEv
+        ? "No evaluada"
+        : appEv.verified
+        ? `Verificada (${appEv.targetFile})`
+        : `Incompleta (${appEv.summary})`,
+    satisfied: appEvSatisfied,
   });
 
   // 4. Mandatory references availability
@@ -718,10 +925,24 @@ export function evaluateRunAssurance(manifest: RunManifest): AssuranceEvaluation
     };
   }
 
-  if (hasWarnChecks || !condSatisfied) {
-    const reason = hasWarnChecks
-      ? "Las verificaciones finalizaron con advertencia WARN que exige reconocimiento explícito del creador (--ack-warn)."
-      : "Se completó el trabajo estructural y las verificaciones automáticas, pero una referencia condicional aplicable no tiene evidencia de lectura.";
+  if (
+    hasWarnChecks ||
+    !condSatisfied ||
+    !manifest.context.expectedSkill.readByAgent ||
+    !appEvSatisfied
+  ) {
+    let reason: string;
+    if (hasWarnChecks) {
+      reason =
+        "Las verificaciones finalizaron con advertencia WARN que exige reconocimiento explícito del creador (--ack-warn).";
+    } else if (!manifest.context.expectedSkill.readByAgent) {
+      reason = `Se completó el trabajo estructural y las verificaciones automáticas, pero la skill asignada (${manifest.context.expectedSkill.name}) no tiene evidencia de lectura efectiva.`;
+    } else if (!appEvSatisfied) {
+      reason = `Se completó el trabajo estructural y las verificaciones automáticas, pero falta evidencia de aplicación en el entregable (${appEv?.summary ?? "incompleta"}).`;
+    } else {
+      reason =
+        "Se completó el trabajo estructural y las verificaciones automáticas, pero una referencia condicional aplicable no tiene evidencia de lectura.";
+    }
     return {
       status: "DEGRADED",
       reason,

@@ -18,6 +18,7 @@ import {
   buildExpectedChecksForPhase,
   classifyRequestKind,
   evaluateRunAssurance,
+  inspectDeliverableApplicationEvidence,
   loadDefaultEnvironmentInfo,
   type RunIncident,
   type RunLedgerEvent,
@@ -138,6 +139,10 @@ export function createRunRecord(options: CreateRunRecordOptions): RunManifest {
 
 export function saveRunManifest(videoDir: string, manifest: RunManifest): void {
   if (!existsSync(videoDir)) return;
+  manifest.context.applicationEvidence = inspectDeliverableApplicationEvidence(
+    videoDir,
+    manifest.targetPhase,
+  );
   const assurance = evaluateRunAssurance(manifest);
   manifest.status = assurance.status;
   manifest.statusReason = assurance.reason;
