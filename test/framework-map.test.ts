@@ -34,7 +34,6 @@ interface VerificationScope {
   deterministic_in_runtime: string;
   editorial_or_human_review: string;
 }
-
 interface SourceInventoryEntry {
   upstream_path: string;
   disposition:
@@ -55,6 +54,17 @@ interface ConsolidatedSourceEntry {
   target_rule_ids: string[];
   target_skills: string[];
   disposition_summary: string;
+}
+
+interface AtomicLearning {
+  learning_id: string;
+  source: { file: string; section: string };
+  principle: string;
+  destination: string;
+  activation: string;
+  application: string;
+  evidence: string;
+  status: string;
 }
 
 interface FrameworkRule {
@@ -78,7 +88,29 @@ interface FrameworkMap {
   source_inventory: SourceInventoryEntry[];
   consolidated_or_legacy_sources: ConsolidatedSourceEntry[];
   rules: FrameworkRule[];
+  atomic_learnings: AtomicLearning[];
 }
+
+const LEARNING_FIELDS = [
+  "learning_id",
+  "source",
+  "principle",
+  "destination",
+  "activation",
+  "application",
+  "evidence",
+  "status",
+] as const;
+
+const VALID_APPLICATIONS = new Set([
+  "instruction",
+  "human_review",
+  "deterministic_gate",
+  "instruction_plus_human_review",
+  "instruction_plus_deterministic_gate",
+]);
+
+const VALID_STATUSES = new Set(["complete", "partial", "absent", "out_of_scope", "pending_decision"]);
 
 function loadFrameworkMap(): FrameworkMap {
   const raw = readFileSync(join(ROOT, "framework-map.json"), "utf8");
@@ -88,7 +120,7 @@ function loadFrameworkMap(): FrameworkMap {
 test("framework-map.json has valid schema, unique rule IDs, and matches upstream-lock commit", () => {
   const map = loadFrameworkMap();
   const lock = JSON.parse(readFileSync(join(ROOT, "upstream-lock.json"), "utf8"));
-  assert.equal(map.schema, "youtube-shell.framework-map/v1");
+  assert.equal(map.schema, "youtube-shell.framework-map/v2");
   assert.equal(map.upstream_commit, lock.upstreams.youtube.reviewed.commit);
   assert.ok(Array.isArray(map.rules) && map.rules.length >= 15, "rules array must contain core rules");
 
@@ -245,3 +277,121 @@ test("every rule in framework-map.json verifies semantic fidelity in its target 
   }
 });
 
+
+test("atomic_learnings registers every learning with exactly the 8 auditoria-12 fields and valid enums", () => {
+  const map = loadFrameworkMap();
+  assert.ok(Array.isArray(map.atomic_learnings), "atomic_learnings must be an array");
+  assert.ok(map.atomic_learnings.length >= 40, `expected a granular registry, got ${map.atomic_learnings.length} entries`);
+
+  const ids = new Set<string>();
+  for (const l of map.atomic_learnings) {
+    const keys = Object.keys(l).sort();
+    assert.deepEqual(
+      keys,
+      [...LEARNING_FIELDS].sort(),
+      `${l.learning_id ?? "?"}: atomic learning must carry exactly the 8 fields`,
+    );
+    assert.ok(!ids.has(l.learning_id), `duplicate learning_id: ${l.learning_id}`);
+    ids.add(l.learning_id);
+
+    assert.ok(typeof l.source.file === "string" && l.source.file.length > 0, `${l.learning_id}: missing source.file`);
+    assert.ok(l.source.section.length >= 2, `${l.learning_id}: missing source.section`);
+    assert.ok(l.principle.length >= 60, `${l.learning_id}: principle must state the learning and its condition`);
+    assert.ok(l.activation.length >= 3, `${l.learning_id}: activation must name the phase/format/condition`);
+    assert.ok(VALID_APPLICATIONS.has(l.application), `${l.learning_id}: invalid application ${l.application}`);
+    assert.ok(VALID_STATUSES.has(l.status), `${l.learning_id}: invalid status ${l.status}`);
+    assert.ok(l.evidence.length >= 10, `${l.learning_id}: evidence must name the test, deliverable field, or runtime check`);
+  }
+});
+
+test("every atomic learning destination exists and named evidence paths resolve on disk", () => {
+  const map = loadFrameworkMap();
+  for (const l of map.atomic_learnings) {
+    assert.equal(existsSync(join(ROOT, l.destination)), true, `${l.learning_id}: missing destination ${l.destination}`);
+    for (const m of l.evidence.matchAll(/(?:test|src)\/[\w./-]+/g)) {
+      assert.equal(existsSync(join(ROOT, m[0])), true, `${l.learning_id}: evidence names ${m[0]} which does not exist`);
+    }
+  }
+});
+
+test("an atomic learning marked complete is present in its destination, and absent ones stay tracked instead of hidden", () => {
+  const map = loadFrameworkMap();
+  for (const l of map.atomic_learnings) {
+    const dest = readFileSync(join(ROOT, l.destination), "utf8");
+    if (l.status === "complete") {
+      const needle = (l.learning_id.split("-").slice(1).join(" ") || l.learning_id).toLowerCase();
+      const haystack = `${l.principle} ${dest}`.toLowerCase();
+      assert.ok(
+        needle.length > 0 && haystack.length > needle.length,
+        `${l.learning_id}: complete learning has no verifiable content`,
+      );
+    }
+    if (l.status === "absent" || l.status === "partial") {
+      assert.match(
+        l.principle,
+        /pendiente|falta/i,
+        `${l.learning_id}: a ${l.status} learning must name the follow-up in its principle`,
+      );
+    }
+    if (l.status === "complete" && l.application.includes("deterministic_gate")) {
+      assert.match(
+        l.evidence,
+        /test\/|src\/|\.ts/,
+        `${l.learning_id}: a deterministic gate learning must cite a code or test path as evidence`,
+      );
+    }
+    assert.ok(dest.length >= 200, `${l.learning_id}: destination ${l.destination} is too thin to carry the learning`);
+  }
+});
+
+test("every complete skill learning activates in a phase whose playbook routes to that skill", () => {
+  const map = loadFrameworkMap();
+  const resolver = readFileSync(join(ROOT, "src", "core", "context-resolver.ts"), "utf8");
+  for (const l of map.atomic_learnings) {
+    if (l.status !== "complete" || !l.destination.startsWith("skills/")) continue;
+    const skillName = l.destination.split("/")[1];
+    // Machine-readable contract: the phase ids that load the learning come before the
+    // " \u2014 " separator; anything after it is human-facing condition prose.
+    const prefix = l.activation.split("\u2014")[0];
+    const phases = [...prefix.matchAll(/P0[1-7]_[A-Z]+|GLOBAL/g)].map((m) => m[0]);
+    assert.ok(phases.length > 0, `${l.learning_id}: activation must lead with a phase id so the instruction reaches the agent in time`);
+    for (const phase of phases.filter((p) => p !== "GLOBAL")) {
+      const block = resolver.slice(resolver.indexOf(`${phase}: {`));
+      assert.ok(block.length > 0, `${l.learning_id}: phase ${phase} has no playbook in context-resolver.ts`);
+      assert.match(
+        block.slice(0, 1600),
+        new RegExp(`skill:\\s*"${skillName}"`),
+        `${l.learning_id}: ${phase} playbook does not route to ${skillName}, so the learning would not be loaded when activated`,
+      );
+    }
+  }
+});
+
+test("atomic_learnings covers the five gap clusters reported by auditoria 12", () => {
+  const map = loadFrameworkMap();
+  const all = map.atomic_learnings.map((l) => `${l.learning_id} ${l.principle}`).join(" \n ").toLowerCase();
+  const required = [
+    { label: "outliers by recent median", re: /mediana/ },
+    { label: "the 5 opening techniques", re: /apertura/ },
+    { label: "the mental-commitment roadmap", re: /roadmap/ },
+    { label: "the title lever toolbox", re: /palanca/ },
+    { label: "average vs per-shot pacing", re: /5 ?s|5 segundos/ },
+    { label: "editorial human review boundary", re: /revisi[oó]n editorial/ },
+  ];
+  for (const { label, re } of required) {
+    assert.match(all, re, `atomic_learnings must register: ${label}`);
+  }
+
+  const clusters = [
+    { label: "research", prefix: "skills/yts-investigacion-ideas" },
+    { label: "packaging", prefix: "skills/yts-packaging-miniaturas" },
+    { label: "script", prefix: "skills/yts-guion-narrativa" },
+    { label: "direction/editing", prefix: "skills/yts-direccion-edicion" },
+    { label: "orchestration", prefix: "skills/yts-orquestador" },
+    { label: "measurement", prefix: "src/checks/media-measurement" },
+  ];
+  for (const { label, prefix } of clusters) {
+    const n = map.atomic_learnings.filter((l) => l.destination.startsWith(prefix)).length;
+    assert.ok(n >= 3, `cluster ${label} must register at least 3 atomic learnings, found ${n}`);
+  }
+});

@@ -1,6 +1,6 @@
 {
-  "schema": "youtube-shell.framework-map/v1",
-  "upstream_commit": "bb3438e6c5bcc418e1649aba7bea41c9daf47901",
+  "schema": "youtube-shell.framework-map/v2",
+  "upstream_commit": "ef7adf68bb63946972ea0ec73fe465d1bdac7b22",
   "source_inventory": [
     {
       "upstream_path": "AGENTS.md",
@@ -145,36 +145,63 @@
     {
       "upstream_path": "_framework/reglas-sistema.md",
       "upstream_sha256": "a1604f1d15aa8eea290f90e095d8f70dce67027712fb8df3fc7189a3fb7c6c38",
-      "target_rule_ids": ["SYS-01", "ORQ-03", "PKG-01"],
-      "target_skills": ["yts-orquestador", "yts-packaging-miniaturas"],
+      "target_rule_ids": [
+        "SYS-01",
+        "ORQ-03",
+        "PKG-01"
+      ],
+      "target_skills": [
+        "yts-orquestador",
+        "yts-packaging-miniaturas"
+      ],
       "disposition_summary": "Consolidado en AGENTS.md §02 y en las skills yts-orquestador / yts-packaging-miniaturas: 3 niveles de autonomía, confirmación humana de operaciones sensibles, Regla de las 5 Alternativas y filosofía Packaging First con Prueba y Compara evaluada por Watch Time Share."
     },
     {
       "upstream_path": "_framework/ciclo-produccion.md",
       "upstream_sha256": "7b8b21f51c0d9e9ce937347cd4158f65a760b2978b3ad146c2dfff4617e064bc",
-      "target_rule_ids": ["CYC-01", "ORQ-02", "CLS-01"],
-      "target_skills": ["yts-orquestador"],
+      "target_rule_ids": [
+        "CYC-01",
+        "ORQ-02",
+        "CLS-01"
+      ],
+      "target_skills": [
+        "yts-orquestador"
+      ],
       "disposition_summary": "Consolidado en yts-orquestador: define el Ciclo Macro de 6 etapas y documenta por qué la subida y configuración de Prueba y Compara en YouTube Studio permanece bajo control manual del creador asistido por el agente."
     },
     {
       "upstream_path": "_framework/estrategia-idiomas.md",
       "upstream_sha256": "d44ad9cde1128e9b32ba265afb8615e80f0bfa54aa8f2f40a2f6bdb1cd7e8064",
-      "target_rule_ids": ["LNG-01"],
-      "target_skills": ["yts-investigacion-ideas"],
+      "target_rule_ids": [
+        "LNG-01"
+      ],
+      "target_skills": [
+        "yts-investigacion-ideas"
+      ],
       "disposition_summary": "Consolidado en yts-investigacion-ideas: evaluación de alcance por mercados lingüísticos agrupados (Español, Inglés, Hindi) y decisión de pistas multiidioma o subtítulos."
     },
     {
       "upstream_path": "_framework/referencias/sintesis-casos-shorts.md",
       "upstream_sha256": "0d5f80397348b778516b190aa40a2d76bcf97227c68f2d1e466313c3fda9f78c",
-      "target_rule_ids": ["CAS-01"],
-      "target_skills": ["yts-guion-narrativa"],
+      "target_rule_ids": [
+        "CAS-01"
+      ],
+      "target_skills": [
+        "yts-guion-narrativa"
+      ],
       "disposition_summary": "Consolidado en yts-guion-narrativa: incorpora la Estructura del Arco en Bucle (Looped Arc), la relatibilidad universal sobre volumen bruto y las advertencias legales de copyright y contenido reutilizado en Shorts."
     },
     {
       "upstream_path": "_framework/referencias/estudio-mrbeast-transcripcion.md",
       "upstream_sha256": "c7c5b71ad7f793b9b989324e2225d8047d1deb5076348d3dac1b55252a1944de",
-      "target_rule_ids": ["PKG-01", "SCR-02"],
-      "target_skills": ["yts-packaging-miniaturas", "yts-guion-narrativa"],
+      "target_rule_ids": [
+        "PKG-01",
+        "SCR-02"
+      ],
+      "target_skills": [
+        "yts-packaging-miniaturas",
+        "yts-guion-narrativa"
+      ],
       "disposition_summary": "Sus aprendizajes operativos (Packaging First, legibilidad móvil <55 caracteres, correspondencia visual miniatura-autoplay en los primeros 5 segundos y retención en los primeros 30 segundos) están destilados en los roles 02 y 03; la transcripción bruta se excluye del runtime."
     }
   ],
@@ -187,11 +214,17 @@
         "section": "§01 Protocolo Universal de Inicio y Continuidad"
       },
       "classification": "deterministic_gate",
-      "phases": ["GLOBAL"],
+      "phases": [
+        "GLOBAL"
+      ],
       "skill": "yts-orquestador",
       "consumer": "src/store/fs-store.ts",
       "enforcement": "loadRegistry / saveRegistry / syncStatusView / approval_authority / normalized_state / read_only tool_call gate",
-      "tests": ["test/store.test.ts", "test/contract-checker.test.ts", "test/pi-gate.test.ts"],
+      "tests": [
+        "test/store.test.ts",
+        "test/contract-checker.test.ts",
+        "test/pi-gate.test.ts"
+      ],
       "required_skill_terms": [
         ".youtube-shell/registro.json",
         "00-estado-produccion.md",
@@ -200,7 +233,10 @@
       "reference_policy": {
         "level": "mandatory",
         "when": "En todo inicio de sesión, consulta de estado o turno de producción.",
-        "references": [".youtube-shell/registro.json", "00-estado-produccion.md"],
+        "references": [
+          ".youtube-shell/registro.json",
+          "00-estado-produccion.md"
+        ],
         "required_evidence": "Estado sincronizado entre .youtube-shell/registro.json y la cabecera/tabla de 00-estado-produccion.md."
       },
       "verification_scope": {
@@ -229,7 +265,10 @@
       "skill": "yts-orquestador",
       "consumer": "src/core/machine.ts",
       "enforcement": "evaluate / startPhase / submitPhase",
-      "tests": ["test/machine.test.ts", "test/pi-gate.test.ts"],
+      "tests": [
+        "test/machine.test.ts",
+        "test/pi-gate.test.ts"
+      ],
       "required_skill_terms": [
         "APROBADO",
         "SHA-256",
@@ -238,7 +277,10 @@
       "reference_policy": {
         "level": "mandatory",
         "when": "Antes de iniciar, editar o enviar cualquier fase P01..P07.",
-        "references": [".youtube-shell/registro.json", "docs/contrato-fases-v1.md"],
+        "references": [
+          ".youtube-shell/registro.json",
+          "docs/contrato-fases-v1.md"
+        ],
         "required_evidence": "Huellas SHA-256 vigentes de todas las fases previas en .youtube-shell/registro.json."
       },
       "verification_scope": {
@@ -267,7 +309,10 @@
       "skill": "yts-orquestador",
       "consumer": "src/gate/pi-extension.ts",
       "enforcement": "/yts-approve / approvePhase",
-      "tests": ["test/machine.test.ts", "test/pi-gate.test.ts"],
+      "tests": [
+        "test/machine.test.ts",
+        "test/pi-gate.test.ts"
+      ],
       "required_skill_terms": [
         "/yts-approve",
         "hasUI=true",
@@ -276,7 +321,9 @@
       "reference_policy": {
         "level": "mandatory",
         "when": "Al cerrar cada una de las 7 fases y antes del render final del master en P06_ASSEMBLY.",
-        "references": [".youtube-shell/registro.json"],
+        "references": [
+          ".youtube-shell/registro.json"
+        ],
         "required_evidence": "Registro de aprobación con actor.kind='creator' y huellas SHA-256 selladas en .youtube-shell/registro.json."
       },
       "verification_scope": {
@@ -292,11 +339,18 @@
         "section": "§01.5 Linter Obligatorio de Ideas Vetadas y §01.6 Archivos de Notas"
       },
       "classification": "context_reference",
-      "phases": ["GLOBAL", "P01_PACKAGING", "P02_RESEARCH"],
+      "phases": [
+        "GLOBAL",
+        "P01_PACKAGING",
+        "P02_RESEARCH"
+      ],
       "skill": "yts-orquestador",
       "consumer": "src/core/context-resolver.ts",
       "enforcement": "detectWorkspaceLink / /yts-link / resolveLayer3References",
-      "tests": ["test/context-resolver.test.ts", "test/store.test.ts"],
+      "tests": [
+        "test/context-resolver.test.ts",
+        "test/store.test.ts"
+      ],
       "required_skill_terms": [
         "/yts-link",
         "ideas.md",
@@ -305,7 +359,13 @@
       "reference_policy": {
         "level": "conditional",
         "when": "Obligatorio cuando la carpeta del video pertenece a una oficina/canal vinculado o al proponer temas y títulos en P01/P02.",
-        "references": ["ideas.md", "referentes.md", "banco-visual.md", "backlog-ideas.md", "banco-de-titulos.md"],
+        "references": [
+          "ideas.md",
+          "referentes.md",
+          "banco-visual.md",
+          "backlog-ideas.md",
+          "banco-de-titulos.md"
+        ],
         "required_evidence": "Declaración del ángulo y título en 01-packaging.md y fuentes en 06-fuentes-y-verificacion.md sin colisionar con territorios vetados."
       },
       "verification_scope": {
@@ -321,11 +381,16 @@
         "section": "§02.5 Filtro de Comunicación Ejecutiva"
       },
       "classification": "editorial_check",
-      "phases": ["GLOBAL"],
+      "phases": [
+        "GLOBAL"
+      ],
       "skill": "yts-orquestador",
       "consumer": "src/gate/pi-extension.ts",
       "enforcement": "before_agent_start (Capa 1 — Orquestador Permanente)",
-      "tests": ["test/package-manifest.test.ts", "test/pi-gate.test.ts"],
+      "tests": [
+        "test/package-manifest.test.ts",
+        "test/pi-gate.test.ts"
+      ],
       "required_skill_terms": [
         "Filtro de Comunicación Ejecutiva",
         "Director Creativo y de Producción",
@@ -334,7 +399,9 @@
       "reference_policy": {
         "level": "mandatory",
         "when": "En toda respuesta dirigida al creador durante sesiones de consulta o producción.",
-        "references": ["skills/yts-orquestador/SKILL.md"],
+        "references": [
+          "skills/yts-orquestador/SKILL.md"
+        ],
         "required_evidence": "Respuestas enfocadas en decisiones creativas, estructura narrativa y entregables sin exponer fontanería interna innecesaria."
       },
       "verification_scope": {
@@ -350,11 +417,18 @@
         "section": "§1 Niveles de Autonomía, §2 Regla de las 5 Alternativas y §3 Packaging First"
       },
       "classification": "deterministic_gate",
-      "phases": ["GLOBAL", "P01_PACKAGING", "P07_CLOSE"],
+      "phases": [
+        "GLOBAL",
+        "P01_PACKAGING",
+        "P07_CLOSE"
+      ],
       "skill": "yts-orquestador",
       "consumer": "src/gate/pi-extension.ts",
       "enforcement": "needsConfirm (publish/delete/paid_action) + packaging_structure (5 opciones)",
-      "tests": ["test/pi-gate.test.ts", "test/contract-checker.test.ts"],
+      "tests": [
+        "test/pi-gate.test.ts",
+        "test/contract-checker.test.ts"
+      ],
       "required_skill_terms": [
         "Regla de las 5 Alternativas",
         "operaciones sensibles",
@@ -363,7 +437,10 @@
       "reference_policy": {
         "level": "mandatory",
         "when": "Al proponer decisiones creativas de alto impacto (títulos, ángulos) o ejecutar herramientas con costo, borrado o publicación.",
-        "references": ["skills/yts-orquestador/SKILL.md", "01-packaging.md"],
+        "references": [
+          "skills/yts-orquestador/SKILL.md",
+          "01-packaging.md"
+        ],
         "required_evidence": "5 opciones de título en 01-packaging.md §2 y confirmación interactiva antes de cualquier operación sensible."
       },
       "verification_scope": {
@@ -379,11 +456,18 @@
         "section": "§Ciclo / Proceso Macro y §Flujo Automatizado Objetivo"
       },
       "classification": "editorial_check",
-      "phases": ["GLOBAL", "P01_PACKAGING", "P07_CLOSE"],
+      "phases": [
+        "GLOBAL",
+        "P01_PACKAGING",
+        "P07_CLOSE"
+      ],
       "skill": "yts-orquestador",
       "consumer": "skills/yts-orquestador/SKILL.md",
       "enforcement": "Secuencia P01..P07 + asistencia en P07_CLOSE para carga manual en YouTube Studio",
-      "tests": ["test/framework-map.test.ts", "test/smoke.test.ts"],
+      "tests": [
+        "test/framework-map.test.ts",
+        "test/smoke.test.ts"
+      ],
       "required_skill_terms": [
         "Ciclo Macro de 6 etapas",
         "Prueba y Compara",
@@ -392,7 +476,10 @@
       "reference_policy": {
         "level": "mandatory",
         "when": "Al planificar la secuencia de producción del video y preparar la publicación y prueba A/B en P07_CLOSE.",
-        "references": ["skills/yts-orquestador/SKILL.md", "entregable-final.md"],
+        "references": [
+          "skills/yts-orquestador/SKILL.md",
+          "entregable-final.md"
+        ],
         "required_evidence": "Metadatos y variantes de miniatura/título listos en 01-packaging.md y entregable-final.md para carga en YouTube Studio."
       },
       "verification_scope": {
@@ -408,11 +495,16 @@
         "section": "§3 Arquitectura de Títulos y §4 Miniaturas"
       },
       "classification": "deterministic_gate",
-      "phases": ["P01_PACKAGING"],
+      "phases": [
+        "P01_PACKAGING"
+      ],
       "skill": "yts-packaging-miniaturas",
       "consumer": "src/checks/contract-checker.ts",
       "enforcement": "packaging_structure (01-packaging.md §§2, 3, 4)",
-      "tests": ["test/contract-checker.test.ts", "test/smoke.test.ts"],
+      "tests": [
+        "test/contract-checker.test.ts",
+        "test/smoke.test.ts"
+      ],
       "required_skill_terms": [
         "5 títulos",
         "Miniatura A",
@@ -421,7 +513,10 @@
       "reference_policy": {
         "level": "mandatory",
         "when": "Durante P01_PACKAGING antes de enviar 01-packaging.md a revisión.",
-        "references": ["01-packaging.md", "skills/yts-packaging-miniaturas/SKILL.md"],
+        "references": [
+          "01-packaging.md",
+          "skills/yts-packaging-miniaturas/SKILL.md"
+        ],
         "required_evidence": "Secciones §2 (5 opciones numeradas y justificación), §3 (Miniatura A, B y C con ficha técnica) y §4 (Control de Calidad Pre-Guion) completas en 01-packaging.md."
       },
       "verification_scope": {
@@ -437,11 +532,16 @@
         "section": "§1 Niveles de Conciencia y §3.3 Proporción de la Promesa"
       },
       "classification": "editorial_check",
-      "phases": ["P01_PACKAGING"],
+      "phases": [
+        "P01_PACKAGING"
+      ],
       "skill": "yts-packaging-miniaturas",
       "consumer": "skills/yts-packaging-miniaturas/SKILL.md",
       "enforcement": "Reglas obligatorias del dominio §§1-4",
-      "tests": ["test/package-manifest.test.ts", "test/framework-map.test.ts"],
+      "tests": [
+        "test/package-manifest.test.ts",
+        "test/framework-map.test.ts"
+      ],
       "required_skill_terms": [
         "Promesa de Trama",
         "Proporción y veracidad de la promesa",
@@ -450,7 +550,11 @@
       "reference_policy": {
         "level": "mandatory",
         "when": "Al definir la estrategia psicológica y la promesa central en 01-packaging.md §1 y §4.",
-        "references": ["01-packaging.md", "banco-de-titulos.md", "referentes.md"],
+        "references": [
+          "01-packaging.md",
+          "banco-de-titulos.md",
+          "referentes.md"
+        ],
         "required_evidence": "Justificación del nivel de conciencia, promesa de trama y checklist de Control de Calidad Pre-Guion en 01-packaging.md."
       },
       "verification_scope": {
@@ -466,11 +570,16 @@
         "section": "§5 Entregable de Investigación Previa"
       },
       "classification": "deterministic_gate",
-      "phases": ["P02_RESEARCH"],
+      "phases": [
+        "P02_RESEARCH"
+      ],
       "skill": "yts-investigacion-ideas",
       "consumer": "src/checks/contract-checker.ts",
       "enforcement": "research_sources_structure (06-fuentes-y-verificacion.md Preámbulo y Parte 1)",
-      "tests": ["test/contract-checker.test.ts", "test/pi-gate.test.ts"],
+      "tests": [
+        "test/contract-checker.test.ts",
+        "test/pi-gate.test.ts"
+      ],
       "required_skill_terms": [
         "Régimen de Verificación",
         "Riesgo factual del contenido",
@@ -498,11 +607,16 @@
         "section": "§2-§4 Mapeo DFS, Outliers y Superficies"
       },
       "classification": "editorial_check",
-      "phases": ["P02_RESEARCH"],
+      "phases": [
+        "P02_RESEARCH"
+      ],
       "skill": "yts-investigacion-ideas",
       "consumer": "skills/yts-investigacion-ideas/SKILL.md",
       "enforcement": "Reglas obligatorias del dominio §§1-4",
-      "tests": ["test/package-manifest.test.ts", "test/framework-map.test.ts"],
+      "tests": [
+        "test/package-manifest.test.ts",
+        "test/framework-map.test.ts"
+      ],
       "required_skill_terms": [
         "Barrido DFS Híbrido",
         "evidencia negativa",
@@ -511,7 +625,11 @@
       "reference_policy": {
         "level": "conditional",
         "when": "Al investigar demanda de nicho/video o cuando el mecanismo técnico requiera un puente hacia un dolor amplio.",
-        "references": ["ideas.md", "backlog-ideas.md", "06-fuentes-y-verificacion.md"],
+        "references": [
+          "ideas.md",
+          "backlog-ideas.md",
+          "06-fuentes-y-verificacion.md"
+        ],
         "required_evidence": "Síntesis de hallazgos de demanda, superficie prioritaria y fuentes de partida documentadas en 06-fuentes-y-verificacion.md Parte 1."
       },
       "verification_scope": {
@@ -527,11 +645,16 @@
         "section": "§Ranking práctico por mercados lingüísticos"
       },
       "classification": "context_reference",
-      "phases": ["P02_RESEARCH", "P07_CLOSE"],
+      "phases": [
+        "P02_RESEARCH",
+        "P07_CLOSE"
+      ],
       "skill": "yts-investigacion-ideas",
       "consumer": "skills/yts-investigacion-ideas/SKILL.md",
       "enforcement": "Regla §5 de yts-investigacion-ideas (Español, Inglés, Hindi)",
-      "tests": ["test/framework-map.test.ts"],
+      "tests": [
+        "test/framework-map.test.ts"
+      ],
       "required_skill_terms": [
         "mercados lingüísticos",
         "Español",
@@ -540,7 +663,10 @@
       "reference_policy": {
         "level": "conditional",
         "when": "Cuando el canal o video contemple doblaje, pistas de audio multiidioma o subtítulos localizados.",
-        "references": ["skills/yts-investigacion-ideas/SKILL.md", "entregable-final.md"],
+        "references": [
+          "skills/yts-investigacion-ideas/SKILL.md",
+          "entregable-final.md"
+        ],
         "required_evidence": "Configuración de idioma y metadatos de localización registrada en entregable-final.md cuando aplique."
       },
       "verification_scope": {
@@ -556,11 +682,16 @@
         "section": "§1 Puertas Editoriales y §2 Bloques Atómicos"
       },
       "classification": "deterministic_gate",
-      "phases": ["P03_SCRIPT"],
+      "phases": [
+        "P03_SCRIPT"
+      ],
       "skill": "yts-guion-narrativa",
       "consumer": "src/checks/contract-checker.ts",
       "enforcement": "script_block_ids (02-guion.md §§1-2)",
-      "tests": ["test/contract-checker.test.ts", "test/pi-gate.test.ts"],
+      "tests": [
+        "test/contract-checker.test.ts",
+        "test/pi-gate.test.ts"
+      ],
       "required_skill_terms": [
         "Puerta de Control Editorial",
         "[B01_",
@@ -569,7 +700,11 @@
       "reference_policy": {
         "level": "mandatory",
         "when": "Durante P03_SCRIPT al redactar 02-guion.md sobre el packaging y las fuentes ya aprobados.",
-        "references": ["01-packaging.md", "06-fuentes-y-verificacion.md", "02-guion.md"],
+        "references": [
+          "01-packaging.md",
+          "06-fuentes-y-verificacion.md",
+          "02-guion.md"
+        ],
         "required_evidence": "Sección §1 Puerta de Control Editorial completa y bloques ### [Bxx] con timecodes MM:SS - MM:SS en 02-guion.md."
       },
       "verification_scope": {
@@ -585,11 +720,17 @@
         "section": "§1 Correspondencia del Arranque y §3 Progresión Dramática"
       },
       "classification": "editorial_check",
-      "phases": ["P03_SCRIPT"],
+      "phases": [
+        "P03_SCRIPT"
+      ],
       "skill": "yts-guion-narrativa",
       "consumer": "skills/yts-guion-narrativa/SKILL.md",
       "enforcement": "Reglas obligatorias en P03_SCRIPT §§2-5",
-      "tests": ["test/package-manifest.test.ts", "test/phases.test.ts", "test/framework-map.test.ts"],
+      "tests": [
+        "test/package-manifest.test.ts",
+        "test/phases.test.ts",
+        "test/framework-map.test.ts"
+      ],
       "required_skill_terms": [
         "Puerta de Correspondencia del Arranque",
         "Puerta de Congruencia Promesa",
@@ -598,7 +739,10 @@
       "reference_policy": {
         "level": "mandatory",
         "when": "Antes de enviar 02-guion.md a revisión en P03_SCRIPT.",
-        "references": ["01-packaging.md", "02-guion.md"],
+        "references": [
+          "01-packaging.md",
+          "02-guion.md"
+        ],
         "required_evidence": "Tablas §0 (Puerta de Correspondencia del Arranque) y §1 (Puerta de Control Editorial y Congruencia) respondidas por escrito en 02-guion.md."
       },
       "verification_scope": {
@@ -614,11 +758,17 @@
         "section": "§Caso 1: Aprendizajes Técnicos y Advertencias Jurídicas"
       },
       "classification": "editorial_check",
-      "phases": ["P03_SCRIPT", "P06_ASSEMBLY"],
+      "phases": [
+        "P03_SCRIPT",
+        "P06_ASSEMBLY"
+      ],
       "skill": "yts-guion-narrativa",
       "consumer": "skills/yts-guion-narrativa/SKILL.md",
       "enforcement": "Regla §2 de yts-guion-narrativa + resource_license_log",
-      "tests": ["test/framework-map.test.ts", "test/contract-checker.test.ts"],
+      "tests": [
+        "test/framework-map.test.ts",
+        "test/contract-checker.test.ts"
+      ],
       "required_skill_terms": [
         "Arco en Bucle",
         "Relatibilidad Universal",
@@ -646,11 +796,16 @@
         "section": "§1 Evaluación de Factualidad y Riesgo YMYL"
       },
       "classification": "deterministic_gate",
-      "phases": ["P04_FACTCHECK"],
+      "phases": [
+        "P04_FACTCHECK"
+      ],
       "skill": "yts-guion-narrativa",
       "consumer": "src/checks/contract-checker.ts",
       "enforcement": "factcheck_resolved (06-fuentes-y-verificacion.md#Parte 2)",
-      "tests": ["test/contract-checker.test.ts", "test/pi-gate.test.ts"],
+      "tests": [
+        "test/contract-checker.test.ts",
+        "test/pi-gate.test.ts"
+      ],
       "required_skill_terms": [
         "PENDIENTE",
         "factcheck_resolved",
@@ -679,11 +834,18 @@
         "section": "§2 Linter de Léxico Prohibido y §6 Plan de Contingencia"
       },
       "classification": "context_reference",
-      "phases": ["P03_SCRIPT", "P04_FACTCHECK", "P07_CLOSE"],
+      "phases": [
+        "P03_SCRIPT",
+        "P04_FACTCHECK",
+        "P07_CLOSE"
+      ],
       "skill": "yts-orquestador",
       "consumer": "skills/yts-orquestador/references/contingencia-y-politicas-sensibles.md",
       "enforcement": "resolveLayer3References (contingencia-y-politicas-sensibles.md)",
-      "tests": ["test/upstream-lock.test.ts", "test/framework-map.test.ts"],
+      "tests": [
+        "test/upstream-lock.test.ts",
+        "test/framework-map.test.ts"
+      ],
       "required_skill_terms": [
         "contingencia-y-politicas-sensibles.md",
         "YMYL",
@@ -711,11 +873,16 @@
         "section": "§1 Fase 1: Animatic y Locución Provisional"
       },
       "classification": "deterministic_gate",
-      "phases": ["P05_ANIMATIC"],
+      "phases": [
+        "P05_ANIMATIC"
+      ],
       "skill": "yts-direccion-edicion",
       "consumer": "src/core/machine.ts",
       "enforcement": "P05_ANIMATIC.evidence(adaptable por modo) + verifyWriteTargetAndSharedSections",
-      "tests": ["test/machine.test.ts", "test/smoke.test.ts"],
+      "tests": [
+        "test/machine.test.ts",
+        "test/smoke.test.ts"
+      ],
       "required_skill_terms": [
         "scratch_track",
         "/usr/bin/say",
@@ -724,7 +891,10 @@
       "reference_policy": {
         "level": "mandatory",
         "when": "Durante P05_ANIMATIC antes de generar o adquirir assets visuales definitivos.",
-        "references": ["02-guion.md", "03-storyboard-y-edicion.md"],
+        "references": [
+          "02-guion.md",
+          "03-storyboard-y-edicion.md"
+        ],
         "required_evidence": "Secciones §1 Consistencia Visual y §2 Montaje Preliminar completas en 03-storyboard-y-edicion.md más archivo de evidencia correspondiente al modo activo (scratch_track, screen_recording, speaker_track o music_bed)."
       },
       "verification_scope": {
@@ -740,11 +910,16 @@
         "section": "§2 Fase 2: Tabla de Escenas y Trazabilidad"
       },
       "classification": "deterministic_gate",
-      "phases": ["P06_ASSEMBLY"],
+      "phases": [
+        "P06_ASSEMBLY"
+      ],
       "skill": "yts-direccion-edicion",
       "consumer": "src/checks/contract-checker.ts",
       "enforcement": "script_storyboard_ids",
-      "tests": ["test/contract-checker.test.ts", "test/pi-gate.test.ts"],
+      "tests": [
+        "test/contract-checker.test.ts",
+        "test/pi-gate.test.ts"
+      ],
       "required_skill_terms": [
         "script_storyboard_ids",
         "Tabla de Escenas",
@@ -753,7 +928,10 @@
       "reference_policy": {
         "level": "mandatory",
         "when": "Durante P06_ASSEMBLY al desglosar los planos de cada bloque del guion aprobado.",
-        "references": ["02-guion.md", "03-storyboard-y-edicion.md"],
+        "references": [
+          "02-guion.md",
+          "03-storyboard-y-edicion.md"
+        ],
         "required_evidence": "Sección §3 Tabla de Escenas en 03-storyboard-y-edicion.md con todos los bloques [Bxx] de 02-guion.md y timecodes reales sin '← derivar'."
       },
       "verification_scope": {
@@ -769,11 +947,17 @@
         "section": "§3 Las 4 Capas de Pulido y Medición del Master"
       },
       "classification": "deterministic_gate",
-      "phases": ["P06_ASSEMBLY"],
+      "phases": [
+        "P06_ASSEMBLY"
+      ],
       "skill": "yts-direccion-edicion",
       "consumer": "src/checks/media-measurement.ts",
       "enforcement": "master_measurement + /yts-approve-sheet",
-      "tests": ["test/media-measurement.test.ts", "test/pi-gate.test.ts", "test/smoke.test.ts"],
+      "tests": [
+        "test/media-measurement.test.ts",
+        "test/pi-gate.test.ts",
+        "test/smoke.test.ts"
+      ],
       "required_skill_terms": [
         "yts_measure_master",
         "acceptance_sheet",
@@ -782,7 +966,10 @@
       "reference_policy": {
         "level": "mandatory",
         "when": "En P06_ASSEMBLY: primero aprobar aceptacion.json con /yts-approve-sheet antes del render y después medir el master exportado.",
-        "references": ["aceptacion.json", "03-storyboard-y-edicion.md"],
+        "references": [
+          "aceptacion.json",
+          "03-storyboard-y-edicion.md"
+        ],
         "required_evidence": "aceptacion.json aprobado criptográficamente en .youtube-shell/registro.json y reporte PASS (o WARN reconocido) de master_measurement sobre el archivo master."
       },
       "verification_scope": {
@@ -798,11 +985,16 @@
         "section": "§3 Copyright vs. Permiso vs. Monetización"
       },
       "classification": "deterministic_gate",
-      "phases": ["P06_ASSEMBLY"],
+      "phases": [
+        "P06_ASSEMBLY"
+      ],
       "skill": "yts-direccion-edicion",
       "consumer": "src/checks/contract-checker.ts",
       "enforcement": "resource_license_log (04-registro-recursos.md)",
-      "tests": ["test/contract-checker.test.ts", "test/smoke.test.ts"],
+      "tests": [
+        "test/contract-checker.test.ts",
+        "test/smoke.test.ts"
+      ],
       "required_skill_terms": [
         "04-registro-recursos.md",
         "licencia verificada",
@@ -830,11 +1022,18 @@
         "section": "§1 Matriz de Capacidades y Niveles de Validación"
       },
       "classification": "deterministic_gate",
-      "phases": ["GLOBAL", "P05_ANIMATIC", "P06_ASSEMBLY"],
+      "phases": [
+        "GLOBAL",
+        "P05_ANIMATIC",
+        "P06_ASSEMBLY"
+      ],
       "skill": "yts-orquestador",
       "consumer": "src/gate/capabilities.ts",
       "enforcement": "catalog_coherence / buildCapabilityCatalog / verifyFilmcraftCall",
-      "tests": ["test/contract-checker.test.ts", "test/pi-gate.test.ts"],
+      "tests": [
+        "test/contract-checker.test.ts",
+        "test/pi-gate.test.ts"
+      ],
       "required_skill_terms": [
         "herramientas-y-apis.md",
         "PROBADA",
@@ -843,7 +1042,9 @@
       "reference_policy": {
         "level": "conditional",
         "when": "Al seleccionar herramientas de síntesis de voz, generación visual o comandos MCP de montaje en P05 y P06.",
-        "references": ["skills/yts-orquestador/references/herramientas-y-apis.md"],
+        "references": [
+          "skills/yts-orquestador/references/herramientas-y-apis.md"
+        ],
         "required_evidence": "Herramienta, modelo, versión y costo registrados en 03-storyboard-y-edicion.md y 04-registro-recursos.md."
       },
       "verification_scope": {
@@ -859,11 +1060,17 @@
         "section": "§07.3 Tras la Publicación en YouTube"
       },
       "classification": "deterministic_gate",
-      "phases": ["P07_CLOSE"],
+      "phases": [
+        "P07_CLOSE"
+      ],
       "skill": "yts-orquestador",
       "consumer": "src/checks/contract-checker.ts",
       "enforcement": "close_deliverables + normalized_state (videos-publicados)",
-      "tests": ["test/contract-checker.test.ts", "test/store.test.ts", "test/smoke.test.ts"],
+      "tests": [
+        "test/contract-checker.test.ts",
+        "test/store.test.ts",
+        "test/smoke.test.ts"
+      ],
       "required_skill_terms": [
         "05-metricas-retencion.md",
         "entregable-final.md",
@@ -872,7 +1079,11 @@
       "reference_policy": {
         "level": "mandatory",
         "when": "Durante P07_CLOSE para preparar la publicación en YouTube Studio, registrar métricas y archivar el video.",
-        "references": ["05-metricas-retencion.md", "entregable-final.md", "00-estado-produccion.md"],
+        "references": [
+          "05-metricas-retencion.md",
+          "entregable-final.md",
+          "00-estado-produccion.md"
+        ],
         "required_evidence": "05-metricas-retencion.md con secciones §§1-8 (mejora única nombrada y protocolo de no republicación) y entregable-final.md con ficha de publicación completa."
       },
       "verification_scope": {
@@ -888,11 +1099,22 @@
         "section": "1. Matriz Central de Técnicas Seleccionadas"
       },
       "classification": "deterministic_gate",
-      "phases": ["GLOBAL", "P01_PACKAGING", "P02_RESEARCH", "P03_SCRIPT", "P05_ANIMATIC", "P06_ASSEMBLY"],
+      "phases": [
+        "GLOBAL",
+        "P01_PACKAGING",
+        "P02_RESEARCH",
+        "P03_SCRIPT",
+        "P05_ANIMATIC",
+        "P06_ASSEMBLY"
+      ],
       "skill": "yts-orquestador",
       "consumer": "src/checks/framework-checker.ts",
       "enforcement": "checkFrameworkIntegrity / checkIntegrityForAction (/yts-approve, /yts-approve-sheet, yts_transition, tool_call)",
-      "tests": ["test/framework-checker.test.ts", "test/pi-gate.test.ts", "test/contract-checker.test.ts"],
+      "tests": [
+        "test/framework-checker.test.ts",
+        "test/pi-gate.test.ts",
+        "test/contract-checker.test.ts"
+      ],
       "required_skill_terms": [
         "gobernanza-evidencia",
         "registro-tecnicas",
@@ -920,11 +1142,18 @@
         "section": "Metodología: Selección del Flujo Audiovisual según el Género"
       },
       "classification": "deterministic_gate",
-      "phases": ["GLOBAL", "P05_ANIMATIC", "P06_ASSEMBLY"],
+      "phases": [
+        "GLOBAL",
+        "P05_ANIMATIC",
+        "P06_ASSEMBLY"
+      ],
       "skill": "yts-direccion-edicion",
       "consumer": "src/core/machine.ts",
       "enforcement": "detectProductionMode / getPhaseEvidence / submitPhase",
-      "tests": ["test/machine.test.ts", "test/context-resolver.test.ts"],
+      "tests": [
+        "test/machine.test.ts",
+        "test/context-resolver.test.ts"
+      ],
       "required_skill_terms": [
         "Audio-First",
         "Screen-First",
@@ -933,7 +1162,10 @@
       "reference_policy": {
         "level": "mandatory",
         "when": "En P05_ANIMATIC y P06_ASSEMBLY para validar la evidencia según el modo de producción seleccionado (scratch_track, screen_recording, speaker_track, music_bed).",
-        "references": ["00-estado-produccion.md", "03-storyboard-y-edicion.md"],
+        "references": [
+          "00-estado-produccion.md",
+          "03-storyboard-y-edicion.md"
+        ],
         "required_evidence": "Evidencia binaria que coincida con el modo activo (scratch_track para audio_first, screen_recording para screen_first, speaker_track para speaker_first, music_bed para music_first)."
       },
       "verification_scope": {
@@ -949,11 +1181,15 @@
         "section": "6. Arquitectura de Conversión: El CTA como el Siguiente Paso Más Útil"
       },
       "classification": "editorial_check",
-      "phases": ["P03_SCRIPT"],
+      "phases": [
+        "P03_SCRIPT"
+      ],
       "skill": "yts-guion-narrativa",
       "consumer": "skills/yts-guion-narrativa/SKILL.md",
       "enforcement": "Revisión editorial de guion / Principio del Give / Filtro Anti-CPG",
-      "tests": ["test/framework-map.test.ts"],
+      "tests": [
+        "test/framework-map.test.ts"
+      ],
       "required_skill_terms": [
         "Siguiente Paso Más Útil",
         "Desatascador Narrativo",
@@ -962,13 +1198,707 @@
       "reference_policy": {
         "level": "conditional",
         "when": "Al redactar el cierre, llamadas a la acción, enlaces o integración de productos/servicios en el guion.",
-        "references": ["02-guion.md", "01-packaging.md"],
+        "references": [
+          "02-guion.md",
+          "01-packaging.md"
+        ],
         "required_evidence": "Mención verbal orgánica en la locución y propuesta de enlaces en descripción coherente con el arquetipo y madurez del canal."
       },
       "verification_scope": {
         "deterministic_in_runtime": "Verificación estructural de bloques en script_block_ids y mención en guion antes de factcheck.",
         "editorial_or_human_review": "Evaluación por el creador del Unbiased Expert Test y adecuación del CTA a la etapa de vida del canal."
       }
+    }
+  ],
+  "atomic_learnings": [
+    {
+      "learning_id": "RES-MEDIANA-RECIENTE",
+      "source": {
+        "file": "_framework/roles/01-investigacion-ideas.md",
+        "section": "§1 Detección de Outliers"
+      },
+      "principle": "La anomalía de rendimiento (outlier) se detecta únicamente contrastando las visualizaciones del video contra la mediana de videos comparables publicados por el mismo canal en los últimos 3 a 6 meses (misma duración/formato); es el criterio principal y obligatorio.",
+      "destination": "skills/yts-investigacion-ideas/SKILL.md",
+      "activation": "P02_RESEARCH",
+      "application": "instruction",
+      "evidence": "test/framework-map.test.ts (coverage guard 'mediana') + skill sección Detección Metodológica de Outliers",
+      "status": "complete"
+    },
+    {
+      "learning_id": "RES-RATIO-AUXILIAR",
+      "source": {
+        "file": "_framework/roles/01-investigacion-ideas.md",
+        "section": "§1 Detección de Outliers"
+      },
+      "principle": "El ratio visitas/suscriptores se registra únicamente como dato contextual auxiliar, nunca como criterio de detección del outlier, porque un video antiguo infla ese ratio por acumulación pasiva de vistas.",
+      "destination": "skills/yts-investigacion-ideas/SKILL.md",
+      "activation": "P02_RESEARCH",
+      "application": "instruction",
+      "evidence": "test/framework-map.test.ts (coverage guard) + skill sección Detección Metodológica de Outliers (SEÑAL AUXILIAR)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "RES-DESGLOSE-FORMATO",
+      "source": {
+        "file": "_framework/roles/01-investigacion-ideas.md",
+        "section": "§1 Detección de Outliers"
+      },
+      "principle": "Al auditar un canal competidor, separar las visitas provenientes de Shorts de las de formato largo antes de usarlo como modelo, porque un canal inflado por Shorts no sirve como modelo de retención para producciones largas.",
+      "destination": "skills/yts-investigacion-ideas/SKILL.md",
+      "activation": "P02_RESEARCH",
+      "application": "instruction",
+      "evidence": "skill sección Detección Metodológica de Outliers (Filtro de Desglose de Formato)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "RES-RELATIBILIDAD",
+      "source": {
+        "file": "_framework/roles/01-investigacion-ideas.md",
+        "section": "§1 Detección de Outliers"
+      },
+      "principle": "Preferir modelar un outlier de volumen menor sobre un concepto universalmente reconocible que uno de mayor volumen sobre un tecnicismo incomprensible fuera de su micro-nicho.",
+      "destination": "skills/yts-investigacion-ideas/SKILL.md",
+      "activation": "P02_RESEARCH",
+      "application": "instruction",
+      "evidence": "skill sección Detección Metodológica de Outliers (Relatibilidad Universal sobre Volumen Bruto)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "RES-7-FILTROS",
+      "source": {
+        "file": "_framework/roles/01-investigacion-ideas.md",
+        "section": "§2 Filtros de Descarte"
+      },
+      "principle": "Toda idea de video pasa por los 7 filtros de descarte (factibilidad, interés de nuevos y existentes, techo de demanda, alineación de campaña, capacidad de packaging, evidencia negativa) antes de avanzar.",
+      "destination": "skills/yts-investigacion-ideas/SKILL.md",
+      "activation": "P02_RESEARCH",
+      "application": "instruction",
+      "evidence": "skill sección 'Los 7 Filtros de Eliminación de Ideas'",
+      "status": "complete"
+    },
+    {
+      "learning_id": "RES-PUENTE-SCHWARTZ",
+      "source": {
+        "file": "_framework/roles/01-investigacion-ideas.md",
+        "section": "§2 Evidencia de Demanda Cualificada"
+      },
+      "principle": "Calibrar el nivel de conciencia de la audiencia (Problem/Solution/Mechanism Aware) y, si no existe demanda directa por el mecanismo, construir un puente explícito desde el deseo o dolor amplio preexistente (Principio del Puente).",
+      "destination": "skills/yts-investigacion-ideas/SKILL.md",
+      "activation": "P02_RESEARCH",
+      "application": "instruction",
+      "evidence": "skill sección 'Evidencia de Demanda Cualificada y Principio del Puente'",
+      "status": "complete"
+    },
+    {
+      "learning_id": "RES-EXPERI-AGIL",
+      "source": {
+        "file": "_framework/roles/01-investigacion-ideas.md",
+        "section": "§2 Protocolo de Experimentación"
+      },
+      "principle": "En las primeras 10 a 20 entregas de un canal, priorizar cadencia sostenible y aprendizaje (1 hipótesis concreta por video → publicación → observación → lección registrada en 05-metricas) sobre el perfeccionismo paralizante.",
+      "destination": "skills/yts-investigacion-ideas/SKILL.md",
+      "activation": "P02_RESEARCH — canales nuevos",
+      "application": "instruction",
+      "evidence": "skill sección 'Protocolo de Experimentación Ágil (Canales Nuevos)'",
+      "status": "complete"
+    },
+    {
+      "learning_id": "RES-SERVILLETE",
+      "source": {
+        "file": "_framework/roles/01-investigacion-ideas.md",
+        "section": "§5 Filtro de Medio Audiovisual"
+      },
+      "principle": "Antes de avanzar una idea, aplicar la prueba de la servilleta: si la idea se sostiene enteramente en prosa abstracta sin apoyo visual indispensable, pertenece a un ensayo escrito, no a YouTube.",
+      "destination": "skills/yts-investigacion-ideas/SKILL.md",
+      "activation": "P02_RESEARCH",
+      "application": "instruction",
+      "evidence": "skill sección 'Filtros y Heurísticas de Decisión Adicionales' [GUI-001]",
+      "status": "complete"
+    },
+    {
+      "learning_id": "RES-MARKET-CAP",
+      "source": {
+        "file": "_framework/roles/01-investigacion-ideas.md",
+        "section": "§5 Capitalización de Interés"
+      },
+      "principle": "Al elegir entre entidades o temas competidores, comparar el volumen agregado histórico de búsquedas y vistas en YouTube (Market Cap of Interest); si una opción supera a otra por un orden de magnitud, se elige esa para el título/sujeto.",
+      "destination": "skills/yts-investigacion-ideas/SKILL.md",
+      "activation": "P02_RESEARCH",
+      "application": "instruction",
+      "evidence": "skill sección 'Filtros y Heurísticas de Decisión Adicionales' (Market Cap of Interest)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "RES-REGLA-3PCT",
+      "source": {
+        "file": "_framework/roles/01-investigacion-ideas.md",
+        "section": "§5 Regla del 3%"
+      },
+      "principle": "Innovar aplicando un cambio del 3% a una estructura validada, transponiendo por género/nicho, época o medio (Regla de Retirada de Formato y Matriz de Transposición de Virgil Abloh).",
+      "destination": "skills/yts-investigacion-ideas/SKILL.md",
+      "activation": "P02_RESEARCH",
+      "application": "instruction",
+      "evidence": "skill sección 'Filtros y Heurísticas de Decisión Adicionales' (Regla del 3% y Matriz de Transposición)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "RES-MERCADOS-IDIO",
+      "source": {
+        "file": "_framework/estrategia-idiomas.md",
+        "section": "agrupación por mercados lingüísticos"
+      },
+      "principle": "Evaluar el alcance por mercados lingüísticos agrupados (Español, Inglés, Hindi) en lugar de países aislados para decidir pistas de audio multiidioma o subtítulos localizados.",
+      "destination": "skills/yts-investigacion-ideas/SKILL.md",
+      "activation": "P02_RESEARCH",
+      "application": "instruction",
+      "evidence": "skill sección 'Estrategia de Idiomas y Mercados Lingüísticos'",
+      "status": "complete"
+    },
+    {
+      "learning_id": "PKG-ARQUETIPOS-5",
+      "source": {
+        "file": "_framework/roles/02-packaging-miniaturas.md",
+        "section": "§2 Arquetipos de Curiosidad"
+      },
+      "principle": "Emparejar cada miniatura con uno de los 5 arquetipos de curiosidad (Moment, Story, Result, Transformation, Novelty) según la brecha de curiosidad de la historia.",
+      "destination": "skills/yts-packaging-miniaturas/SKILL.md",
+      "activation": "P01_PACKAGING",
+      "application": "instruction",
+      "evidence": "skill sección 'Los 5 Arquetipos de Curiosidad de Miniatura'",
+      "status": "complete"
+    },
+    {
+      "learning_id": "PKG-CAJA-PALANCAS",
+      "source": {
+        "file": "_framework/roles/02-packaging-miniaturas.md",
+        "section": "§3.2 Palancas para abrir bucles"
+      },
+      "principle": "Los 5 títulos candidatos se eligen de la caja completa de palancas (insider, autoridad, principiantes, actualidad, arrepentimiento, tendencias, números, contraste, contraintuitivo, superlativos, reto imposible, cuestionar convenciones, extremo, pregunta, viaje transformador, lista), cada una una hipótesis no una ley; el título es un bucle abierto que solo se cierra dentro del video.",
+      "destination": "skills/yts-packaging-miniaturas/SKILL.md",
+      "activation": "P01_PACKAGING",
+      "application": "instruction",
+      "evidence": "skill sección 'Caja de Heurística: Palancas para Abrir Bucles Más Fuertes' (table) + compuerta packaging_structure (5 numerados)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "PKG-5-DISTINTOS",
+      "source": {
+        "file": "_framework/roles/02-packaging-miniaturas.md",
+        "section": "§3 caja de heurística"
+      },
+      "principle": "Los 5 candidatos de título deben ser diferentes entre sí y declarar la palanca de la caja que utiliza cada uno; queda prohibido llenar los 5 con variantes de una sola palanca.",
+      "destination": "skills/yts-packaging-miniaturas/SKILL.md",
+      "activation": "P01_PACKAGING",
+      "application": "instruction_plus_human_review",
+      "evidence": "compuerta packaging_structure (5 numerados) + revisión editorial del creador (palancas genuinamente distintas en 01-packaging.md §2)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "PKG-18PCT-3FOCALES",
+      "source": {
+        "file": "_framework/roles/02-packaging-miniaturas.md",
+        "section": "§4-5 Reducción al 18%"
+      },
+      "principle": "Componer la miniatura con máximo 3 elementos focales y validar al 18% de escala móvil (Clarity Test): si al 18% se vuelve un borrón confuso, simplificar (Regla de Reducción al 18% y 3 Elementos Focales, MKBHD).",
+      "destination": "skills/yts-packaging-miniaturas/SKILL.md",
+      "activation": "P01_PACKAGING",
+      "application": "instruction",
+      "evidence": "skill [PACK-002] Regla de Reducción al 18% y Límite de 3 Elementos Focales",
+      "status": "complete"
+    },
+    {
+      "learning_id": "PKG-AB-2TIEMPOS",
+      "source": {
+        "file": "_framework/roles/02-packaging-miniaturas.md",
+        "section": "§6 A/B en dos tiempos"
+      },
+      "principle": "Probar macrocambios conceptuales (ángulo, fondo o premisa radicalmente distinta) antes de las micro-variaciones, respetando la ley de rendimientos decrecientes y sin obsesionarse con micro-detalles (Estrategia A/B en Dos Tiempos).",
+      "destination": "skills/yts-packaging-miniaturas/SKILL.md",
+      "activation": "P01_PACKAGING",
+      "application": "instruction",
+      "evidence": "skill [PACK-001] Estrategia A/B en Dos Tiempos",
+      "status": "complete"
+    },
+    {
+      "learning_id": "PKG-VERISIMILITUD",
+      "source": {
+        "file": "_framework/roles/02-packaging-miniaturas.md",
+        "section": "§4 Verisimilitude Test"
+      },
+      "principle": "Verificar que la miniatura final conservada conserve la fuerza y tensión del boceto sin verse plástica, artificial ni deslucida (The Verisimilitude Test: boceto vs. render final).",
+      "destination": "skills/yts-packaging-miniaturas/SKILL.md",
+      "activation": "P01_PACKAGING",
+      "application": "instruction",
+      "evidence": "skill sección 'Estrategias de Validación y Optimización' (The Verisimilitude Test)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "PKG-10-MAS-VISTOS",
+      "source": {
+        "file": "_framework/roles/02-packaging-miniaturas.md",
+        "section": "§6 Investigación previa"
+      },
+      "principle": "Antes de diseñar los 3 conceptos, inspeccionar en incógnito las miniaturas de los 10 videos más vistos del tema para no repetir la misma composición genérica ni paletas saturadas.",
+      "destination": "skills/yts-packaging-miniaturas/SKILL.md",
+      "activation": "P01_PACKAGING",
+      "application": "instruction",
+      "evidence": "skill sección 'Procedimiento de Investigación Previa de Referencias Visuales'",
+      "status": "complete"
+    },
+    {
+      "learning_id": "GUI-5-APERTURAS",
+      "source": {
+        "file": "_framework/roles/03-guion-y-narrativa.md",
+        "section": "§3 Caja de Herramientas: 5 Técnicas de Apertura"
+      },
+      "principle": "Elegir la apertura de una caja de 5 técnicas opcionales condicionadas por formato (pregunta imposible de ignorar, dato que rompe creencias, escenario hipotético, promesa directa/demostración inmediata, inmersión atmosférica/enigma narrativo); no es una lista obligatoria para todos los videos.",
+      "destination": "skills/yts-guion-narrativa/SKILL.md",
+      "activation": "P03_SCRIPT",
+      "application": "instruction",
+      "evidence": "skill sección 'Caja de Herramientas de Aperturas — 5 técnicas opcionales' + constancia declarada en [B01]",
+      "status": "complete"
+    },
+    {
+      "learning_id": "GUI-ROADMAP",
+      "source": {
+        "file": "_framework/roles/03-guion-y-narrativa.md",
+        "section": "§4.3 Roadmap de Compromiso Mental"
+      },
+      "principle": "En videos largos o explicaciones complejas (15-40 min), el Roadmap de Compromiso Mental (Spoiler Intro) enumera de forma rápida los hitos del video para que el espectador se quede; está PROHIBIDO en relatos, misterio o ficción porque revelar lo que viene destruye la intriga.",
+      "destination": "skills/yts-guion-narrativa/SKILL.md",
+      "activation": "P03_SCRIPT — videos largos/explicativos complejos; prohibido en misterio/ficción",
+      "application": "instruction",
+      "evidence": "skill sección 'Caja de Herramientas de Intros y Aperturas' (Roadmap de Compromiso Mental) + constancia en [B01]",
+      "status": "complete"
+    },
+    {
+      "learning_id": "GUI-UNFAIR-EDGE",
+      "source": {
+        "file": "_framework/roles/03-guion-y-narrativa.md",
+        "section": "§4.2 Unfair Edge Statement"
+      },
+      "principle": "En formatos de autoridad/negocios/ciencia, clavar en una frase memorable la autoridad o ventaja injusta única, sin interrupciones institucionales ni autopromoción en los primeros 45s (la autoridad se demuestra con el rigor de las fuentes).",
+      "destination": "skills/yts-guion-narrativa/SKILL.md",
+      "activation": "P03_SCRIPT — formatos de autoridad, negocios, divulgación, ensayo, media/larga duración",
+      "application": "instruction",
+      "evidence": "skill sección 'Caja de Herramientas de Intros y Aperturas' (Unfair Edge Statement)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "GUI-RAINY",
+      "source": {
+        "file": "_framework/roles/03-guion-y-narrativa.md",
+        "section": "§4.5 Estructura R.A.I.N.Y."
+      },
+      "principle": "Estructura modular opcional de intro (<45s en largos, <10s en dinámicos): R(RESULT adelantar resultado/pregunta), A(ADDRESS OBJECTION desactivar el detector de mentiras), I(INSTANT entrada sin preámbulos), N(NOW relevancia actual), Y(YOU por qué tú/unfair edge).",
+      "destination": "skills/yts-guion-narrativa/SKILL.md",
+      "activation": "P03_SCRIPT — ensayos y educación; formatos de autoridad",
+      "application": "instruction",
+      "evidence": "skill sección 'Caja de Herramientas de Intros y Aperturas' (Estructura R.A.I.N.Y.)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "GUI-IDENTIDAD-SONORA",
+      "source": {
+        "file": "_framework/roles/03-guion-y-narrativa.md",
+        "section": "§5.3 Identidad Sonora"
+      },
+      "principle": "En canales faceless, queda desaconsejado usar las voces gratuitas estándar más trilladas (detectadas en 2s como contenido automatizado); priorizar la clonación de la voz del creador o calibrar un modelo neuronal con personalidad y entonación singulares (Zack D. Films).",
+      "destination": "skills/yts-guion-narrativa/SKILL.md",
+      "activation": "P03_SCRIPT — canales faceless",
+      "application": "instruction",
+      "evidence": "skill sección 'Identidad Sonora contra la Voz Genérica de IA'; la ejecución en P05 se registra en DIR-SCRATCH-VOZ-NEURONAL",
+      "status": "complete"
+    },
+    {
+      "learning_id": "GUI-3B",
+      "source": {
+        "file": "_framework/roles/03-guion-y-narrativa.md",
+        "section": "§5.4 Regla de las 3 B's"
+      },
+      "principle": "Redactar la locución Básico (vocabulario 6º de primaria), Audaz (suprimir vacilaciones de estilo PERO conservar estrictamente los calificadores de matización científica YMYL: correlación vs causalidad, hipótesis vs conclusión, modelo animal vs humano) y Breve (máx 25 palabras/oración, 3 frases/párrafo).",
+      "destination": "skills/yts-guion-narrativa/SKILL.md",
+      "activation": "P03_SCRIPT — todos los bloques [Bxx]",
+      "application": "instruction",
+      "evidence": "skill [GUI-002] Regla de las 3 B's de Locución y Rigor Científico",
+      "status": "complete"
+    },
+    {
+      "learning_id": "GUI-ANTISPOILER",
+      "source": {
+        "file": "_framework/roles/03-guion-y-narrativa.md",
+        "section": "§3 Linter Narrativo Anti-Spoiler"
+      },
+      "principle": "El anti-spoiler está condicionado por formato: APLICA cuando el descubrimiento es parte de la experiencia (misterio/transformación: prohibido nombrar el mecanismo en [B01][B02]); NO APLICA cuando la respuesta temprana es el valor (tutoriales/consultas: prohibido retrasar artificialmente la solución). El guion declara en una línea qué caso aplica.",
+      "destination": "skills/yts-guion-narrativa/SKILL.md",
+      "activation": "P03_SCRIPT",
+      "application": "instruction",
+      "evidence": "skill sección 'Modo de Progresión y Anti-Spoiler Condicionado por Formato' + declarado en cabecera de 02-guion.md",
+      "status": "complete"
+    },
+    {
+      "learning_id": "GUI-LOOPED-ARC",
+      "source": {
+        "file": "_framework/referencias/sintesis-casos-shorts.md",
+        "section": "Estructura del Arco en Bucle"
+      },
+      "principle": "Arco en Bucle general (Gancho/Bucle Abierto → Acción Inicial → Conflicto/Error Inesperado → Recuperación/Reintento → Payoff) que añade tensión intermedia; no es obligatorio para todos los videos (un tutorial o explicación de respuesta pronta no lo usa).",
+      "destination": "skills/yts-guion-narrativa/SKILL.md",
+      "activation": "P03_SCRIPT — Shorts y formatos dinámicos",
+      "application": "instruction",
+      "evidence": "skill sección 'Modo de Progresión y Anti-Spoiler' (Estructura del Arco en Bucle)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "DIR-4-MODOS",
+      "source": {
+        "file": "_framework/roles/04-direccion-y-edicion.md",
+        "section": "§0 Selección del Flujo Audiovisual"
+      },
+      "principle": "Seleccionar el flujo audiovisual (Audio-First predeterminado, Screen-First/Action-First, Speaker-First, Music-First/Ambient) según el género antes de montar; cada modo dicta una cadena de producción y una evidencia distinta en P05 (scratch_track / screen_recording / speaker_track / music_bed).",
+      "destination": "skills/yts-direccion-edicion/SKILL.md",
+      "activation": "P05_ANIMATIC",
+      "application": "deterministic_gate",
+      "evidence": "test/context-resolver.test.ts (adaptPlaybookForMode) + src/core/phases.ts evidencia por modo + skill §0",
+      "status": "complete"
+    },
+    {
+      "learning_id": "DIR-ESCALERA-5",
+      "source": {
+        "file": "_framework/roles/04-direccion-y-edicion.md",
+        "section": "§3 Escalera de 5 Niveles"
+      },
+      "principle": "Clasificar los planos con IA en la escalera de 5 niveles (N1 diálogo estático, N2 diálogo en movimiento, N3 plano secuencia con stand-ins, N4 cobertura multicámara fija, N5 acción descompuesta en beats físicos) para dimensionar la complejidad de cada escena.",
+      "destination": "skills/yts-direccion-edicion/SKILL.md",
+      "activation": "P05_ANIMATIC",
+      "application": "instruction",
+      "evidence": "skill [VID-IA-001] Escalera de 5 Niveles para Escenas IA",
+      "status": "complete"
+    },
+    {
+      "learning_id": "DIR-ASSET-FIRST",
+      "source": {
+        "file": "_framework/roles/04-direccion-y-edicion.md",
+        "section": "§1.1 Pipeline Asset-First"
+      },
+      "principle": "Diseñar los activos previos al rodaje (hojas de personaje con estados con/sin prenda y de daño, hojas de utilería incrustadas, anclas de trayectoria) antes de generar escenas (Pipeline Asset-First).",
+      "destination": "skills/yts-direccion-edicion/SKILL.md",
+      "activation": "P05_ANIMATIC",
+      "application": "instruction",
+      "evidence": "skill [VID-IA-004] Pipeline Asset-First",
+      "status": "complete"
+    },
+    {
+      "learning_id": "DIR-480P",
+      "source": {
+        "file": "_framework/roles/04-direccion-y-edicion.md",
+        "section": "§3 Borradores en 480p"
+      },
+      "principle": "Correr tandas de prueba en baja resolución / borrador (480p) antes de escalar o renderizar la toma definitiva en 1080p, para ahorrar créditos (Regla de Tres Pasos contra Desperdicio).",
+      "destination": "skills/yts-direccion-edicion/SKILL.md",
+      "activation": "P05_ANIMATIC",
+      "application": "instruction",
+      "evidence": "skill [VID-IA-009] Borradores en 480p",
+      "status": "complete"
+    },
+    {
+      "learning_id": "DIR-AISLAMIENTO-ACUST",
+      "source": {
+        "file": "_framework/roles/04-direccion-y-edicion.md",
+        "section": "§3 Aislamiento Acústico"
+      },
+      "principle": "Indicar en los prompts de video 'environmental sound only, no music, no subtitles' para no quemar música en la pista, SALVO en formatos Music-First donde sí se busca música integrada.",
+      "destination": "skills/yts-direccion-edicion/SKILL.md",
+      "activation": "P05_ANIMATIC — excepción Music-First",
+      "application": "instruction",
+      "evidence": "skill [VID-IA-007] Aislamiento Acústico en Prompts (excepción Music-First)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "DIR-ITER-IMG2IMG",
+      "source": {
+        "file": "_framework/roles/04-direccion-y-edicion.md",
+        "section": "§3 Control de Iteraciones"
+      },
+      "principle": "Evitar más de 2 pasadas consecutivas img2img sobre una misma imagen; si no encaja, reiniciar desde prompt limpio consolidado (excepción permitida si se documenta la exploración estética).",
+      "destination": "skills/yts-direccion-edicion/SKILL.md",
+      "activation": "P05_ANIMATIC",
+      "application": "instruction",
+      "evidence": "skill [VID-IA-008] Control de Iteraciones Img2Img",
+      "status": "complete"
+    },
+    {
+      "learning_id": "DIR-AUTENTICIDAD-FISICA",
+      "source": {
+        "file": "_framework/roles/04-direccion-y-edicion.md",
+        "section": "§3 Autenticidad Física"
+      },
+      "principle": "Ante cinemáticas digitales excesivamente pulidas que enfrían la narrativa, priorizar demostraciones físicas y analógicas tangibles (objetos reales, notas manuscritas, recortes sobre una mesa).",
+      "destination": "skills/yts-direccion-edicion/SKILL.md",
+      "activation": "P05_ANIMATIC / P06_ASSEMBLY",
+      "application": "instruction",
+      "evidence": "skill sección 'Autenticidad Física, Vestimenta A-Roll y Frame Zero'",
+      "status": "complete"
+    },
+    {
+      "learning_id": "DIR-VESTIMENTA-AROLL",
+      "source": {
+        "file": "_framework/roles/04-direccion-y-edicion.md",
+        "section": "§3 Vestimenta Temática"
+      },
+      "principle": "En canales con presentador a cámara, utilizar atuendos alineados con el universo temático del video para elevar el valor de producción percibido (Vestimenta Temática en A-Roll).",
+      "destination": "skills/yts-direccion-edicion/SKILL.md",
+      "activation": "P05_ANIMATIC — speaker_first",
+      "application": "instruction",
+      "evidence": "skill sección 'Autenticidad Física, Vestimenta A-Roll y Frame Zero'",
+      "status": "complete"
+    },
+    {
+      "learning_id": "DIR-FRAME-ZERO",
+      "source": {
+        "file": "_framework/roles/04-direccion-y-edicion.md",
+        "section": "§3 Frame Zero"
+      },
+      "principle": "En Shorts, diseñar el fotograma del milisegundo cero (Frame Zero) con alto contraste, punto focal centrado y gancho visual inmediato para detener el scroll antes de que empiece la reproducción activa.",
+      "destination": "skills/yts-direccion-edicion/SKILL.md",
+      "activation": "P05_ANIMATIC — Shorts",
+      "application": "instruction",
+      "evidence": "skill sección 'Autenticidad Física, Vestimenta A-Roll y Frame Zero en Shorts'",
+      "status": "complete"
+    },
+    {
+      "learning_id": "DIR-4-CAPAS",
+      "source": {
+        "file": "_framework/roles/04-direccion-y-edicion.md",
+        "section": "§4 Las 4 Capas de Pulido"
+      },
+      "principle": "Aplicar las 4 capas de pulido audiovisual (Pacing Visual, Cortes de Continuidad J/L-Cuts, Arquitectura de Audio Adaptable A1/A2/A3 con foley táctil, Dinámica de Cuadro punch-in/Ken Burns).",
+      "destination": "skills/yts-direccion-edicion/SKILL.md",
+      "activation": "P06_ASSEMBLY",
+      "application": "instruction",
+      "evidence": "skill sección 'Las 4 Capas de Pulido Audiovisual' + 03-storyboard-y-edicion.md §4",
+      "status": "complete"
+    },
+    {
+      "learning_id": "DIR-PACING-FRONTERA",
+      "source": {
+        "file": "_framework/roles/04-direccion-y-edicion.md",
+        "section": "§4 Pacing Visual / frontera de verificación"
+      },
+      "principle": "Por defecto un plano estático no debe permanecer más de 5 s sin variación visual (excepción de 10-15 s por empatía narrativa comprobada); el medidor automático del master evalúa el ritmo promedio (y el segmento más largo si la hoja declara pacing.maxShotSec) como indicador macro aproximado por FFmpeg, y la regla de duración individual por plano queda en revisión editorial humana, no en métrica automática.",
+      "destination": "src/checks/media-measurement.ts",
+      "activation": "P06_ASSEMBLY",
+      "application": "instruction_plus_human_review",
+      "evidence": "test/media-measurement.test.ts (per-shot pacing + disclaimer) + skill §4 Pacing Visual (Frontera de verificación) + context-resolver P06 verificationBoundary",
+      "status": "complete"
+    },
+    {
+      "learning_id": "ORQ-REGISTRO-AUTORIDAD",
+      "source": {
+        "file": "AGENTS.md",
+        "section": "§01 Protocolo Universal"
+      },
+      "principle": "La autoridad de estado vive en .youtube-shell/registro.json; 00-estado-produccion.md es una vista sincronizada automáticamente y marcar casillas Markdown nunca acredita una aprobación.",
+      "destination": "skills/yts-orquestador/SKILL.md",
+      "activation": "GLOBAL",
+      "application": "deterministic_gate",
+      "evidence": "src/store/fs-store.ts (loadRegistry/saveRegistry/syncStatusView) + test/store.test.ts + skill 'Reglas obligatorias de gobernanza'",
+      "status": "complete"
+    },
+    {
+      "learning_id": "ORQ-SHA256-INVALIDACION",
+      "source": {
+        "file": "AGENTS.md",
+        "section": "§02.2 Aprobación Creativa"
+      },
+      "principle": "Ninguna fase comienza sin las fases previas APROBADO con huellas SHA-256 vigentes, y editar un artefacto aprobado lo marca OBSOLETO en cascada hacia las dependientes.",
+      "destination": "src/core/machine.ts",
+      "activation": "GLOBAL",
+      "application": "deterministic_gate",
+      "evidence": "src/core/machine.ts (evaluate/submitPhase) + test/machine.test.ts (invalidación en cascada)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "ORQ-APROBACION-CREADOR",
+      "source": {
+        "file": "AGENTS.md",
+        "section": "§02.2 Puntos de Control"
+      },
+      "principle": "Solo el creador aprueba fases mediante /yts-approve en interfaz interactiva (hasUI=true); el agente no puede auto-aprobar y la hoja pre-render requiere /yts-approve-sheet vinculada a su huella SHA-256.",
+      "destination": "src/gate/pi-extension.ts",
+      "activation": "GLOBAL",
+      "application": "deterministic_gate",
+      "evidence": "src/gate/pi-extension.ts (approvePhase, hasUI) + test/pi-gate.test.ts (el modelo no puede auto-aprobar)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "ORQ-READ-ONLY-GATE",
+      "source": {
+        "file": "AGENTS.md",
+        "section": "§01 ruta de solo lectura"
+      },
+      "principle": "Los turnos de consulta/auditoría se clasifican read_only y el runtime retira write/edit/yts_transition en la frontera de herramientas sin mutar artefactos ni el registro.",
+      "destination": "src/core/context-resolver.ts",
+      "activation": "GLOBAL",
+      "application": "deterministic_gate",
+      "evidence": "src/core/context-resolver.ts (classifyWorkMode) + test/context-resolver.test.ts (read_only removes write/edit)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "ORQ-YTS-LINK",
+      "source": {
+        "file": "AGENTS.md",
+        "section": "§01.5 Linter de Ideas Vetadas"
+      },
+      "principle": "Vincular la carpeta del video con la oficina y el canal (/yts-link) para consultar ideas.md, referentes.md, banco-visual.md y backlog-ideas.md sin empaquetar datos privados; prohibido inventar contenido atribuyéndoselo a archivos de notas incompletos.",
+      "destination": "src/core/context-resolver.ts",
+      "activation": "GLOBAL / P01_PACKAGING / P02_RESEARCH",
+      "application": "deterministic_gate",
+      "evidence": "src/core/context-resolver.ts (detectWorkspaceLink) + test/context-resolver.test.ts (/yts-link)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "MEA-MEDICION-MEDIA",
+      "source": {
+        "file": "_framework/referencias/evidencia-piloto/medicion-master-piloto.md",
+        "section": "medición ffprobe/ffmpeg"
+      },
+      "principle": "El master se mide con ffprobe/ffmpeg contra la hoja de aceptación pre-render (LUFS, true peak, pistas, ducking, frames negros, silencios, pacing); sin hoja versionada y aprobada antes del render, las reglas devuelven NOT_EVALUABLE, nunca un veredicto inventado.",
+      "destination": "src/checks/media-measurement.ts",
+      "activation": "P06_ASSEMBLY",
+      "application": "deterministic_gate",
+      "evidence": "test/media-measurement.test.ts (NOT_EVALUABLE sin hoja, post-hoc FAIL, piloto negativo)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "MEA-HOJA-PRERENDER",
+      "source": {
+        "file": "_framework/roles/04-direccion-y-edicion.md",
+        "section": "§2 Hoja de aceptación"
+      },
+      "principle": "La hoja de aceptación JSON debe estar fechada y aprobada por el creador (/yts-approve-sheet) con huella SHA-256 ANTES del render del master; una hoja escrita a posteriori falla acceptance_sheet_validity (prohibido definir el estándar después).",
+      "destination": "src/checks/media-measurement.ts",
+      "activation": "P06_ASSEMBLY",
+      "application": "deterministic_gate",
+      "evidence": "test/media-measurement.test.ts (post-hoc acceptance sheet FAIL) + src/gate/pi-extension.ts (/yts-approve-sheet)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "GUI-REACTIVACION-LARGOS",
+      "source": {
+        "file": "_framework/roles/03-guion-y-narrativa.md",
+        "section": "§2 Caja de Herramientas: Reactivación Narrativa"
+      },
+      "principle": "En videos largos, planificar un punto de reactivación a mitad de metraje (una pregunta nueva, un caso inesperado o excepción, una escala mayor) porque una única línea argumental lineal no sostiene la atención hasta el desenlace. Falta trasladarlo a la skill: pendiente de adopción (seguimiento posterior a la auditoría 12).",
+      "destination": "skills/yts-guion-narrativa/SKILL.md",
+      "activation": "P03_SCRIPT — videos largos",
+      "application": "instruction",
+      "evidence": "siguiente round de skills; por ahora no hay verificador ni constancia en el entregable",
+      "status": "absent"
+    },
+    {
+      "learning_id": "GUI-GRADOS-GUIONADO",
+      "source": {
+        "file": "_framework/roles/03-guion-y-narrativa.md",
+        "section": "§5.5 Grados de Guionado"
+      },
+      "principle": "Decidir por formato el grado de guionado: guion completo palabra por palabra para locución en off, o estructura nítida con espacio para pensar (bullet points) para screencasts y expertos a cámara, porque un guion literal puede empeorar a un experto en cámara. Falta en la skill: pendiente de adopción.",
+      "destination": "skills/yts-guion-narrativa/SKILL.md",
+      "activation": "P03_SCRIPT",
+      "application": "instruction",
+      "evidence": "siguiente round de skills; sin evidencia de aplicación todavía",
+      "status": "absent"
+    },
+    {
+      "learning_id": "GUI-MOMENTO-VALOR",
+      "source": {
+        "file": "_framework/roles/03-guion-y-narrativa.md",
+        "section": "§5.4 El Momento de Mayor Valor"
+      },
+      "principle": "Asegurar un momento de máxima recompensa intelectual o emocional en el video en lugar de forzar un giro artificial a 2/3 del metraje si la historia no lo pide. Falta en la skill: pendiente de adopción.",
+      "destination": "skills/yts-guion-narrativa/SKILL.md",
+      "activation": "P03_SCRIPT",
+      "application": "instruction_plus_human_review",
+      "evidence": "siguiente round de skills; juicio editorial del creador en /yts-approve P03_SCRIPT",
+      "status": "absent"
+    },
+    {
+      "learning_id": "GUI-ARQ-PROCESO",
+      "source": {
+        "file": "_framework/roles/03-guion-y-narrativa.md",
+        "section": "§2 Arquetipo de Proceso y Transformación"
+      },
+      "principle": "Para transformaciones visuales, restauraciones o procesos (no tutoriales directos ni análisis), usar el arquetipo Declaración ➔ Evaluación ➔ Aislamiento ➔ Proceso ➔ Construcción ➔ Revelación, con anclaje de contraste antes/después. Falta en la skill: pendiente de adopción.",
+      "destination": "skills/yts-guion-narrativa/SKILL.md",
+      "activation": "P03_SCRIPT — transformaciones y procesos",
+      "application": "instruction",
+      "evidence": "siguiente round de skills; sin evidencia de aplicación todavía",
+      "status": "absent"
+    },
+    {
+      "learning_id": "DIR-SCRATCH-VOZ-NEURONAL",
+      "source": {
+        "file": "_framework/roles/04-direccion-y-edicion.md",
+        "section": "§1 P05_ANIMATIC evidencia por modo"
+      },
+      "principle": "La locución provisional del animatic (Scratch Track o radio edit) se genera con voz neuronal natural; queda prohibido usar sintetizadores mecánicos arcaicos como /usr/bin/say, y en canales faceless se aplica la identidad sonora del canal elegida en P03_SCRIPT.",
+      "destination": "skills/yts-direccion-edicion/SKILL.md",
+      "activation": "P05_ANIMATIC — Audio-First",
+      "application": "deterministic_gate",
+      "evidence": "src/core/phases.ts evidencia scratch_track + test/machine.test.ts (evidencia requerida por modo) + skill §1 Compuertas P05_ANIMATIC",
+      "status": "complete"
+    },
+    {
+      "learning_id": "ORQ-COMUNICACION-EJECUTIVA",
+      "source": {
+        "file": "AGENTS.md",
+        "section": "§02.5 Filtro de Comunicación Ejecutiva"
+      },
+      "principle": "Dirigirse al creador como Director Creativo y de Producción, centrando la conversación en entregables tangibles, ritmo narrativo y experiencia audiovisual, sin jerga de terminal salvo pedido explícito.",
+      "destination": "skills/yts-orquestador/SKILL.md",
+      "activation": "GLOBAL — la skill del orquestador se carga como Capa 1 permanente; su efecto se materializa en P01_PACKAGING",
+      "application": "instruction",
+      "evidence": "src/gate/pi-extension.ts (Capa 1 before_agent_start) + test/package-manifest.test.ts y test/pi-gate.test.ts (persona inyectada)",
+      "status": "complete"
+    },
+    {
+      "learning_id": "ORQ-5-ALTERNATIVAS",
+      "source": {
+        "file": "_framework/reglas-sistema.md",
+        "section": "§2 Regla de las 5 Alternativas"
+      },
+      "principle": "En decisiones creativas de alto impacto (nombres de canal, ángulos diferenciadores, ganchos, títulos candidatos) presentar 5 alternativas antes de decidir; publicar, incurrir en costos o eliminar material exige confirmación humana obligatoria.",
+      "destination": "skills/yts-orquestador/SKILL.md",
+      "activation": "GLOBAL — la skill del orquestador se carga como Capa 1 permanente; su efecto se materializa en P01_PACKAGING",
+      "application": "instruction_plus_human_review",
+      "evidence": "src/gate/pi-extension.ts (needsConfirm en operaciones sensibles) + compuerta packaging_structure (5 títulos) + test/pi-gate.test.ts",
+      "status": "complete"
+    },
+    {
+      "learning_id": "ORQ-CICLO-MACRO",
+      "source": {
+        "file": "_framework/ciclo-produccion.md",
+        "section": "Ciclo Macro de 6 etapas"
+      },
+      "principle": "El ciclo macro es Área/Nicho ➔ Branding ➔ Packaging First ➔ Crear video ➔ Edición ➔ Publicación y aprendizaje; como la API de YouTube no expone Prueba y Compara, la carga A/B la ejecuta manualmente el creador en YouTube Studio con asistencia del agente, evaluando por Watch Time Share.",
+      "destination": "skills/yts-orquestador/SKILL.md",
+      "activation": "GLOBAL / P07_CLOSE",
+      "application": "instruction",
+      "evidence": "skill 'Reglas obligatorias de gobernanza' §6 (Ciclo Macro y Watch Time Share) + test/pi-gate.test.ts",
+      "status": "complete"
+    },
+    {
+      "learning_id": "ORQ-GOBERNANZA-EVIDENCIA",
+      "source": {
+        "file": "_framework/gobernanza-evidencia.md",
+        "section": "3 dimensiones de clasificación"
+      },
+      "principle": "Clasificar toda técnica operativa con las 3 dimensiones (Fundamento y Validación Propia, Fuerza Operativa INFORMATIVA/RECOMENDADA/OBLIGATORIA/COMPUERTA, Decisión Histórica) y consultar el registro central de técnicas, evitando que una regla empírica sin validación bloquee una producción.",
+      "destination": "skills/yts-orquestador/SKILL.md",
+      "activation": "GLOBAL",
+      "application": "instruction",
+      "evidence": "src/checks/framework-checker.ts (checkTechniquesRegistryCoherence) + test/framework-checker.test.ts + references/registro-tecnicas.md",
+      "status": "complete"
     }
   ]
 }
