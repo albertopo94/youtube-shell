@@ -6,10 +6,10 @@
       "role": "Domain knowledge (layer 3): phases, templates, contract checker, pilot measurement",
       "reviewed": {
         "ref": "main",
-        "commit": "96371974d93688c7e10e706e612c7926d4faab43",
-        "committed_at": "2026-11-01T18:41:29Z",
+        "commit": "91200429df849d32b57ac4d82269b53969f4fb83",
+        "committed_at": "2026-11-01T19:49:11Z",
         "reviewed_on": "2026-11-01",
-        "evidence": "auditoria externa 12 (opinion de mi amiga.md): a67b1fe (revision 11: outliers por mediana reciente, campana unica matizada, delimitacion de ambitos en herramientas-y-apis), 46b53d4 (base v0.7.2) y ef7adf6/af32db8 (adopciones del consumidor) revisados contra skills, runtime y plantillas espejadas"
+        "evidence": "auditoria externa 12 (opinion de mi amiga.md) + observabilidad y aseguramiento de ejecucion v0.14.0: 53 atomic_learnings con guarantee_level y consumer_sha256, RunLedger (.youtube-shell/runs/<run-id>/), /yts-audit y /yts-runs"
       },
       "affects_us": [
         "_framework/plantillas/pipeline-video-template/",
@@ -150,9 +150,9 @@
         },
         {
           "upstream_path": "_framework/compatibilidad-consumidores.md",
-          "upstream_sha256": "3750785719e1b96aa119072fd50f47126f31eaac3ea53481208f3e0f7ade190f",
+          "upstream_sha256": "6be05e3a898900c119eb7e9c78b7c2afda999c74667aa38df0d78c334039fc25",
           "local_target": "upstream-lock.json",
-          "role": "consumer_contract; consumer version declared: youtube-shell v0.13.0 (aligned 8/8 templates; outliers-by-recent-median, per-shot pacing boundary, mirrored tool-scope note and media-engine MCP surface guard adopted)"
+          "role": "consumer_contract; consumer version declared: youtube-shell v0.14.0 (aligned 8/8 templates; 53 atomic_learnings complete with guarantee_level + consumer_sha256; execution observability ledger and 9 E2E assurance scenarios)"
         },
         {
           "upstream_path": "_framework/gobernanza-evidencia.md",
