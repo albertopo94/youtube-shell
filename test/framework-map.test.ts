@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PHASES, PHASE_IDS } from "../src/core/phases.ts";
@@ -65,6 +66,13 @@ interface AtomicLearning {
   application: string;
   evidence: string;
   status: string;
+  source_sha256: string;
+  consumer_sha256: string;
+  activation_trigger: string;
+  application_evidence: string;
+  guarantee_level: string;
+  test_type: string;
+  last_reviewed: string;
 }
 
 interface FrameworkRule {
@@ -100,7 +108,31 @@ const LEARNING_FIELDS = [
   "application",
   "evidence",
   "status",
+  "source_sha256",
+  "consumer_sha256",
+  "activation_trigger",
+  "application_evidence",
+  "guarantee_level",
+  "test_type",
+  "last_reviewed",
 ] as const;
+
+const VALID_GUARANTEE_LEVELS = new Set([
+  "RUNTIME_ENFORCED",
+  "DELIVERED",
+  "OBSERVED",
+  "TESTED",
+  "HUMAN_JUDGED",
+  "REFERENCE_ONLY",
+]);
+
+const VALID_TEST_TYPES = new Set([
+  "static_contract",
+  "integration",
+  "e2e",
+  "behavioral",
+  "human_review_only",
+]);
 
 const VALID_APPLICATIONS = new Set([
   "instruction",
@@ -301,6 +333,26 @@ test("atomic_learnings registers every learning with exactly the 8 auditoria-12 
     assert.ok(VALID_APPLICATIONS.has(l.application), `${l.learning_id}: invalid application ${l.application}`);
     assert.ok(VALID_STATUSES.has(l.status), `${l.learning_id}: invalid status ${l.status}`);
     assert.ok(l.evidence.length >= 10, `${l.learning_id}: evidence must name the test, deliverable field, or runtime check`);
+    assert.match(l.source_sha256, /^[0-9a-f]{64}$/, `${l.learning_id}: invalid source_sha256`);
+    assert.match(l.consumer_sha256, /^[0-9a-f]{64}$/, `${l.learning_id}: invalid consumer_sha256`);
+    assert.ok(l.activation_trigger.length >= 3, `${l.learning_id}: missing activation_trigger`);
+    assert.ok(l.application_evidence.length >= 10, `${l.learning_id}: missing application_evidence`);
+    assert.ok(VALID_GUARANTEE_LEVELS.has(l.guarantee_level), `${l.learning_id}: invalid guarantee_level ${l.guarantee_level}`);
+    assert.ok(VALID_TEST_TYPES.has(l.test_type), `${l.learning_id}: invalid test_type ${l.test_type}`);
+    assert.match(l.last_reviewed, /^\d{4}-\d{2}-\d{2}$/, `${l.learning_id}: invalid last_reviewed ${l.last_reviewed}`);
+  }
+});
+
+test("every atomic learning consumer_sha256 matches the actual destination file bytes on disk", () => {
+  const map = loadFrameworkMap();
+  for (const l of map.atomic_learnings) {
+    const destPath = join(ROOT, l.destination);
+    const actualSha = createHash("sha256").update(readFileSync(destPath)).digest("hex");
+    assert.equal(
+      l.consumer_sha256,
+      actualSha,
+      `${l.learning_id}: consumer_sha256 drifted from ${l.destination}; review learning fidelity and update consumer_sha256`,
+    );
   }
 });
 

@@ -1222,7 +1222,14 @@
       "activation": "P02_RESEARCH",
       "application": "instruction",
       "evidence": "test/framework-map.test.ts (coverage guard 'mediana') + skill sección Detección Metodológica de Outliers",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "8e4f4c19e1b62d6e3c73e27980369674cc3eae027ddd444f974b54689c711440",
+      "consumer_sha256": "f2aad15ad0d09de7d469bb17b56ea52bd49a67e8a2c96413867b0d3a8e576288",
+      "activation_trigger": "P02_RESEARCH",
+      "application_evidence": "test/framework-map.test.ts (coverage guard 'mediana') + skill sección Detección Metodológica de Outliers",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "RES-RATIO-AUXILIAR",
@@ -1235,7 +1242,14 @@
       "activation": "P02_RESEARCH",
       "application": "instruction",
       "evidence": "test/framework-map.test.ts (coverage guard) + skill sección Detección Metodológica de Outliers (SEÑAL AUXILIAR)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "8e4f4c19e1b62d6e3c73e27980369674cc3eae027ddd444f974b54689c711440",
+      "consumer_sha256": "f2aad15ad0d09de7d469bb17b56ea52bd49a67e8a2c96413867b0d3a8e576288",
+      "activation_trigger": "P02_RESEARCH",
+      "application_evidence": "test/framework-map.test.ts (coverage guard) + skill sección Detección Metodológica de Outliers (SEÑAL AUXILIAR)",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "RES-DESGLOSE-FORMATO",
@@ -1248,7 +1262,14 @@
       "activation": "P02_RESEARCH",
       "application": "instruction",
       "evidence": "skill sección Detección Metodológica de Outliers (Filtro de Desglose de Formato)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "8e4f4c19e1b62d6e3c73e27980369674cc3eae027ddd444f974b54689c711440",
+      "consumer_sha256": "f2aad15ad0d09de7d469bb17b56ea52bd49a67e8a2c96413867b0d3a8e576288",
+      "activation_trigger": "P02_RESEARCH",
+      "application_evidence": "skill sección Detección Metodológica de Outliers (Filtro de Desglose de Formato)",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "RES-RELATIBILIDAD",
@@ -1261,7 +1282,14 @@
       "activation": "P02_RESEARCH",
       "application": "instruction",
       "evidence": "skill sección Detección Metodológica de Outliers (Relatibilidad Universal sobre Volumen Bruto)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "8e4f4c19e1b62d6e3c73e27980369674cc3eae027ddd444f974b54689c711440",
+      "consumer_sha256": "f2aad15ad0d09de7d469bb17b56ea52bd49a67e8a2c96413867b0d3a8e576288",
+      "activation_trigger": "P02_RESEARCH",
+      "application_evidence": "skill sección Detección Metodológica de Outliers (Relatibilidad Universal sobre Volumen Bruto)",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "RES-7-FILTROS",
@@ -1274,7 +1302,14 @@
       "activation": "P02_RESEARCH",
       "application": "instruction",
       "evidence": "skill sección 'Los 7 Filtros de Eliminación de Ideas'",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "8e4f4c19e1b62d6e3c73e27980369674cc3eae027ddd444f974b54689c711440",
+      "consumer_sha256": "f2aad15ad0d09de7d469bb17b56ea52bd49a67e8a2c96413867b0d3a8e576288",
+      "activation_trigger": "P02_RESEARCH",
+      "application_evidence": "skill sección 'Los 7 Filtros de Eliminación de Ideas'",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "RES-PUENTE-SCHWARTZ",
@@ -1287,7 +1322,14 @@
       "activation": "P02_RESEARCH",
       "application": "instruction",
       "evidence": "skill sección 'Evidencia de Demanda Cualificada y Principio del Puente'",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "8e4f4c19e1b62d6e3c73e27980369674cc3eae027ddd444f974b54689c711440",
+      "consumer_sha256": "f2aad15ad0d09de7d469bb17b56ea52bd49a67e8a2c96413867b0d3a8e576288",
+      "activation_trigger": "P02_RESEARCH",
+      "application_evidence": "skill sección 'Evidencia de Demanda Cualificada y Principio del Puente'",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "RES-EXPERI-AGIL",
@@ -1300,7 +1342,14 @@
       "activation": "P02_RESEARCH — canales nuevos",
       "application": "instruction",
       "evidence": "skill sección 'Protocolo de Experimentación Ágil (Canales Nuevos)'",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "8e4f4c19e1b62d6e3c73e27980369674cc3eae027ddd444f974b54689c711440",
+      "consumer_sha256": "f2aad15ad0d09de7d469bb17b56ea52bd49a67e8a2c96413867b0d3a8e576288",
+      "activation_trigger": "P02_RESEARCH — canales nuevos",
+      "application_evidence": "skill sección 'Protocolo de Experimentación Ágil (Canales Nuevos)'",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "RES-SERVILLETE",
@@ -1313,7 +1362,14 @@
       "activation": "P02_RESEARCH",
       "application": "instruction",
       "evidence": "skill sección 'Filtros y Heurísticas de Decisión Adicionales' [GUI-001]",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "8e4f4c19e1b62d6e3c73e27980369674cc3eae027ddd444f974b54689c711440",
+      "consumer_sha256": "f2aad15ad0d09de7d469bb17b56ea52bd49a67e8a2c96413867b0d3a8e576288",
+      "activation_trigger": "P02_RESEARCH",
+      "application_evidence": "skill sección 'Filtros y Heurísticas de Decisión Adicionales' [GUI-001]",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "RES-MARKET-CAP",
@@ -1326,7 +1382,14 @@
       "activation": "P02_RESEARCH",
       "application": "instruction",
       "evidence": "skill sección 'Filtros y Heurísticas de Decisión Adicionales' (Market Cap of Interest)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "8e4f4c19e1b62d6e3c73e27980369674cc3eae027ddd444f974b54689c711440",
+      "consumer_sha256": "f2aad15ad0d09de7d469bb17b56ea52bd49a67e8a2c96413867b0d3a8e576288",
+      "activation_trigger": "P02_RESEARCH",
+      "application_evidence": "skill sección 'Filtros y Heurísticas de Decisión Adicionales' (Market Cap of Interest)",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "RES-REGLA-3PCT",
@@ -1339,7 +1402,14 @@
       "activation": "P02_RESEARCH",
       "application": "instruction",
       "evidence": "skill sección 'Filtros y Heurísticas de Decisión Adicionales' (Regla del 3% y Matriz de Transposición)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "8e4f4c19e1b62d6e3c73e27980369674cc3eae027ddd444f974b54689c711440",
+      "consumer_sha256": "f2aad15ad0d09de7d469bb17b56ea52bd49a67e8a2c96413867b0d3a8e576288",
+      "activation_trigger": "P02_RESEARCH",
+      "application_evidence": "skill sección 'Filtros y Heurísticas de Decisión Adicionales' (Regla del 3% y Matriz de Transposición)",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "RES-MERCADOS-IDIO",
@@ -1352,7 +1422,14 @@
       "activation": "P02_RESEARCH",
       "application": "instruction",
       "evidence": "skill sección 'Estrategia de Idiomas y Mercados Lingüísticos'",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "d44ad9cde1128e9b32ba265afb8615e80f0bfa54aa8f2f40a2f6bdb1cd7e8064",
+      "consumer_sha256": "f2aad15ad0d09de7d469bb17b56ea52bd49a67e8a2c96413867b0d3a8e576288",
+      "activation_trigger": "P02_RESEARCH",
+      "application_evidence": "skill sección 'Estrategia de Idiomas y Mercados Lingüísticos'",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "PKG-ARQUETIPOS-5",
@@ -1365,7 +1442,14 @@
       "activation": "P01_PACKAGING",
       "application": "instruction",
       "evidence": "skill sección 'Los 5 Arquetipos de Curiosidad de Miniatura'",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "f30eeed5a2d0ec9edb3c26232029fd40f9eca8b977607823ffa6c02c5fc3aeeb",
+      "consumer_sha256": "315a23da03aafa19952707fe051c3302696736296e1333683fd0ed86a3430546",
+      "activation_trigger": "P01_PACKAGING",
+      "application_evidence": "skill sección 'Los 5 Arquetipos de Curiosidad de Miniatura'",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "PKG-CAJA-PALANCAS",
@@ -1378,7 +1462,14 @@
       "activation": "P01_PACKAGING",
       "application": "instruction",
       "evidence": "skill sección 'Caja de Heurística: Palancas para Abrir Bucles Más Fuertes' (table) + compuerta packaging_structure (5 numerados)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "f30eeed5a2d0ec9edb3c26232029fd40f9eca8b977607823ffa6c02c5fc3aeeb",
+      "consumer_sha256": "315a23da03aafa19952707fe051c3302696736296e1333683fd0ed86a3430546",
+      "activation_trigger": "P01_PACKAGING",
+      "application_evidence": "skill sección 'Caja de Heurística: Palancas para Abrir Bucles Más Fuertes' (table) + compuerta packaging_structure (5 numerados)",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "PKG-5-DISTINTOS",
@@ -1391,7 +1482,14 @@
       "activation": "P01_PACKAGING",
       "application": "instruction_plus_human_review",
       "evidence": "compuerta packaging_structure (5 numerados) + revisión editorial del creador (palancas genuinamente distintas en 01-packaging.md §2)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "f30eeed5a2d0ec9edb3c26232029fd40f9eca8b977607823ffa6c02c5fc3aeeb",
+      "consumer_sha256": "315a23da03aafa19952707fe051c3302696736296e1333683fd0ed86a3430546",
+      "activation_trigger": "P01_PACKAGING",
+      "application_evidence": "compuerta packaging_structure (5 numerados) + revisión editorial del creador (palancas genuinamente distintas en 01-packaging.md §2)",
+      "guarantee_level": "HUMAN_JUDGED",
+      "test_type": "behavioral",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "PKG-18PCT-3FOCALES",
@@ -1404,7 +1502,14 @@
       "activation": "P01_PACKAGING",
       "application": "instruction",
       "evidence": "skill [PACK-002] Regla de Reducción al 18% y Límite de 3 Elementos Focales",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "f30eeed5a2d0ec9edb3c26232029fd40f9eca8b977607823ffa6c02c5fc3aeeb",
+      "consumer_sha256": "315a23da03aafa19952707fe051c3302696736296e1333683fd0ed86a3430546",
+      "activation_trigger": "P01_PACKAGING",
+      "application_evidence": "skill [PACK-002] Regla de Reducción al 18% y Límite de 3 Elementos Focales",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "PKG-AB-2TIEMPOS",
@@ -1417,7 +1522,14 @@
       "activation": "P01_PACKAGING",
       "application": "instruction",
       "evidence": "skill [PACK-001] Estrategia A/B en Dos Tiempos",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "f30eeed5a2d0ec9edb3c26232029fd40f9eca8b977607823ffa6c02c5fc3aeeb",
+      "consumer_sha256": "315a23da03aafa19952707fe051c3302696736296e1333683fd0ed86a3430546",
+      "activation_trigger": "P01_PACKAGING",
+      "application_evidence": "skill [PACK-001] Estrategia A/B en Dos Tiempos",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "PKG-VERISIMILITUD",
@@ -1430,7 +1542,14 @@
       "activation": "P01_PACKAGING",
       "application": "instruction",
       "evidence": "skill sección 'Estrategias de Validación y Optimización' (The Verisimilitude Test)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "f30eeed5a2d0ec9edb3c26232029fd40f9eca8b977607823ffa6c02c5fc3aeeb",
+      "consumer_sha256": "315a23da03aafa19952707fe051c3302696736296e1333683fd0ed86a3430546",
+      "activation_trigger": "P01_PACKAGING",
+      "application_evidence": "skill sección 'Estrategias de Validación y Optimización' (The Verisimilitude Test)",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "PKG-10-MAS-VISTOS",
@@ -1443,7 +1562,14 @@
       "activation": "P01_PACKAGING",
       "application": "instruction",
       "evidence": "skill sección 'Procedimiento de Investigación Previa de Referencias Visuales'",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "f30eeed5a2d0ec9edb3c26232029fd40f9eca8b977607823ffa6c02c5fc3aeeb",
+      "consumer_sha256": "315a23da03aafa19952707fe051c3302696736296e1333683fd0ed86a3430546",
+      "activation_trigger": "P01_PACKAGING",
+      "application_evidence": "skill sección 'Procedimiento de Investigación Previa de Referencias Visuales'",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "GUI-5-APERTURAS",
@@ -1456,7 +1582,14 @@
       "activation": "P03_SCRIPT",
       "application": "instruction",
       "evidence": "skill sección 'Caja de Herramientas de Aperturas — 5 técnicas opcionales' + constancia declarada en [B01]",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "2f93f32493f4d967c17f7b2c2c49b12c603a92e23d503e4db66ce61f888edc1e",
+      "consumer_sha256": "15dddbc6917b097f4aa60e22f52d311425cc8408bb6af4b7a21d30c77398e2bb",
+      "activation_trigger": "P03_SCRIPT",
+      "application_evidence": "skill sección 'Caja de Herramientas de Aperturas — 5 técnicas opcionales' + constancia declarada en [B01]",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "GUI-ROADMAP",
@@ -1469,7 +1602,14 @@
       "activation": "P03_SCRIPT — videos largos/explicativos complejos; prohibido en misterio/ficción",
       "application": "instruction",
       "evidence": "skill sección 'Caja de Herramientas de Intros y Aperturas' (Roadmap de Compromiso Mental) + constancia en [B01]",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "2f93f32493f4d967c17f7b2c2c49b12c603a92e23d503e4db66ce61f888edc1e",
+      "consumer_sha256": "15dddbc6917b097f4aa60e22f52d311425cc8408bb6af4b7a21d30c77398e2bb",
+      "activation_trigger": "P03_SCRIPT — videos largos/explicativos complejos; prohibido en misterio/ficción",
+      "application_evidence": "skill sección 'Caja de Herramientas de Intros y Aperturas' (Roadmap de Compromiso Mental) + constancia en [B01]",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "GUI-UNFAIR-EDGE",
@@ -1482,7 +1622,14 @@
       "activation": "P03_SCRIPT — formatos de autoridad, negocios, divulgación, ensayo, media/larga duración",
       "application": "instruction",
       "evidence": "skill sección 'Caja de Herramientas de Intros y Aperturas' (Unfair Edge Statement)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "2f93f32493f4d967c17f7b2c2c49b12c603a92e23d503e4db66ce61f888edc1e",
+      "consumer_sha256": "15dddbc6917b097f4aa60e22f52d311425cc8408bb6af4b7a21d30c77398e2bb",
+      "activation_trigger": "P03_SCRIPT — formatos de autoridad, negocios, divulgación, ensayo, media/larga duración",
+      "application_evidence": "skill sección 'Caja de Herramientas de Intros y Aperturas' (Unfair Edge Statement)",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "GUI-RAINY",
@@ -1495,7 +1642,14 @@
       "activation": "P03_SCRIPT — ensayos y educación; formatos de autoridad",
       "application": "instruction",
       "evidence": "skill sección 'Caja de Herramientas de Intros y Aperturas' (Estructura R.A.I.N.Y.)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "2f93f32493f4d967c17f7b2c2c49b12c603a92e23d503e4db66ce61f888edc1e",
+      "consumer_sha256": "15dddbc6917b097f4aa60e22f52d311425cc8408bb6af4b7a21d30c77398e2bb",
+      "activation_trigger": "P03_SCRIPT — ensayos y educación; formatos de autoridad",
+      "application_evidence": "skill sección 'Caja de Herramientas de Intros y Aperturas' (Estructura R.A.I.N.Y.)",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "GUI-IDENTIDAD-SONORA",
@@ -1508,7 +1662,14 @@
       "activation": "P03_SCRIPT — canales faceless",
       "application": "instruction",
       "evidence": "skill sección 'Identidad Sonora contra la Voz Genérica de IA'; la ejecución en P05 se registra en DIR-SCRATCH-VOZ-NEURONAL",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "2f93f32493f4d967c17f7b2c2c49b12c603a92e23d503e4db66ce61f888edc1e",
+      "consumer_sha256": "15dddbc6917b097f4aa60e22f52d311425cc8408bb6af4b7a21d30c77398e2bb",
+      "activation_trigger": "P03_SCRIPT — canales faceless",
+      "application_evidence": "skill sección 'Identidad Sonora contra la Voz Genérica de IA'; la ejecución en P05 se registra en DIR-SCRATCH-VOZ-NEURONAL",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "GUI-3B",
@@ -1521,7 +1682,14 @@
       "activation": "P03_SCRIPT — todos los bloques [Bxx]",
       "application": "instruction",
       "evidence": "skill [GUI-002] Regla de las 3 B's de Locución y Rigor Científico",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "2f93f32493f4d967c17f7b2c2c49b12c603a92e23d503e4db66ce61f888edc1e",
+      "consumer_sha256": "15dddbc6917b097f4aa60e22f52d311425cc8408bb6af4b7a21d30c77398e2bb",
+      "activation_trigger": "P03_SCRIPT — todos los bloques [Bxx]",
+      "application_evidence": "skill [GUI-002] Regla de las 3 B's de Locución y Rigor Científico",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "GUI-ANTISPOILER",
@@ -1534,7 +1702,14 @@
       "activation": "P03_SCRIPT",
       "application": "instruction",
       "evidence": "skill sección 'Modo de Progresión y Anti-Spoiler Condicionado por Formato' + declarado en cabecera de 02-guion.md",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "2f93f32493f4d967c17f7b2c2c49b12c603a92e23d503e4db66ce61f888edc1e",
+      "consumer_sha256": "15dddbc6917b097f4aa60e22f52d311425cc8408bb6af4b7a21d30c77398e2bb",
+      "activation_trigger": "P03_SCRIPT",
+      "application_evidence": "skill sección 'Modo de Progresión y Anti-Spoiler Condicionado por Formato' + declarado en cabecera de 02-guion.md",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "GUI-LOOPED-ARC",
@@ -1547,7 +1722,14 @@
       "activation": "P03_SCRIPT — Shorts y formatos dinámicos",
       "application": "instruction",
       "evidence": "skill sección 'Modo de Progresión y Anti-Spoiler' (Estructura del Arco en Bucle)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "0d5f80397348b778516b190aa40a2d76bcf97227c68f2d1e466313c3fda9f78c",
+      "consumer_sha256": "15dddbc6917b097f4aa60e22f52d311425cc8408bb6af4b7a21d30c77398e2bb",
+      "activation_trigger": "P03_SCRIPT — Shorts y formatos dinámicos",
+      "application_evidence": "skill sección 'Modo de Progresión y Anti-Spoiler' (Estructura del Arco en Bucle)",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "DIR-4-MODOS",
@@ -1560,7 +1742,14 @@
       "activation": "P05_ANIMATIC",
       "application": "deterministic_gate",
       "evidence": "test/context-resolver.test.ts (adaptPlaybookForMode) + src/core/phases.ts evidencia por modo + skill §0",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "52b220768b1c4989bad332ecf10e045c21010b4915fd2426dc13ce5299368c50",
+      "consumer_sha256": "2436e6a6cc734b82765f234b80d8722166b169923a90703c15694b02d57f317b",
+      "activation_trigger": "P05_ANIMATIC",
+      "application_evidence": "test/context-resolver.test.ts (adaptPlaybookForMode) + src/core/phases.ts evidencia por modo + skill §0",
+      "guarantee_level": "RUNTIME_ENFORCED",
+      "test_type": "integration",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "DIR-ESCALERA-5",
@@ -1573,7 +1762,14 @@
       "activation": "P05_ANIMATIC",
       "application": "instruction",
       "evidence": "skill [VID-IA-001] Escalera de 5 Niveles para Escenas IA",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "52b220768b1c4989bad332ecf10e045c21010b4915fd2426dc13ce5299368c50",
+      "consumer_sha256": "2436e6a6cc734b82765f234b80d8722166b169923a90703c15694b02d57f317b",
+      "activation_trigger": "P05_ANIMATIC",
+      "application_evidence": "skill [VID-IA-001] Escalera de 5 Niveles para Escenas IA",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "DIR-ASSET-FIRST",
@@ -1586,7 +1782,14 @@
       "activation": "P05_ANIMATIC",
       "application": "instruction",
       "evidence": "skill [VID-IA-004] Pipeline Asset-First",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "52b220768b1c4989bad332ecf10e045c21010b4915fd2426dc13ce5299368c50",
+      "consumer_sha256": "2436e6a6cc734b82765f234b80d8722166b169923a90703c15694b02d57f317b",
+      "activation_trigger": "P05_ANIMATIC",
+      "application_evidence": "skill [VID-IA-004] Pipeline Asset-First",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "DIR-480P",
@@ -1599,7 +1802,14 @@
       "activation": "P05_ANIMATIC",
       "application": "instruction",
       "evidence": "skill [VID-IA-009] Borradores en 480p",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "52b220768b1c4989bad332ecf10e045c21010b4915fd2426dc13ce5299368c50",
+      "consumer_sha256": "2436e6a6cc734b82765f234b80d8722166b169923a90703c15694b02d57f317b",
+      "activation_trigger": "P05_ANIMATIC",
+      "application_evidence": "skill [VID-IA-009] Borradores en 480p",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "DIR-AISLAMIENTO-ACUST",
@@ -1612,7 +1822,14 @@
       "activation": "P05_ANIMATIC — excepción Music-First",
       "application": "instruction",
       "evidence": "skill [VID-IA-007] Aislamiento Acústico en Prompts (excepción Music-First)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "52b220768b1c4989bad332ecf10e045c21010b4915fd2426dc13ce5299368c50",
+      "consumer_sha256": "2436e6a6cc734b82765f234b80d8722166b169923a90703c15694b02d57f317b",
+      "activation_trigger": "P05_ANIMATIC — excepción Music-First",
+      "application_evidence": "skill [VID-IA-007] Aislamiento Acústico en Prompts (excepción Music-First)",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "DIR-ITER-IMG2IMG",
@@ -1625,7 +1842,14 @@
       "activation": "P05_ANIMATIC",
       "application": "instruction",
       "evidence": "skill [VID-IA-008] Control de Iteraciones Img2Img",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "52b220768b1c4989bad332ecf10e045c21010b4915fd2426dc13ce5299368c50",
+      "consumer_sha256": "2436e6a6cc734b82765f234b80d8722166b169923a90703c15694b02d57f317b",
+      "activation_trigger": "P05_ANIMATIC",
+      "application_evidence": "skill [VID-IA-008] Control de Iteraciones Img2Img",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "DIR-AUTENTICIDAD-FISICA",
@@ -1638,7 +1862,14 @@
       "activation": "P05_ANIMATIC / P06_ASSEMBLY",
       "application": "instruction",
       "evidence": "skill sección 'Autenticidad Física, Vestimenta A-Roll y Frame Zero'",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "52b220768b1c4989bad332ecf10e045c21010b4915fd2426dc13ce5299368c50",
+      "consumer_sha256": "2436e6a6cc734b82765f234b80d8722166b169923a90703c15694b02d57f317b",
+      "activation_trigger": "P05_ANIMATIC / P06_ASSEMBLY",
+      "application_evidence": "skill sección 'Autenticidad Física, Vestimenta A-Roll y Frame Zero'",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "DIR-VESTIMENTA-AROLL",
@@ -1651,7 +1882,14 @@
       "activation": "P05_ANIMATIC — speaker_first",
       "application": "instruction",
       "evidence": "skill sección 'Autenticidad Física, Vestimenta A-Roll y Frame Zero'",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "52b220768b1c4989bad332ecf10e045c21010b4915fd2426dc13ce5299368c50",
+      "consumer_sha256": "2436e6a6cc734b82765f234b80d8722166b169923a90703c15694b02d57f317b",
+      "activation_trigger": "P05_ANIMATIC — speaker_first",
+      "application_evidence": "skill sección 'Autenticidad Física, Vestimenta A-Roll y Frame Zero'",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "DIR-FRAME-ZERO",
@@ -1664,7 +1902,14 @@
       "activation": "P05_ANIMATIC — Shorts",
       "application": "instruction",
       "evidence": "skill sección 'Autenticidad Física, Vestimenta A-Roll y Frame Zero en Shorts'",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "52b220768b1c4989bad332ecf10e045c21010b4915fd2426dc13ce5299368c50",
+      "consumer_sha256": "2436e6a6cc734b82765f234b80d8722166b169923a90703c15694b02d57f317b",
+      "activation_trigger": "P05_ANIMATIC — Shorts",
+      "application_evidence": "skill sección 'Autenticidad Física, Vestimenta A-Roll y Frame Zero en Shorts'",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "DIR-4-CAPAS",
@@ -1677,7 +1922,14 @@
       "activation": "P06_ASSEMBLY",
       "application": "instruction",
       "evidence": "skill sección 'Las 4 Capas de Pulido Audiovisual' + 03-storyboard-y-edicion.md §4",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "52b220768b1c4989bad332ecf10e045c21010b4915fd2426dc13ce5299368c50",
+      "consumer_sha256": "2436e6a6cc734b82765f234b80d8722166b169923a90703c15694b02d57f317b",
+      "activation_trigger": "P06_ASSEMBLY",
+      "application_evidence": "skill sección 'Las 4 Capas de Pulido Audiovisual' + 03-storyboard-y-edicion.md §4",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "DIR-PACING-FRONTERA",
@@ -1690,7 +1942,14 @@
       "activation": "P06_ASSEMBLY",
       "application": "instruction_plus_human_review",
       "evidence": "test/media-measurement.test.ts (per-shot pacing + disclaimer) + skill §4 Pacing Visual (Frontera de verificación) + context-resolver P06 verificationBoundary",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "52b220768b1c4989bad332ecf10e045c21010b4915fd2426dc13ce5299368c50",
+      "consumer_sha256": "b4bb1210d6e238c101bbfd1b11211e3234b14cd0030cba31992fa92211d1f12d",
+      "activation_trigger": "P06_ASSEMBLY",
+      "application_evidence": "test/media-measurement.test.ts (per-shot pacing + disclaimer) + skill §4 Pacing Visual (Frontera de verificación) + context-resolver P06 verificationBoundary",
+      "guarantee_level": "HUMAN_JUDGED",
+      "test_type": "behavioral",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "ORQ-REGISTRO-AUTORIDAD",
@@ -1703,7 +1962,14 @@
       "activation": "GLOBAL",
       "application": "deterministic_gate",
       "evidence": "src/store/fs-store.ts (loadRegistry/saveRegistry/syncStatusView) + test/store.test.ts + skill 'Reglas obligatorias de gobernanza'",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "3d706a1c74b0103fa6483fc91b5648ce312e44f6b5686ca5dbc03ffc716be44d",
+      "consumer_sha256": "f0a2409f9f3ad8ed40fc3a214e3d4f8b0c61ab2ded0c29a90018a9b11faa8c12",
+      "activation_trigger": "GLOBAL",
+      "application_evidence": "src/store/fs-store.ts (loadRegistry/saveRegistry/syncStatusView) + test/store.test.ts + skill 'Reglas obligatorias de gobernanza'",
+      "guarantee_level": "RUNTIME_ENFORCED",
+      "test_type": "integration",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "ORQ-SHA256-INVALIDACION",
@@ -1716,7 +1982,14 @@
       "activation": "GLOBAL",
       "application": "deterministic_gate",
       "evidence": "src/core/machine.ts (evaluate/submitPhase) + test/machine.test.ts (invalidación en cascada)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "3d706a1c74b0103fa6483fc91b5648ce312e44f6b5686ca5dbc03ffc716be44d",
+      "consumer_sha256": "ba2c40e7a02d168598fdd8fbe40d2b09273fbabd11f7f5ddb7e65e0d55eb5df1",
+      "activation_trigger": "GLOBAL",
+      "application_evidence": "src/core/machine.ts (evaluate/submitPhase) + test/machine.test.ts (invalidación en cascada)",
+      "guarantee_level": "RUNTIME_ENFORCED",
+      "test_type": "e2e",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "ORQ-APROBACION-CREADOR",
@@ -1729,7 +2002,14 @@
       "activation": "GLOBAL",
       "application": "deterministic_gate",
       "evidence": "src/gate/pi-extension.ts (approvePhase, hasUI) + test/pi-gate.test.ts (el modelo no puede auto-aprobar)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "3d706a1c74b0103fa6483fc91b5648ce312e44f6b5686ca5dbc03ffc716be44d",
+      "consumer_sha256": "a8eecd831eae51b94766bfd781e773e2cce824baa316a34e06d564f6e87291d6",
+      "activation_trigger": "GLOBAL",
+      "application_evidence": "src/gate/pi-extension.ts (approvePhase, hasUI) + test/pi-gate.test.ts (el modelo no puede auto-aprobar)",
+      "guarantee_level": "RUNTIME_ENFORCED",
+      "test_type": "e2e",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "ORQ-READ-ONLY-GATE",
@@ -1742,7 +2022,14 @@
       "activation": "GLOBAL",
       "application": "deterministic_gate",
       "evidence": "src/core/context-resolver.ts (classifyWorkMode) + test/context-resolver.test.ts (read_only removes write/edit)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "3d706a1c74b0103fa6483fc91b5648ce312e44f6b5686ca5dbc03ffc716be44d",
+      "consumer_sha256": "ca466940d85a6805e1a2c12f8c110567a57df786fed4f98de207348929e4f3de",
+      "activation_trigger": "GLOBAL",
+      "application_evidence": "src/core/context-resolver.ts (classifyWorkMode) + test/context-resolver.test.ts (read_only removes write/edit)",
+      "guarantee_level": "RUNTIME_ENFORCED",
+      "test_type": "integration",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "ORQ-YTS-LINK",
@@ -1755,7 +2042,14 @@
       "activation": "GLOBAL / P01_PACKAGING / P02_RESEARCH",
       "application": "deterministic_gate",
       "evidence": "src/core/context-resolver.ts (detectWorkspaceLink) + test/context-resolver.test.ts (/yts-link)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "3d706a1c74b0103fa6483fc91b5648ce312e44f6b5686ca5dbc03ffc716be44d",
+      "consumer_sha256": "ca466940d85a6805e1a2c12f8c110567a57df786fed4f98de207348929e4f3de",
+      "activation_trigger": "GLOBAL / P01_PACKAGING / P02_RESEARCH",
+      "application_evidence": "src/core/context-resolver.ts (detectWorkspaceLink) + test/context-resolver.test.ts (/yts-link)",
+      "guarantee_level": "RUNTIME_ENFORCED",
+      "test_type": "integration",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "MEA-MEDICION-MEDIA",
@@ -1768,7 +2062,14 @@
       "activation": "P06_ASSEMBLY",
       "application": "deterministic_gate",
       "evidence": "test/media-measurement.test.ts (NOT_EVALUABLE sin hoja, post-hoc FAIL, piloto negativo)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "d4c92f8f6c1ecb4d7a684132b266578c0c7acb36977ce1c3e64336e29586cdb3",
+      "consumer_sha256": "b4bb1210d6e238c101bbfd1b11211e3234b14cd0030cba31992fa92211d1f12d",
+      "activation_trigger": "P06_ASSEMBLY",
+      "application_evidence": "test/media-measurement.test.ts (NOT_EVALUABLE sin hoja, post-hoc FAIL, piloto negativo)",
+      "guarantee_level": "RUNTIME_ENFORCED",
+      "test_type": "integration",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "MEA-HOJA-PRERENDER",
@@ -1781,7 +2082,14 @@
       "activation": "P06_ASSEMBLY",
       "application": "deterministic_gate",
       "evidence": "test/media-measurement.test.ts (post-hoc acceptance sheet FAIL) + src/gate/pi-extension.ts (/yts-approve-sheet)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "52b220768b1c4989bad332ecf10e045c21010b4915fd2426dc13ce5299368c50",
+      "consumer_sha256": "b4bb1210d6e238c101bbfd1b11211e3234b14cd0030cba31992fa92211d1f12d",
+      "activation_trigger": "P06_ASSEMBLY",
+      "application_evidence": "test/media-measurement.test.ts (post-hoc acceptance sheet FAIL) + src/gate/pi-extension.ts (/yts-approve-sheet)",
+      "guarantee_level": "RUNTIME_ENFORCED",
+      "test_type": "integration",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "GUI-REACTIVACION-LARGOS",
@@ -1789,12 +2097,19 @@
         "file": "_framework/roles/03-guion-y-narrativa.md",
         "section": "§2 Caja de Herramientas: Reactivación Narrativa"
       },
-      "principle": "En videos largos, planificar un punto de reactivación a mitad de metraje (una pregunta nueva, un caso inesperado o excepción, una escala mayor) porque una única línea argumental lineal no sostiene la atención hasta el desenlace. Falta trasladarlo a la skill: pendiente de adopción (seguimiento posterior a la auditoría 12).",
+      "principle": "En videos largos de doble dígito de minutos, planificar un punto de reactivación a mitad de metraje (una pregunta nueva que profundice, un caso inesperado o excepción que cambie la interpretación, o un salto de escala) para sostener la atención hasta el desenlace.",
       "destination": "skills/yts-guion-narrativa/SKILL.md",
       "activation": "P03_SCRIPT — videos largos",
       "application": "instruction",
-      "evidence": "siguiente round de skills; por ahora no hay verificador ni constancia en el entregable",
-      "status": "absent"
+      "evidence": "skill sección 'Reactivación Narrativa en Videos Largos' + bloques intermedios en 02-guion.md",
+      "status": "complete",
+      "source_sha256": "2f93f32493f4d967c17f7b2c2c49b12c603a92e23d503e4db66ce61f888edc1e",
+      "consumer_sha256": "15dddbc6917b097f4aa60e22f52d311425cc8408bb6af4b7a21d30c77398e2bb",
+      "activation_trigger": "P03_SCRIPT — videos largos",
+      "application_evidence": "skill sección 'Reactivación Narrativa en Videos Largos' + bloques intermedios en 02-guion.md",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "GUI-GRADOS-GUIONADO",
@@ -1802,12 +2117,19 @@
         "file": "_framework/roles/03-guion-y-narrativa.md",
         "section": "§5.5 Grados de Guionado"
       },
-      "principle": "Decidir por formato el grado de guionado: guion completo palabra por palabra para locución en off, o estructura nítida con espacio para pensar (bullet points) para screencasts y expertos a cámara, porque un guion literal puede empeorar a un experto en cámara. Falta en la skill: pendiente de adopción.",
+      "principle": "Decidir por formato el grado de guionado: Grado A (guion completo palabra por palabra) para locución en off y ensayos densos, o Grado B (estructura nítida con espacio para pensar / bullet points) para screencasts (Screen-First) y expertos hablando a cámara (Speaker-First).",
       "destination": "skills/yts-guion-narrativa/SKILL.md",
       "activation": "P03_SCRIPT",
       "application": "instruction",
-      "evidence": "siguiente round de skills; sin evidencia de aplicación todavía",
-      "status": "absent"
+      "evidence": "skill sección 'Grados de Guionado según el Formato' + estructura de bloques [Bxx] en 02-guion.md",
+      "status": "complete",
+      "source_sha256": "2f93f32493f4d967c17f7b2c2c49b12c603a92e23d503e4db66ce61f888edc1e",
+      "consumer_sha256": "15dddbc6917b097f4aa60e22f52d311425cc8408bb6af4b7a21d30c77398e2bb",
+      "activation_trigger": "P03_SCRIPT",
+      "application_evidence": "skill sección 'Grados de Guionado según el Formato' + estructura de bloques [Bxx] en 02-guion.md",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "GUI-MOMENTO-VALOR",
@@ -1815,12 +2137,19 @@
         "file": "_framework/roles/03-guion-y-narrativa.md",
         "section": "§5.4 El Momento de Mayor Valor"
       },
-      "principle": "Asegurar un momento de máxima recompensa intelectual o emocional en el video en lugar de forzar un giro artificial a 2/3 del metraje si la historia no lo pide. Falta en la skill: pendiente de adopción.",
+      "principle": "Asegurar un momento de máxima recompensa intelectual o emocional en el video (prueba decisiva, revelación del mecanismo o conclusión práctica) en lugar de forzar un giro artificial a 2/3 del metraje si la historia no lo pide.",
       "destination": "skills/yts-guion-narrativa/SKILL.md",
       "activation": "P03_SCRIPT",
       "application": "instruction_plus_human_review",
-      "evidence": "siguiente round de skills; juicio editorial del creador en /yts-approve P03_SCRIPT",
-      "status": "absent"
+      "evidence": "skill sección 'El Momento de Mayor Valor' + revisión editorial del creador en /yts-approve P03_SCRIPT",
+      "status": "complete",
+      "source_sha256": "2f93f32493f4d967c17f7b2c2c49b12c603a92e23d503e4db66ce61f888edc1e",
+      "consumer_sha256": "15dddbc6917b097f4aa60e22f52d311425cc8408bb6af4b7a21d30c77398e2bb",
+      "activation_trigger": "P03_SCRIPT",
+      "application_evidence": "skill sección 'El Momento de Mayor Valor' + revisión editorial del creador en /yts-approve P03_SCRIPT",
+      "guarantee_level": "HUMAN_JUDGED",
+      "test_type": "behavioral",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "GUI-ARQ-PROCESO",
@@ -1828,12 +2157,19 @@
         "file": "_framework/roles/03-guion-y-narrativa.md",
         "section": "§2 Arquetipo de Proceso y Transformación"
       },
-      "principle": "Para transformaciones visuales, restauraciones o procesos (no tutoriales directos ni análisis), usar el arquetipo Declaración ➔ Evaluación ➔ Aislamiento ➔ Proceso ➔ Construcción ➔ Revelación, con anclaje de contraste antes/después. Falta en la skill: pendiente de adopción.",
+      "principle": "Para transformaciones visuales, restauraciones o procesos paso a paso (no tutoriales directos ni ensayos), usar el arquetipo Declaración ➔ Evaluación ➔ Aislamiento ➔ Proceso ➔ Construcción/Acabado ➔ Revelación, fijando el anclaje de contraste Antes/Después desde los primeros segundos.",
       "destination": "skills/yts-guion-narrativa/SKILL.md",
       "activation": "P03_SCRIPT — transformaciones y procesos",
       "application": "instruction",
-      "evidence": "siguiente round de skills; sin evidencia de aplicación todavía",
-      "status": "absent"
+      "evidence": "skill sección 'Arquetipo Opcional de Proceso y Transformación' + 02-guion.md",
+      "status": "complete",
+      "source_sha256": "2f93f32493f4d967c17f7b2c2c49b12c603a92e23d503e4db66ce61f888edc1e",
+      "consumer_sha256": "15dddbc6917b097f4aa60e22f52d311425cc8408bb6af4b7a21d30c77398e2bb",
+      "activation_trigger": "P03_SCRIPT — transformaciones y procesos",
+      "application_evidence": "skill sección 'Arquetipo Opcional de Proceso y Transformación' + 02-guion.md",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "DIR-SCRATCH-VOZ-NEURONAL",
@@ -1846,7 +2182,14 @@
       "activation": "P05_ANIMATIC — Audio-First",
       "application": "deterministic_gate",
       "evidence": "src/core/phases.ts evidencia scratch_track + test/machine.test.ts (evidencia requerida por modo) + skill §1 Compuertas P05_ANIMATIC",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "52b220768b1c4989bad332ecf10e045c21010b4915fd2426dc13ce5299368c50",
+      "consumer_sha256": "2436e6a6cc734b82765f234b80d8722166b169923a90703c15694b02d57f317b",
+      "activation_trigger": "P05_ANIMATIC — Audio-First",
+      "application_evidence": "src/core/phases.ts evidencia scratch_track + test/machine.test.ts (evidencia requerida por modo) + skill §1 Compuertas P05_ANIMATIC",
+      "guarantee_level": "RUNTIME_ENFORCED",
+      "test_type": "e2e",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "ORQ-COMUNICACION-EJECUTIVA",
@@ -1859,7 +2202,14 @@
       "activation": "GLOBAL — la skill del orquestador se carga como Capa 1 permanente; su efecto se materializa en P01_PACKAGING",
       "application": "instruction",
       "evidence": "src/gate/pi-extension.ts (Capa 1 before_agent_start) + test/package-manifest.test.ts y test/pi-gate.test.ts (persona inyectada)",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "3d706a1c74b0103fa6483fc91b5648ce312e44f6b5686ca5dbc03ffc716be44d",
+      "consumer_sha256": "f0a2409f9f3ad8ed40fc3a214e3d4f8b0c61ab2ded0c29a90018a9b11faa8c12",
+      "activation_trigger": "GLOBAL — la skill del orquestador se carga como Capa 1 permanente; su efecto se materializa en P01_PACKAGING",
+      "application_evidence": "src/gate/pi-extension.ts (Capa 1 before_agent_start) + test/package-manifest.test.ts y test/pi-gate.test.ts (persona inyectada)",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "ORQ-5-ALTERNATIVAS",
@@ -1872,7 +2222,14 @@
       "activation": "GLOBAL — la skill del orquestador se carga como Capa 1 permanente; su efecto se materializa en P01_PACKAGING",
       "application": "instruction_plus_human_review",
       "evidence": "src/gate/pi-extension.ts (needsConfirm en operaciones sensibles) + compuerta packaging_structure (5 títulos) + test/pi-gate.test.ts",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "a1604f1d15aa8eea290f90e095d8f70dce67027712fb8df3fc7189a3fb7c6c38",
+      "consumer_sha256": "f0a2409f9f3ad8ed40fc3a214e3d4f8b0c61ab2ded0c29a90018a9b11faa8c12",
+      "activation_trigger": "GLOBAL — la skill del orquestador se carga como Capa 1 permanente; su efecto se materializa en P01_PACKAGING",
+      "application_evidence": "src/gate/pi-extension.ts (needsConfirm en operaciones sensibles) + compuerta packaging_structure (5 títulos) + test/pi-gate.test.ts",
+      "guarantee_level": "HUMAN_JUDGED",
+      "test_type": "behavioral",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "ORQ-CICLO-MACRO",
@@ -1885,7 +2242,14 @@
       "activation": "GLOBAL / P07_CLOSE",
       "application": "instruction",
       "evidence": "skill 'Reglas obligatorias de gobernanza' §6 (Ciclo Macro y Watch Time Share) + test/pi-gate.test.ts",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "7b8b21f51c0d9e9ce937347cd4158f65a760b2978b3ad146c2dfff4617e064bc",
+      "consumer_sha256": "f0a2409f9f3ad8ed40fc3a214e3d4f8b0c61ab2ded0c29a90018a9b11faa8c12",
+      "activation_trigger": "GLOBAL / P07_CLOSE",
+      "application_evidence": "skill 'Reglas obligatorias de gobernanza' §6 (Ciclo Macro y Watch Time Share) + test/pi-gate.test.ts",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     },
     {
       "learning_id": "ORQ-GOBERNANZA-EVIDENCIA",
@@ -1898,7 +2262,14 @@
       "activation": "GLOBAL",
       "application": "instruction",
       "evidence": "src/checks/framework-checker.ts (checkTechniquesRegistryCoherence) + test/framework-checker.test.ts + references/registro-tecnicas.md",
-      "status": "complete"
+      "status": "complete",
+      "source_sha256": "68a6908f762a889adbf7b70d313969fbf4ae36590ce4649f5ba77b50bbe061ce",
+      "consumer_sha256": "f0a2409f9f3ad8ed40fc3a214e3d4f8b0c61ab2ded0c29a90018a9b11faa8c12",
+      "activation_trigger": "GLOBAL",
+      "application_evidence": "src/checks/framework-checker.ts (checkTechniquesRegistryCoherence) + test/framework-checker.test.ts + references/registro-tecnicas.md",
+      "guarantee_level": "DELIVERED",
+      "test_type": "static_contract",
+      "last_reviewed": "2026-11-01"
     }
   ]
 }
