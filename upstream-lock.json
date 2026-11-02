@@ -6,7 +6,7 @@
       "role": "Domain knowledge (layer 3): phases, templates, contract checker, pilot measurement",
       "reviewed": {
         "ref": "main",
-        "commit": "7ff07e03581b10854e48d46b2f0822273304d776",
+        "commit": "42e9961739bfcd0cefee6f37650004b663835eac",
         "committed_at": "2026-11-01T20:31:48Z",
         "reviewed_on": "2026-11-01",
         "evidence": "auditoria externa 12 (opinion de mi amiga.md) + observabilidad y aseguramiento de ejecucion v0.15.0: 53 atomic_learnings con guarantee_level, source_sha256 y consumer_sha256, RunLedger (.youtube-shell/runs/<run-id>/), readByAgent obligatorio en produccion, evidencia de aplicacion en entregable, riesgo factual ALTO y CLI --runs/--audit"
@@ -150,7 +150,7 @@
         },
         {
           "upstream_path": "_framework/compatibilidad-consumidores.md",
-          "upstream_sha256": "73c88b5809c4c58e1cd84c46910b26431734823c5868bd45f8b766902b2bf4c9",
+          "upstream_sha256": "3b86602c7844b964f2fd1e34a38d170b11da6a1504901a71378ebfcd237a6ffe",
           "local_target": "upstream-lock.json",
           "role": "consumer_contract; consumer version declared: youtube-shell v0.16.0 (aligned 8/8 templates; 53 atomic_learnings complete with guarantee_level + source_sha256 + consumer_sha256; execution observability ledger, CLI --runs/--audit and 9 E2E assurance scenarios)"
         },
