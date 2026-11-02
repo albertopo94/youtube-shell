@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   buildContextAttestation,
@@ -17,12 +17,17 @@ import {
   appendRunEvent,
   createRunRecord,
   finalizeRunRecord,
+  generateRunId,
   listRunManifests,
   loadRunEvents,
+  loadRunEventsDetailed,
   loadRunManifest,
+  pruneOldRuns,
   reconcileOrphanedRuns,
+  runDir,
   runEventsPath,
   runManifestPath,
+  RUN_ID_PATTERN,
   saveRunManifest,
 } from "../src/store/run-ledger.ts";
 
@@ -101,7 +106,7 @@ test("missing mandatory reference marks context attestation incomplete and evalu
   });
 
   const manifest = createRunRecord({
-    runId: "run-degraded-1",
+    runId: "run-20261101T100000Z-aa11bb22",
     videoDir: tmp,
     startedAt: now,
     promptText: "Inicia packaging",
@@ -132,7 +137,7 @@ test("RunLedger persists manifest.json and events.jsonl under .youtube-shell/run
   });
 
   const manifest = createRunRecord({
-    runId: "run-001",
+    runId: "run-20261101T120000Z-cc33dd44",
     videoDir: tmp,
     startedAt: now,
     promptText: "consulta: qué estado tiene el proyecto",
@@ -152,8 +157,8 @@ test("RunLedger persists manifest.json and events.jsonl under .youtube-shell/run
 
   // Must NOT have created .youtube-shell/registro.json
   assert.equal(existsSync(registryPath(tmp)), false);
-  assert.equal(existsSync(runManifestPath(tmp, "run-001")), true);
-  assert.equal(existsSync(runEventsPath(tmp, "run-001")), true);
+  assert.equal(existsSync(runManifestPath(tmp, manifest.runId)), true);
+  assert.equal(existsSync(runEventsPath(tmp, manifest.runId)), true);
 
   const finalized = finalizeRunRecord(tmp, manifest, {
     finishedAt: "2026-11-01T12:00:05Z",
@@ -161,20 +166,20 @@ test("RunLedger persists manifest.json and events.jsonl under .youtube-shell/run
   });
 
   assert.equal(finalized.status, "NOT_APPLICABLE");
-  const loaded = loadRunManifest(tmp, "run-001");
+  const loaded = loadRunManifest(tmp, manifest.runId);
   assert.equal(loaded?.status, "NOT_APPLICABLE");
 
-  const events = loadRunEvents(tmp, "run-001");
+  const events = loadRunEvents(tmp, manifest.runId);
   assert.equal(events.length, 2);
   assert.equal(events[0].type, "run_started");
   assert.equal(events[1].type, "run_settled");
 
   const allRuns = listRunManifests(tmp);
   assert.equal(allRuns.length, 1);
-  assert.equal(allRuns[0].runId, "run-001");
+  assert.equal(allRuns[0].runId, manifest.runId);
 
   const reportText = formatRunAuditReport(loaded!);
-  assert.match(reportText, /run-001/);
+  assert.match(reportText, new RegExp(manifest.runId));
   assert.match(reportText, /NOT_APPLICABLE/);
   assert.match(reportText, /Controles con evidencia satisfactoria/);
 });
@@ -196,7 +201,7 @@ test("Detalle 1: submitting a production phase without reading the assigned skil
   });
 
   const manifest = createRunRecord({
-    runId: "run-unread-skill",
+    runId: "run-20261101T130000Z-ee55ff66",
     videoDir: tmp,
     startedAt: now,
     promptText: "Envía P01_PACKAGING a revisión",
@@ -242,7 +247,7 @@ test("Detalle 4: inspectDeliverableApplicationEvidence checks phase deliverable 
   });
 
   const manifest = createRunRecord({
-    runId: "run-no-app-evidence",
+    runId: "run-20261101T131000Z-aa00bb11",
     videoDir: tmp,
     startedAt: now,
     promptText: "Completa P01_PACKAGING",
@@ -438,7 +443,7 @@ test("S2 (v0.16.0): mandatory references require full read before submit, partia
   });
 
   const manifest = createRunRecord({
-    runId: "run-20261101T151000Z-a1b2c3d4",
+    runId: "run-20261101T151000Z-a1b2c3",
     videoDir,
     startedAt: now,
     promptText: "Redacta y envía P01_PACKAGING",
@@ -661,4 +666,216 @@ test("S3 (v0.16.0): activation-state sequence accumulates the 6-state handshake 
   const diag2 = diagnoseActivationState(tmp, { now: "2026-11-01T17:00:20Z" })!;
   assert.equal(diag2.state, "RUN_STARTED");
   assert.equal(readActivationState(tmp)!.sequence.length, 3);
+});
+
+test("S5 §4.F.1: runId is canonical and only canonical identifiers reach the filesystem", (t) => {
+  const tmp = mkdtempSync(join(tmpdir(), "yts-runid-"));
+  t.after(() => rmSync(tmp, { recursive: true, force: true }));
+
+  const generated = generateRunId("2026-11-01T21:22:23Z");
+  assert.match(generated, RUN_ID_PATTERN, "generateRunId must emit the canonical shape");
+  assert.equal(generated, "run-20261101T212223Z-" + generated.slice(-6));
+
+  // A legacy/non-canonical id must never be loadable (also blocks ../ traversal).
+  const now = "2026-11-01T21:00:00Z";
+  const { registry: reg } = scaffoldVideoDir(tmp, { now });
+  const reader = createFsReader(tmp);
+  const ev = evaluate(reg, reader);
+  const wf = resolveWorkflowContext({
+    videoDir: tmp,
+    promptText: "consulta rápida",
+    reg,
+    evaluation: ev,
+    hasRegistry: true,
+  });
+  const manifest = createRunRecord({
+    videoDir: tmp,
+    startedAt: now,
+    promptText: "consulta rápida",
+    resolvedWorkflow: wf,
+    promptDelivered: true,
+  });
+  saveRunManifest(tmp, manifest);
+
+  assert.equal(loadRunManifest(tmp, "run-001"), undefined);
+  assert.deepEqual(loadRunEvents(tmp, "../evil"), []);
+  assert.equal(loadRunManifest(tmp, "../../etc"), undefined);
+  assert.ok(loadRunManifest(tmp, manifest.runId), "the canonical run must load");
+
+  // A manifest whose stored runId no longer matches its directory must not load.
+  const dir = runDir(tmp, manifest.runId);
+  const tampered = { ...manifest, runId: "run-20261101T210000Z-ffffff" };
+  writeFileSync(join(dir, "manifest.json"), JSON.stringify(tampered), "utf8");
+  assert.equal(loadRunManifest(tmp, manifest.runId), undefined);
+});
+
+test("S5 §4.F.2/§4.F.3: loadRunEvents recovers every valid line and appendRunEvent caps events durably", (t) => {
+  const tmp = mkdtempSync(join(tmpdir(), "yts-events-robust-"));
+  t.after(() => rmSync(tmp, { recursive: true, force: true }));
+
+  const runId = "run-20261101T213000Z-aabbcc";
+  const mk = (n: number): any => ({ at: `2026-11-01T21:30:${String(n).padStart(2, "0")}Z`, type: "tool_completed", toolName: `t${n}` });
+
+  for (let i = 1; i <= 3; i += 1) appendRunEvent(tmp, runId, mk(i));
+  const eventsFile = runEventsPath(tmp, runId);
+  writeFileSync(eventsFile, readFileSync(eventsFile, "utf8") + "{no-es-json\n", "utf8");
+  appendRunEvent(tmp, runId, mk(4));
+
+  const detailed = loadRunEventsDetailed(tmp, runId);
+  assert.equal(detailed.events.length, 4, "corrupted line must not erase valid events");
+  assert.deepEqual(detailed.corruptedLines, [4], "corrupted line number must be reported");
+
+  // Head-trim cap: newest events survive, oldest are dropped.
+  const cappedRun = "run-20261101T213100Z-dddeee";
+  for (let i = 5; i <= 12; i += 1) appendRunEvent(tmp, cappedRun, mk(i), { maxEvents: 5 });
+  const capped = loadRunEventsDetailed(tmp, cappedRun);
+  assert.equal(capped.events.length, 5);
+  assert.deepEqual(capped.corruptedLines, []);
+  assert.equal(capped.events.at(-1)?.toolName, "t12", "newest event must survive");
+  assert.equal(capped.events[0]?.toolName, "t8", "oldest events must be pruned first");
+});
+
+test("S5 §4.E: the ledger never persists the OS home or raw absolute paths in manifest.json or events.jsonl", (t) => {
+  const tmp = mkdtempSync(join(tmpdir(), "yts-privacy-"));
+  t.after(() => rmSync(tmp, { recursive: true, force: true }));
+
+  const now = "2026-11-01T22:00:00Z";
+  const { registry: reg } = scaffoldVideoDir(tmp, { now });
+  const reader = createFsReader(tmp);
+  const ev = evaluate(reg, reader);
+  const wf = resolveWorkflowContext({
+    videoDir: tmp,
+    promptText: "Inicia P01_PACKAGING",
+    reg,
+    evaluation: ev,
+    hasRegistry: true,
+  });
+  const manifest = createRunRecord({
+    videoDir: tmp,
+    startedAt: now,
+    promptText: "Inicia P01_PACKAGING",
+    resolvedWorkflow: wf,
+    promptDelivered: true,
+    promptHash: "sha256:privacy",
+  });
+  recordReferenceReadInAttestation(manifest.context, manifest.context.expectedSkill.resolvedPath, tmp);
+  saveRunManifest(tmp, manifest);
+  appendRunEvent(tmp, manifest.runId, {
+    at: now,
+    type: "tool_completed",
+    toolName: "write",
+    details: { path: join(tmp, "01-packaging.md"), masterPath: "/Volumes/Studio/renders/master.mp4" },
+  });
+
+  const manifestBytes = readFileSync(runManifestPath(tmp, manifest.runId), "utf8");
+  const eventsBytes = readFileSync(runEventsPath(tmp, manifest.runId), "utf8");
+
+  assert.ok(!manifestBytes.includes(tmp), "manifest.json must not contain the video absolute path");
+  assert.ok(!eventsBytes.includes(tmp), "events.jsonl must not contain the video absolute path");
+  const home = homedir();
+  if (home && home !== "/") {
+    assert.ok(!manifestBytes.includes(home), "manifest.json must not leak os.homedir()");
+    assert.ok(!eventsBytes.includes(home), "events.jsonl must not leak os.homedir()");
+  }
+  assert.match(manifestBytes, /"resolvedPath":\s*"<pkg>\//, "skill path must be tagged <pkg>/");
+  assert.match(eventsBytes, /"path":\s*"<video>\//, "video-relative path must be tagged <video>/");
+  assert.match(
+    eventsBytes,
+    /"masterPath":\s*"<external>\/master\.mp4"/,
+    "foreign absolute path must be tagged <external>/",
+  );
+
+  // Idempotence: re-saving a loaded manifest must never double-prefix already tagged values.
+  const reloaded = loadRunManifest(tmp, manifest.runId)!;
+  saveRunManifest(tmp, reloaded);
+  const again = readFileSync(runManifestPath(tmp, manifest.runId), "utf8");
+  assert.ok(
+    !again.includes("<pkg>/<pkg>/") && !again.includes("<video>/<video>/"),
+    "tagging must be idempotent",
+  );
+  assert.match(again, /"resolvedPath":\s*"<pkg>\//);
+});
+
+test("S5 §4.E: pruneOldRuns keeps the newest runs and never prunes live or registro-referenced runs", (t) => {
+  const tmp = mkdtempSync(join(tmpdir(), "yts-retention-"));
+  t.after(() => rmSync(tmp, { recursive: true, force: true }));
+
+  const now = "2026-11-01T23:00:00Z";
+  const { registry: reg } = scaffoldVideoDir(tmp, { now });
+  const reader = createFsReader(tmp);
+  const wf = resolveWorkflowContext({
+    videoDir: tmp,
+    promptText: "consulta",
+    reg,
+    evaluation: evaluate(reg, reader),
+    hasRegistry: true,
+  });
+
+  const ids = [
+    "run-20261101T230000Z-000000aa",
+    "run-20261101T230100Z-111111aa",
+    "run-20261101T230200Z-222222aa",
+    "run-20261101T230300Z-333333aa",
+  ];
+  for (const runId of ids) {
+    const m = createRunRecord({
+      runId,
+      videoDir: tmp,
+      startedAt: now,
+      promptText: "consulta",
+      resolvedWorkflow: wf,
+      promptDelivered: true,
+    });
+    finalizeRunRecord(tmp, m, { finishedAt: now, aborted: false });
+  }
+  // One unfinished run is always pinned.
+  const live = createRunRecord({
+    runId: "run-20261101T225900Z-444444aa",
+    videoDir: tmp,
+    startedAt: "2026-11-01T22:59:00Z",
+    promptText: "consulta",
+    resolvedWorkflow: wf,
+    promptDelivered: true,
+  });
+  saveRunManifest(tmp, live);
+
+  // One finished run is referenced by registro.json, so it is also pinned.
+  const regPath = registryPath(tmp);
+  writeFileSync(regPath, readFileSync(regPath, "utf8") + `\n<!-- refs ${ids[1]} -->\n`, "utf8");
+
+  // The cap applies to prunable history: 3 finished+unreferenced runs with keep=2 drops the oldest one.
+  const res = pruneOldRuns(tmp, { keep: 2 });
+  assert.deepEqual(res.pruned, [ids[0]], "only the oldest unprotected finished run may go");
+  assert.equal(existsSync(runDir(tmp, ids[0])), false);
+  assert.equal(existsSync(runDir(tmp, ids[1])), true, "registro-referenced run survives");
+  assert.equal(existsSync(runDir(tmp, ids[2])), true);
+  assert.equal(existsSync(runDir(tmp, ids[3])), true, "newest run survives");
+  assert.equal(existsSync(runDir(tmp, "run-20261101T225900Z-444444aa")), true, "unsettled run survives");
+  assert.equal(res.kept, 4);
+
+  // A tighter cap prunes further but still never touches pinned evidence.
+  const res2 = pruneOldRuns(tmp, { keep: 1 });
+  assert.deepEqual(res2.pruned, [ids[2]]);
+  assert.equal(existsSync(runDir(tmp, ids[1])), true, "registro-referenced run still survives");
+  assert.equal(existsSync(runDir(tmp, ids[3])), true);
+  assert.equal(listRunManifests(tmp).length, res2.kept);
+});
+
+test("S5 §4.E: absolute path tokens inside engine command strings are tagged too", (t) => {
+  const tmp = mkdtempSync(join(tmpdir(), "yts-cmd-privacy-"));
+  t.after(() => rmSync(tmp, { recursive: true, force: true }));
+
+  const runId = "run-20261101T235900Z-cafe01";
+  appendRunEvent(tmp, runId, {
+    at: "2026-11-01T23:59:00Z",
+    type: "tool_completed",
+    toolName: "filmcraft_render_sequence",
+    details: { command: `render -i ${join(tmp, "seq.fc.json")} -o /Volumes/Studio/out/master.mp4 --w 1920` },
+  });
+
+  const raw = readFileSync(runEventsPath(tmp, runId), "utf8");
+  assert.ok(!raw.includes(tmp), "command must not leak the video absolute path");
+  assert.match(raw, /-i <video>\/seq\.fc\.json/, "input token must be tagged <video>/");
+  assert.match(raw, /-o <external>\/master\.mp4/, "output token must be tagged <external>/");
+  assert.match(raw, /--w 1920/, "non-path tokens stay untouched");
 });

@@ -53,6 +53,7 @@ import {
   finalizeRunRecord,
   listRunManifests,
   loadRunManifest,
+  pruneOldRuns,
   reconcileOrphanedRuns,
   sanitizeToolInputForLedger,
   saveRunManifest,
@@ -819,6 +820,11 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
     }
   }
 
+  function parseRetentionFromEnv(raw: string | undefined): number {
+    const parsed = Number.parseInt(raw ?? "", 10);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : 50;
+  }
+
   function getHostActivation(ctx: any): {
     activationId?: string;
     launchedViaWrapper: boolean;
@@ -979,6 +985,17 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
     if (!manifest || !currentRun) return;
     const dedupKey = toolCallId ? `${toolName}:${toolCallId}` : "";
     if (dedupKey && currentRun.recordedToolCallIds.has(dedupKey)) {
+      // §4.F.4: tool_execution_end arrives after tool_result for the same call and carries
+      // the real duration. Update the existing record instead of dropping the duration.
+      if (durationMs !== undefined) {
+        const existing = manifest.actions.completedTools.find(
+          (t) => t.toolCallId === toolCallId && t.toolName === toolName,
+        );
+        if (existing && existing.durationMs === undefined) {
+          existing.durationMs = durationMs;
+          saveRunManifest(videoDir, manifest);
+        }
+      }
       return;
     }
     if (dedupKey) {
@@ -1084,6 +1101,12 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
       try {
         const nowIso = nowFn();
         reconcileOrphanedRuns(ctx.cwd, { now: nowIso });
+        pruneOldRuns(ctx.cwd, {
+          keep: parseRetentionFromEnv(process.env.YOUTUBE_SHELL_RUN_RETENTION),
+          ...(currentRun && currentRun.videoDir === ctx.cwd
+            ? { protectedRunIds: [currentRun.manifest.runId] }
+            : {}),
+        });
         const host = getHostActivation(ctx);
         if (host.launchedViaWrapper) {
           diagnoseActivationState(ctx.cwd, { now: nowIso });

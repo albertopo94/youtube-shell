@@ -624,3 +624,24 @@ test("Scenario 10 (S4 §4.B cronología unificada): human commands persist to li
   assert.match(note, /Cronología de producción \(agente \+ creador\)/);
   assert.match(note, /Creador: \/yts-approve P01_PACKAGING/);
 });
+
+test("Scenario 11 (S5 §4.F.4): durationMs arriving on tool_execution_end updates the recorded tool instead of being dropped", async (t) => {
+  const tmp = mkdtempSync(join(tmpdir(), "yts-e2e-s11-"));
+  t.after(() => rmSync(tmp, { recursive: true, force: true }));
+
+  const h = createScriptedAssuranceHarness({ videoDir: tmp });
+  await h.runCommand("yts-init");
+  await h.startAgentRun("Inicia P01_PACKAGING");
+  await h.callTool("read", { path: "01-packaging.md" });
+  await h.settleAgentRun(false);
+
+  const run = listRunManifests(tmp).at(-1)!;
+  const readTool = run.actions.completedTools.find((tc) => tc.toolName === "read");
+  assert.ok(readTool, "the read call must be recorded");
+  assert.equal(readTool.durationMs, 5, "durationMs from tool_execution_end must be preserved");
+  assert.equal(
+    run.actions.completedTools.filter((tc) => tc.toolName === "read").length,
+    1,
+    "tool_result + tool_execution_end must not create two records for one call",
+  );
+});

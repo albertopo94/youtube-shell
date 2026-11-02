@@ -29,7 +29,7 @@ if (parsed.help) {
 }
 
 if (parsed.runs) {
-  const { listRunManifests, reconcileOrphanedRuns } = await import("../src/store/run-ledger.ts");
+  const { listRunManifests, reconcileOrphanedRuns, pruneOldRuns } = await import("../src/store/run-ledger.ts");
   const { formatObservedRunsReport } = await import("../src/core/assurance.ts");
   const reconciliation = reconcileOrphanedRuns(process.cwd(), {
     now: new Date().toISOString(),
@@ -39,6 +39,10 @@ if (parsed.runs) {
       `Reconciliación de corridas no asentadas: ${reconciliation.orphaned.length} huérfana(s), ${reconciliation.unknown.length} con estado de proceso desconocido.\n`,
     );
   }
+  const retention = Number.parseInt(process.env.YOUTUBE_SHELL_RUN_RETENTION ?? "", 10);
+  pruneOldRuns(process.cwd(), {
+    keep: Number.isInteger(retention) && retention > 0 ? retention : 50,
+  });
   const runs = listRunManifests(process.cwd());
   const { readLifecycleEvents, buildLifecycleTimeline, formatLifecycleTimeline } = await import(
     "../src/store/lifecycle.ts"
