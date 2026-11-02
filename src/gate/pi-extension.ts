@@ -943,7 +943,16 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         summary: `${toolName}: ${errorReason ?? "la herramienta devolvió error"}`,
       });
     } else if (toolName === "read" && targetPath) {
-      const matched = recordReferenceReadInAttestation(manifest.context, videoDir, targetPath);
+      const readParams = {
+        offset: typeof input?.offset === "number" ? input.offset : undefined,
+        limit: typeof input?.limit === "number" ? input.limit : undefined,
+      };
+      const matched = recordReferenceReadInAttestation(
+        manifest.context,
+        videoDir,
+        targetPath,
+        readParams,
+      );
       if (matched) {
         appendRunEvent(videoDir, manifest.runId, {
           at: nowIso,
@@ -952,7 +961,7 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
           workMode: manifest.workMode,
           toolName: "read",
           toolCallId,
-          details: { path: targetPath },
+          details: { path: targetPath, ...(readParams.limit ? { limit: readParams.limit } : {}) },
         });
       }
     }

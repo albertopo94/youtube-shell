@@ -238,6 +238,47 @@ test("Scenario 2 (Inicio y envío verificado de P01): attests skill/references, 
   const trStart = await h.callTool("yts_transition", { action: "start", phase: "P01_PACKAGING" });
   assert.equal(trStart.blocked, false);
 
+  const completedPkg = `# 01 - Packaging: Títulos y Miniaturas
+## 1. Estrategia Psicológica y Promesa de Trama (Pre-Guion)
+- **Ángulo Psicológico Principal:** Curiosidad y mecanismo oculto
+- **Promesa Central del Video (Plot Promise):** Explicar por qué una deriva de 30 nanosegundos en un oscilador de cesio colapsaría la sincronización global.
+- ** Filtro Anti-Clickbait:** El experimento de deriva se resuelve en el minuto 4 con datos del BIPM.
+
+## 2. Opciones de Títulos (Mínimo 5 Alternativas Creativas)
+1. Por qué los relojes atómicos pierden un segundo (palanca usada: Curiosidad / Paradoja)
+2. El error oculto que casi apaga el GPS mundial (palanca usada: Miedo / Riesgo sistémico)
+3. Cómo una oscilación de cesio sostiene Internet (palanca usada: Mecanismo oculto)
+4. 30 nanosegundos: el límite físico de la red eléctrica (palanca usada: Especificidad numérica)
+5. Lo que la física cuántica cambió en tu teléfono hoy (palanca usada: Relevancia directa)
+
+- **Título Principal Seleccionado:** El error oculto que casi apaga el GPS mundial
+- **Justificación del título elegido:** Conecta un riesgo cotidiano tangible con el mecanismo físico real del oscilador de cesio.
+
+## 3. Variantes de Miniatura (Thumbnails)
+### Miniatura A (Principal)
+- **Brecha de Curiosidad:** Story
+- **Punto focal principal (Hero):** Satélite GPS con reloj digital marcando ERROR -0.00003s
+- **Texto en miniatura:** 30 NANOSEGUNDOS
+- **Prompt para generador de imágenes / boceto:** Fotografía macro realista de reloj atómico de cesio con alerta roja.
+
+### Miniatura B (Variante de Contraste - para Prueba Nativa en Video Largo o histórico)
+- **Brecha de Curiosidad:** Result
+- **Concepto diferencial respecto a la Variante A:** Mapa mundial apagándose por zonas horarias.
+- **Prompt / boceto:** Ilustración técnica de red global perdiendo sincronización.
+
+### Miniatura C (Variante Radical - para Prueba Nativa en Video Largo o histórico)
+- **Brecha de Curiosidad:** Novelty
+- **Concepto diferencial:** Comparativa visual entre un reloj mecánico suizo y una trampa láser de átomos.
+- **Prompt / boceto:** Split screen macro entre engranaje mecánico y haz láser azul en cámara de vacío.
+
+## 4. Control de Calidad Pre-Guion (Checklist)
+- [x] **Coherencia con el Canal:** ¿Este empaque encaja naturalmente con los pilares del canal?
+- [x] **Prueba del Scroll (Mobile Test):** ¿La miniatura A y B se entienden perfectamente reducidas al tamaño de un sello postal?
+- [x] **No-Redundancia:** ¿El texto de la miniatura es diferente a las palabras exactas del título?
+`;
+  const wrPkg = await h.callTool("write", { path: "01-packaging.md", content: completedPkg });
+  assert.equal(wrPkg.blocked, false);
+
   const trSubmit = await h.callTool("yts_transition", { action: "submit", phase: "P01_PACKAGING" });
   assert.equal(trSubmit.blocked, false);
   await h.settleAgentRun(false);
@@ -451,6 +492,44 @@ test("Scenario 9 (Reanudación): recovers active phase, classifies requestKind=r
   // Run 2: resumption that finishes and submits P01_PACKAGING
   await h.startAgentRun("Reanuda y envía P01_PACKAGING a revisión");
   await h.callTool("read", { path: "skills/yts-packaging-miniaturas/SKILL.md" });
+  await h.callTool("read", { path: "01-packaging.md" });
+  await h.callTool("write", {
+    path: "01-packaging.md",
+    content: `# 01 - Packaging: Títulos y Miniaturas
+## 1. Estrategia Psicológica y Promesa de Trama (Pre-Guion)
+- **Ángulo Psicológico Principal:** Curiosidad y mecanismo oculto
+- **Promesa Central del Video (Plot Promise):** Demostrar cómo el estándar de cesio sostiene la sincronización de redes.
+- ** Filtro Anti-Clickbait:** Se entrega la demostración completa en el bloque B02.
+
+## 2. Opciones de Títulos (Mínimo 5 Alternativas Creativas)
+1. Por qué los relojes atómicos pierden un segundo (palanca usada: Curiosidad / Paradoja)
+2. El error oculto que casi apaga el GPS mundial (palanca usada: Miedo / Riesgo sistémico)
+3. Cómo una oscilación de cesio sostiene Internet (palanca usada: Mecanismo oculto)
+4. 30 nanosegundos: el límite físico de la red eléctrica (palanca usada: Especificidad numérica)
+5. Lo que la física cuántica cambió en tu teléfono hoy (palanca usada: Relevancia directa)
+
+- **Título Principal Seleccionado:** El error oculto que casi apaga el GPS mundial
+- **Justificación del título elegido:** Conecta un riesgo cotidiano tangible con el mecanismo físico real del oscilador de cesio.
+
+## 3. Variantes de Miniatura (Thumbnails)
+### Miniatura A (Principal)
+- **Punto focal principal (Hero):** Satélite GPS con reloj digital marcando ERROR -0.00003s
+- **Prompt para generador de imágenes / boceto:** Fotografía macro realista de reloj atómico de cesio con alerta roja.
+
+### Miniatura B (Variante de Contraste - para Prueba Nativa en Video Largo o histórico)
+- **Concepto diferencial respecto a la Variante A:** Mapa mundial apagándose por zonas horarias.
+- **Prompt / boceto:** Ilustración técnica de red global perdiendo sincronización.
+
+### Miniatura C (Variante Radical - para Prueba Nativa en Video Largo o histórico)
+- **Concepto diferencial:** Comparativa visual entre un reloj mecánico suizo y una trampa láser de átomos.
+- **Prompt / boceto:** Split screen macro entre engranaje mecánico y haz láser azul en cámara de vacío.
+
+## 4. Control de Calidad Pre-Guion (Checklist)
+- [x] **Coherencia con el Canal:** Sí
+- [x] **Prueba del Scroll (Mobile Test):** Sí
+- [x] **No-Redundancia:** Sí
+`,
+  });
   await h.callTool("yts_transition", { action: "submit", phase: "P01_PACKAGING" });
   await h.settleAgentRun(false);
 

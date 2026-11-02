@@ -133,8 +133,18 @@ test("buildThreeLayerPrompt renders Layer 1 (Orchestrator), Layer 2 (Active Phas
   assert.match(prompt, /\[Capa 2 — Playbook de Fase Activa\]/);
   assert.match(prompt, /yts-packaging-miniaturas/);
   assert.match(prompt, /01-packaging\.md/);
-  assert.match(prompt, /Referencias obligatorias de la fase:/);
-  assert.match(prompt, /Referencias condicionales:/);
+  assert.match(
+    prompt,
+    /Referencias obligatorias de la fase \(deben existir y evidenciar lectura completa antes del submit\):/,
+  );
+  assert.match(
+    prompt,
+    /Referencias condicionales \(se leen cuando se activa su condición; si no aplica se registra por qué\):/,
+  );
+  assert.match(
+    prompt,
+    /Referencias opcionales \(disponibles sin ser requisito de aprobación\):\s*[^\n]*banco-de-titulos\.md/,
+  );
   assert.match(prompt, /Constancia de aplicación exigida en el entregable:/);
   assert.match(prompt, /Frontera de verificación \(Runtime vs\. Editorial humano\):/);
   assert.match(prompt, /\[Capa 3 — Referencias Bajo Demanda y Vínculo de Oficina\/Canal\]/);

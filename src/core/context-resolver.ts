@@ -26,6 +26,7 @@ export interface PhasePlaybook {
   summary: string;
   mandatoryReferences: string[];
   conditionalReferences: string[];
+  optionalReferences?: string[];
   requiredDeliverableEvidence: string;
   verificationBoundary: PhaseVerificationBoundary;
 }
@@ -42,8 +43,12 @@ export const PHASE_PLAYBOOKS: Record<PhaseId, PhasePlaybook> = {
       "skills/yts-packaging-miniaturas/SKILL.md",
     ],
     conditionalReferences: [
-      "ideas.md y backlog-ideas.md (si hay vínculo de oficina/canal, para verificar territorios vetados)",
-      "banco-de-titulos.md y referentes.md (si existen en el canal/oficina, para alinear ángulos y estilo visual)",
+      "ideas.md (si hay vínculo de oficina/canal, para verificar territorios vetados)",
+      "backlog-ideas.md (si hay vínculo de oficina/canal, para verificar territorios vetados)",
+    ],
+    optionalReferences: [
+      "banco-de-titulos.md (si existe en el canal, para alinear ángulos)",
+      "referentes.md (si existe en la oficina, para alinear estilo visual)",
     ],
     requiredDeliverableEvidence:
       "Secciones §1 (Estrategia Psicológica y Promesa de Trama), §2 (5 opciones de título numeradas con su palanca de la caja de heurística declarada por candidato y justificación del recomendado), §3 (Miniatura A, B y C con ficha técnica) y §4 (Control de Calidad Pre-Guion) completas en 01-packaging.md.",
@@ -67,7 +72,11 @@ export const PHASE_PLAYBOOKS: Record<PhaseId, PhasePlaybook> = {
     ],
     conditionalReferences: [
       "skills/yts-orquestador/references/contingencia-y-politicas-sensibles.md (obligatorio si el contenido toca salud, finanzas, ciencia o Zona Roja YMYL)",
-      "ideas.md y backlog-ideas.md (para linter de enfoques vetados y estrategia de mercados lingüísticos)",
+      "ideas.md (para linter de enfoques vetados)",
+      "backlog-ideas.md (para estrategia de mercados lingüísticos)",
+    ],
+    optionalReferences: [
+      "referentes.md (si existe en la oficina, para calibrar formato)",
     ],
     requiredDeliverableEvidence:
       "Declaración explícita del Régimen de Verificación (riesgo factual separado del formato) en el Preámbulo y tabla/lista de Fuentes de Partida con URL/DOI y limitaciones metodológicas en la Parte 1 de 06-fuentes-y-verificacion.md.",
@@ -93,6 +102,9 @@ export const PHASE_PLAYBOOKS: Record<PhaseId, PhasePlaybook> = {
     conditionalReferences: [
       "skills/yts-orquestador/references/contingencia-y-politicas-sensibles.md (para léxico blindado YMYL y matización de estudios en modelos animales)",
     ],
+    optionalReferences: [
+      "banco-de-titulos.md (opcional si se consulta historial de estructuras de título)",
+    ],
     requiredDeliverableEvidence:
       "Modo de progresión declarado en cabecera, técnica de apertura elegida (caja de 5) y decisión de Roadmap de Compromiso Mental (usado/no usado/prohibido) en [B01], tabla §0 (Puerta de Correspondencia del Arranque), §1 (Puerta de Control Editorial y Congruencia Promesa-Contenido) y bloques ### [Bxx] con timecodes MM:SS - MM:SS en 02-guion.md.",
     verificationBoundary: {
@@ -116,6 +128,9 @@ export const PHASE_PLAYBOOKS: Record<PhaseId, PhasePlaybook> = {
     conditionalReferences: [
       "01-packaging.md (si una matización factual obliga a revisar la congruencia con la promesa de entrada)",
     ],
+    optionalReferences: [
+      "referentes.md (opcional en oficina)",
+    ],
     requiredDeliverableEvidence:
       "Tabla de Parte 2 (Verificación de Afirmaciones del Borrador) con cada bloque [Bxx] resuelto en VERIFICADO/MODIFICADO/ELIMINADO con DOI/URL real y Checkpoints de Rigor marcados en 06-fuentes-y-verificacion.md, manteniendo intacta la Parte 1.",
     verificationBoundary: {
@@ -138,7 +153,8 @@ export const PHASE_PLAYBOOKS: Record<PhaseId, PhasePlaybook> = {
     ],
     conditionalReferences: [
       "skills/yts-orquestador/references/herramientas-y-apis.md (para seleccionar motor TTS neuronal y herramientas visuales según estado PROBADA/DOCUMENTADA)",
-      "banco-visual.md e identidad-visual.md (si existen en la oficina/canal)",
+      "banco-visual.md (si existe en la oficina)",
+      "identidad-visual.md (si existe en el canal)",
     ],
     requiredDeliverableEvidence:
       "Secciones §1 Consistencia Visual (anclajes y referencias de continuidad) y §2 Fase 1: Montaje Preliminar completas en 03-storyboard-y-edicion.md más archivo de audio declarado en evidence(scratch_track).",
@@ -166,6 +182,9 @@ export const PHASE_PLAYBOOKS: Record<PhaseId, PhasePlaybook> = {
       "skills/yts-orquestador/references/herramientas-y-apis.md (capacidades FilmCraft MCP y límites de proveedores)",
       "skills/yts-orquestador/references/contingencia-y-politicas-sensibles.md (§3 Copyright vs. Permiso vs. Monetización)",
     ],
+    optionalReferences: [
+      "banco-visual.md (opcional en oficina)",
+    ],
     requiredDeliverableEvidence:
       "Tabla de Escenas (§3) con todos los [Bxx] y timecodes sin '← derivar', §4 Capas Obligatorias, 04-registro-recursos.md con licencias y costos verificados, aceptacion.json sellado con /yts-approve-sheet y archivo master medido por ffprobe/ffmpeg.",
     verificationBoundary: {
@@ -190,7 +209,9 @@ export const PHASE_PLAYBOOKS: Record<PhaseId, PhasePlaybook> = {
     ],
     conditionalReferences: [
       "skills/yts-orquestador/references/contingencia-y-politicas-sensibles.md (§6 Plan de Contingencia ante avisos en YouTube Studio)",
-      "ideas.md, backlog-ideas.md y banco-de-titulos.md (para volcar aprendizajes al siguiente ciclo)",
+      "ideas.md (para volcar aprendizajes al siguiente ciclo)",
+      "backlog-ideas.md (para volcar aprendizajes al siguiente ciclo)",
+      "banco-de-titulos.md (para volcar aprendizajes al siguiente ciclo)",
     ],
     requiredDeliverableEvidence:
       "05-metricas-retencion.md completo (incluyendo §5 Mejora Única Nombrada y §8 Protocolo de no republicar archivos idénticos) y entregable-final.md con ficha de publicación y especificaciones técnicas verificadas.",
@@ -571,8 +592,9 @@ export function buildThreeLayerPrompt(resolved: ResolvedWorkflowContext): string
     `Skill asignada: ${resolved.playbook.skill} (${resolved.playbook.role})`,
     `Foco de la fase: ${resolved.playbook.summary}`,
     `Superficie editable permitida: ${resolved.editableTargets.join("; ")}`,
-    `Referencias obligatorias de la fase: ${resolved.playbook.mandatoryReferences.join("; ")}`,
-    `Referencias condicionales: ${resolved.playbook.conditionalReferences.join("; ")}`,
+    `Referencias obligatorias de la fase (deben existir y evidenciar lectura completa antes del submit): ${resolved.playbook.mandatoryReferences.join("; ")}`,
+    `Referencias condicionales (se leen cuando se activa su condición; si no aplica se registra por qué): ${resolved.playbook.conditionalReferences.join("; ")}`,
+    `Referencias opcionales (disponibles sin ser requisito de aprobación): ${(resolved.playbook.optionalReferences ?? []).join("; ") || "ninguna"}`,
     `Constancia de aplicación exigida en el entregable: ${resolved.playbook.requiredDeliverableEvidence}`,
     `Evidencia requerida al enviar: ${evidenceLabel}`,
     `Verificadores deterministas de salida: ${checksLabel}`,

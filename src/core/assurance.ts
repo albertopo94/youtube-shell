@@ -30,19 +30,21 @@ export interface SkillAttestation {
   sha256?: string;
   deliveredInPrompt: boolean;
   readByAgent: boolean;
+  readScope?: "full" | "partial";
 }
 
 export interface ReferenceAttestation {
   label: string;
   targetFile: string;
   resolvedPath?: string;
-  kind: "mandatory" | "conditional";
+  kind: "mandatory" | "conditional" | "optional";
   applicable: boolean;
   reason: string;
   exists: boolean;
   sha256?: string;
   deliveredInPrompt: boolean;
   readByAgent: boolean;
+  readScope?: "full" | "partial";
 }
 
 export interface DeliverableApplicationEvidence {
@@ -56,6 +58,7 @@ export interface ContextAttestation {
   expectedSkill: SkillAttestation;
   mandatoryReferences: ReferenceAttestation[];
   conditionalReferences: ReferenceAttestation[];
+  optionalReferences?: ReferenceAttestation[];
   applicationEvidence?: DeliverableApplicationEvidence;
   highFactualRisk?: boolean;
   promptHash?: string;
@@ -244,11 +247,18 @@ export function classifyRequestKind(
   return "production";
 }
 
-function extractTargetFileFromReferenceLabel(label: string): string {
+function extractTargetFilesFromReferenceLabel(label: string): string[] {
   const cleaned = label.trim();
   const beforeParen = cleaned.split(/\s+\(/)[0].trim();
   const beforeHash = beforeParen.split("#")[0].trim();
-  return beforeHash;
+  if (beforeHash.startsWith("skills/")) {
+    return [beforeHash];
+  }
+  const tokens = beforeHash
+    .split(/[,]|(?:\s+y\s+)|(?:\s+e\s+)/)
+    .map((s) => s.trim())
+    .filter((s) => s.endsWith(".md") || s.endsWith(".json"));
+  return tokens.length > 0 ? tokens : [beforeHash];
 }
 
 function resolveReferenceOnDisk(
@@ -263,57 +273,34 @@ function resolveReferenceOnDisk(
     return { resolvedPath: full, ...stat };
   }
 
-  // Check if it is an office/channel file list (e.g. "ideas.md y backlog-ideas.md")
-  const tokens = targetFile
-    .split(/[,/]|(?:\s+y\s+)|(?:\s+e\s+)/)
-    .map((s) => s.trim())
-    .filter((s) => s.endsWith(".md") || s.endsWith(".json"));
-
-  if (tokens.length === 1) {
-    const single = tokens[0];
-    const inVideo = join(videoDir, single);
-    const stVideo = sha256FileIfPresent(inVideo);
-    if (stVideo.exists) {
-      return { resolvedPath: inVideo, ...stVideo };
-    }
-    if (resolved.layer3.workspaceLink?.channelDir) {
-      const inChannel = join(resolved.layer3.workspaceLink.channelDir, single);
-      const stChannel = sha256FileIfPresent(inChannel);
-      if (stChannel.exists) return { resolvedPath: inChannel, ...stChannel };
-    }
-    if (resolved.layer3.workspaceLink?.officeRoot) {
-      const inOffice = join(resolved.layer3.workspaceLink.officeRoot, single);
-      const stOffice = sha256FileIfPresent(inOffice);
-      if (stOffice.exists) return { resolvedPath: inOffice, ...stOffice };
-    }
-    return { resolvedPath: inVideo, exists: false };
+  const single = targetFile.trim();
+  const matchOffice = resolved.layer3.officeFiles.find((f) => f.name === single && f.exists);
+  if (matchOffice) {
+    const st = sha256FileIfPresent(matchOffice.path);
+    return { resolvedPath: matchOffice.path, ...st };
+  }
+  const matchChannel = resolved.layer3.channelFiles.find((f) => f.name === single && f.exists);
+  if (matchChannel) {
+    const st = sha256FileIfPresent(matchChannel.path);
+    return { resolvedPath: matchChannel.path, ...st };
   }
 
-  if (tokens.length > 1) {
-    // Multi-file conditional reference (e.g., "ideas.md y backlog-ideas.md")
-    for (const tok of tokens) {
-      const matchOffice = resolved.layer3.officeFiles.find((f) => f.name === tok && f.exists);
-      if (matchOffice) {
-        const st = sha256FileIfPresent(matchOffice.path);
-        return { resolvedPath: matchOffice.path, ...st };
-      }
-      const matchChannel = resolved.layer3.channelFiles.find((f) => f.name === tok && f.exists);
-      if (matchChannel) {
-        const st = sha256FileIfPresent(matchChannel.path);
-        return { resolvedPath: matchChannel.path, ...st };
-      }
-      const inVideo = join(videoDir, tok);
-      const stVideo = sha256FileIfPresent(inVideo);
-      if (stVideo.exists) {
-        return { resolvedPath: inVideo, ...stVideo };
-      }
-    }
-    return { exists: false };
+  const inVideo = join(videoDir, single);
+  const stVideo = sha256FileIfPresent(inVideo);
+  if (stVideo.exists) {
+    return { resolvedPath: inVideo, ...stVideo };
   }
-
-  const fallback = join(videoDir, targetFile);
-  const st = sha256FileIfPresent(fallback);
-  return { resolvedPath: fallback, ...st };
+  if (resolved.layer3.workspaceLink?.channelDir) {
+    const inChannel = join(resolved.layer3.workspaceLink.channelDir, single);
+    const stChannel = sha256FileIfPresent(inChannel);
+    if (stChannel.exists) return { resolvedPath: inChannel, ...stChannel };
+  }
+  if (resolved.layer3.workspaceLink?.officeRoot) {
+    const inOffice = join(resolved.layer3.workspaceLink.officeRoot, single);
+    const stOffice = sha256FileIfPresent(inOffice);
+    if (stOffice.exists) return { resolvedPath: inOffice, ...stOffice };
+  }
+  return { resolvedPath: inVideo, exists: false };
 }
 
 export function detectHighFactualRisk(videoDir: string): boolean {
@@ -330,6 +317,21 @@ export function detectHighFactualRisk(videoDir: string): boolean {
   } catch {
     return false;
   }
+}
+
+function hasNonPlaceholderFieldValue(text: string, labelRegex: RegExp): boolean {
+  const match = text.match(labelRegex);
+  if (!match) return false;
+  const rawVal = (match[1] ?? "")
+    .replace(/\*\([^)]*\)\*:\s*/g, "")
+    .replace(/\*\([^)]*\)\*/g, "")
+    .trim();
+  if (!rawVal || rawVal.length < 3) return false;
+  if (/^(?:TBD|\.\.\.|____+|`?\[[^\]]*\]`?)$/i.test(rawVal)) return false;
+  if (/\[Insertar|\[Pegar aqu[íi]|\[Enlace\s*\/|\[UNA sola mejora|\[VERIFICAR/i.test(rawVal)) {
+    return false;
+  }
+  return true;
 }
 
 export function inspectDeliverableApplicationEvidence(
@@ -353,18 +355,52 @@ export function inspectDeliverableApplicationEvidence(
       if (!text) {
         return { expected: true, verified: false, targetFile, summary: "01-packaging.md ausente" };
       }
-      const hasTitles = /Opciones de T[íi]tulo/i.test(text);
-      const hasLevers = /(?:Palanca|Gatillo|Emoci[óo]n|Curiosidad|Miedo|Deseo|Contraste|Miniatura)/i.test(
-        text,
+      // Must have 5 numbered candidate titles without template placeholder "(palanca usada: ____)"
+      const candidateLines = text
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter((l) => /^[1-5]\.\s+\S+/.test(l));
+      const validTitleCandidates = candidateLines.filter(
+        (l) =>
+          !/T[íi]tulo\s+[1-5]:\s*\(palanca usada:\s*____\)/i.test(l) &&
+          !/____|\[Insertar|\bTBD\b/i.test(l) &&
+          l.replace(/^[1-5]\.\s+/, "").trim().length >= 8,
       );
-      const verified = hasTitles && hasLevers;
+      const hasSelectedTitle = hasNonPlaceholderFieldValue(
+        text,
+        /-\s*\*\*T[íi]tulo Principal Seleccionado:\*\*\s*([^\n]+)/i,
+      );
+      const hasJustification = hasNonPlaceholderFieldValue(
+        text,
+        /-\s*\*\*Justificaci[óo]n del t[íi]tulo elegido:\*\*\s*([^\n]+)/i,
+      );
+      const extractSection = (headingRe: RegExp): string => {
+        const m = text.match(headingRe);
+        if (!m || m.index === undefined) return "";
+        const rest = text.slice(m.index + m[0].length);
+        const nextIdx = rest.search(/\n###\s+|\n##\s+|\n---\s*\n/);
+        return nextIdx === -1 ? rest : rest.slice(0, nextIdx);
+      };
+      const thumbA = extractSection(/###\s+Miniatura A[^\n]*/i);
+      const thumbB = extractSection(/###\s+Miniatura B[^\n]*/i);
+      const thumbC = extractSection(/###\s+Miniatura C[^\n]*/i);
+      const hasThumbContent = (sec: string): boolean =>
+        hasNonPlaceholderFieldValue(sec, /-\s*\*\*(?:Punto focal principal[^*]*|Concepto diferencial[^*]*|Prompt[^*]*):\*\*\s*([^\n]+)/i);
+
+      const verified =
+        validTitleCandidates.length >= 5 &&
+        hasSelectedTitle &&
+        hasJustification &&
+        hasThumbContent(thumbA) &&
+        hasThumbContent(thumbB) &&
+        hasThumbContent(thumbC);
       return {
         expected: true,
         verified,
         targetFile,
         summary: verified
-          ? "Palancas de título y conceptos de miniatura documentados en 01-packaging.md"
-          : "Falta documentar opciones de título o palancas/conceptos de miniatura en 01-packaging.md",
+          ? "5 opciones de título con palanca, título seleccionado justificado y 3 miniaturas completas en 01-packaging.md"
+          : "Faltan 5 títulos reales sin '____', título seleccionado justificado o desarrollo de Miniaturas A/B/C en 01-packaging.md",
       };
     }
     case "P02_RESEARCH": {
@@ -378,18 +414,40 @@ export function inspectDeliverableApplicationEvidence(
           summary: "06-fuentes-y-verificacion.md ausente",
         };
       }
-      const hasRisk = /Riesgo factual|R[ée]gimen de Verificaci[óo]n|Nivel de Riesgo Factual/i.test(
-        text,
+      const part1Text = text.split(/##\s+Parte 2/i)[0] ?? text;
+      const hasCheckedRegime =
+        /\[[xX]\]\s*(?:Bajo|Medio|Alto|Zona Verde|Zona Amarilla|Zona Roja|N\/A\s*-\s*Ficci[óo]n Pura)/i.test(
+          part1Text,
+        ) ||
+        hasNonPlaceholderFieldValue(
+          part1Text,
+          /-\s*\*\*(?:Riesgo factual|Nivel de riesgo factual|Grado de controversia[^*]*):\*\*\s*([^\n]+)/i,
+        );
+      const hasUnfilledSourcePlaceholder = /\[Enlace\s*\/\s*DOI de fuente primaria/i.test(part1Text);
+      const hasRealSourceOrExemption =
+        /https?:\/\/(?!\.\.\.)[^\s)\]]+/i.test(part1Text) ||
+        /\b10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i.test(part1Text) ||
+        /\[[xX]\]\s*\*\*N\/A\s*-\s*Ficci[óo]n Pura/i.test(part1Text);
+      const hasFacts = hasNonPlaceholderFieldValue(
+        part1Text,
+        /-\s*\*\*Hechos Comprobados de Base:\*\*\s*([^\n]+)/i,
       );
-      const hasSources = /Parte 1|Fuentes|Barrido|mediana/i.test(text);
-      const verified = hasRisk && hasSources;
+      const hasLimits = hasNonPlaceholderFieldValue(
+        part1Text,
+        /-\s*\*\*L[íi]mites de la Evidencia:\*\*\s*([^\n]+)/i,
+      );
+      const verified =
+        hasCheckedRegime &&
+        !hasUnfilledSourcePlaceholder &&
+        hasRealSourceOrExemption &&
+        (hasFacts || hasLimits);
       return {
         expected: true,
         verified,
         targetFile,
         summary: verified
-          ? "Riesgo factual y fuentes de Parte 1 documentados en 06-fuentes-y-verificacion.md"
-          : "Falta declarar riesgo factual o fuentes de Parte 1 en 06-fuentes-y-verificacion.md",
+          ? "Régimen de verificación marcado y fuentes primarias / límites documentados en Parte 1 de 06-fuentes-y-verificacion.md"
+          : "Falta marcar el régimen de riesgo factual o sustituir los placeholders de fuentes primarias en Parte 1 de 06-fuentes-y-verificacion.md",
       };
     }
     case "P03_SCRIPT": {
@@ -398,56 +456,161 @@ export function inspectDeliverableApplicationEvidence(
       if (!text) {
         return { expected: true, verified: false, targetFile, summary: "02-guion.md ausente" };
       }
-      const hasBlocks = /\[B01\]/.test(text);
-      const hasGate = /Puerta de Control Editorial|Apertura|Gancho/i.test(text);
-      const verified = hasBlocks && hasGate;
+      const hasPlotPromise = hasNonPlaceholderFieldValue(
+        text,
+        /-\s*\*\*Promesa de Trama[^*]*:\*\*\s*([^\n]+)/i,
+      );
+      const hasOpeningChecks =
+        /\[[xX]\]\s*\*\*Claridad de Contexto|\|\s*\*\*¿El t[íi]tulo hace una pregunta[^|]*\|\s*[^|\s][^|]*\|/i.test(
+          text,
+        );
+      const b01Idx = text.search(/###\s+\[B01\]/);
+      const b01Body = b01Idx >= 0 ? text.slice(b01Idx, b01Idx + 600) : "";
+      const hasRealB01Dialogue =
+        b01Idx >= 0 &&
+        !/^\s*>\s*\*"\.\.\."\*\s*$/m.test(b01Body) &&
+        b01Body.replace(/###\s+\[B01\][^\n]*/, "").trim().length >= 25;
+      const verified = hasPlotPromise && hasOpeningChecks && hasRealB01Dialogue;
       return {
         expected: true,
         verified,
         targetFile,
         summary: verified
-          ? "Bloques [Bxx] y Puerta de Control Editorial presentes en 02-guion.md"
-          : "Faltan bloques [B01] o Puerta de Control Editorial en 02-guion.md",
+          ? "Promesa de trama, puerta de arranque y bloques [Bxx] con locución real en 02-guion.md"
+          : "Falta promesa de trama, puerta de arranque respondida o locución real sin placeholder '... ' en [B01] de 02-guion.md",
       };
     }
     case "P04_FACTCHECK": {
       const targetFile = "06-fuentes-y-verificacion.md";
       const text = readSafe(targetFile);
-      const verified = Boolean(text && /Parte 2|Afirmaciones/i.test(text));
+      if (!text) {
+        return {
+          expected: true,
+          verified: false,
+          targetFile,
+          summary: "06-fuentes-y-verificacion.md ausente",
+        };
+      }
+      const part2Split = text.split(/##\s+Parte 2/i);
+      const part2 = part2Split[1] ?? "";
+      const hasTemplatePlaceholders =
+        /\[Insertar DOI o URL real\]|"\[Texto literal del guion\]"|\bDD\/MM\/AAAA\b/i.test(part2);
+      const tableRows = part2
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter((l) => l.startsWith("|") && /\[B\d{2,3}\]/.test(l));
+      const hasPendingRow = tableRows.some((r) => /\bPENDIENTE\b/i.test(r));
+      const hasResolvedRow = tableRows.some((r) =>
+        /\b(?:VERIFICADO|CORREGIDO|MODIFICADO|ELIMINADO|EN_DEBATE)\b/i.test(r),
+      );
+      const verified =
+        part2.length > 0 && !hasTemplatePlaceholders && !hasPendingRow && hasResolvedRow;
       return {
         expected: true,
         verified,
         targetFile,
         summary: verified
-          ? "Parte 2 de verificación factual presente en 06-fuentes-y-verificacion.md"
-          : "Falta Parte 2 en 06-fuentes-y-verificacion.md",
+          ? "Parte 2 de verificación factual resuelta sin PENDIENTE ni placeholders en 06-fuentes-y-verificacion.md"
+          : "Parte 2 de 06-fuentes-y-verificacion.md mantiene filas en PENDIENTE, sin [Bxx] resueltos o con placeholders de plantilla",
       };
     }
-    case "P05_ANIMATIC":
+    case "P05_ANIMATIC": {
+      const targetFile = "03-storyboard-y-edicion.md";
+      const text = readSafe(targetFile);
+      if (!text) {
+        return {
+          expected: true,
+          verified: false,
+          targetFile,
+          summary: "03-storyboard-y-edicion.md ausente",
+        };
+      }
+      const hasTemplateStylePlaceholder = /`\[ej\.\s*Cinematic 35mm/i.test(text);
+      const hasAnimaticGateChecked = /\[[xX]\]\s*\*\*(?:Radio Edit completado|Wireframe visual|Aprobado para producci[óo]n definitiva)/i.test(
+        text,
+      );
+      const sceneRows = text
+        .split(/\r?\n/)
+        .filter((l) => l.trim().startsWith("|") && /\[B01\]/.test(l));
+      const hasCleanSceneRow = sceneRows.some(
+        (r) => !/←\s*derivar|\*"\.\.\."\*|`\[Prompt con anclajes/i.test(r),
+      );
+      const verified = !hasTemplateStylePlaceholder && (hasAnimaticGateChecked || hasCleanSceneRow);
+      return {
+        expected: true,
+        verified,
+        targetFile,
+        summary: verified
+          ? "Consistencia visual y montaje preliminar / animática completados en 03-storyboard-y-edicion.md"
+          : "03-storyboard-y-edicion.md conserva placeholders de plantilla en §1/§2 sin validar animática",
+      };
+    }
     case "P06_ASSEMBLY": {
       const targetFile = "03-storyboard-y-edicion.md";
       const text = readSafe(targetFile);
-      const verified = Boolean(text && /\[B01\]|Storyboard|Checklist/i.test(text));
+      const resText = readSafe("04-registro-recursos.md");
+      if (!text || !resText) {
+        return {
+          expected: true,
+          verified: false,
+          targetFile,
+          summary: "Falta 03-storyboard-y-edicion.md o 04-registro-recursos.md",
+        };
+      }
+      const sceneRows = text
+        .split(/\r?\n/)
+        .filter((l) => l.trim().startsWith("|") && /\[B\d{2,3}\]/.test(l));
+      const hasValidScenes =
+        sceneRows.length > 0 &&
+        sceneRows.every((r) => !/←\s*derivar|\*"\.\.\."\*|`\[Prompt con anclajes/i.test(r));
+      const hasCleanResources =
+        !/\[VERIFICAR|SIN LICENCIA|https:\/\/\.\.\./i.test(resText) &&
+        !/`\s*`/.test(resText);
+      const verified = hasValidScenes && hasCleanResources;
       return {
         expected: true,
         verified,
         targetFile,
         summary: verified
-          ? "Trazabilidad de bloques y storyboard presente en 03-storyboard-y-edicion.md"
-          : "Falta trazabilidad de storyboard en 03-storyboard-y-edicion.md",
+          ? "Tabla de escenas [Bxx] sincronizada y 04-registro-recursos.md con licencias limpias"
+          : "03-storyboard-y-edicion.md o 04-registro-recursos.md aún contienen marcadores '← derivar', '[Prompt...]' o '[VERIFICAR]'",
       };
     }
     case "P07_CLOSE": {
       const targetFile = "entregable-final.md";
       const text = readSafe(targetFile);
-      const verified = Boolean(text && /Paquete de Publicaci[óo]n|Aprendizajes/i.test(text));
+      const metricsText = readSafe("05-metricas-retencion.md");
+      if (!text) {
+        return {
+          expected: true,
+          verified: false,
+          targetFile,
+          summary: "entregable-final.md ausente",
+        };
+      }
+      const hasOfficialTitle = hasNonPlaceholderFieldValue(
+        text,
+        /-\s*\*\*T[íi]tulo Oficial:\*\*\s*([^\n]+)/i,
+      );
+      const hasSections =
+        /##\s+1\.\s+Metadata Definitiva Publicada/i.test(text) &&
+        /##\s+2\.\s+Archivo Master y Assets/i.test(text) &&
+        /##\s+3\.\s+Cr[ée]ditos y Licencias en Descripci[óo]n/i.test(text);
+      const hasUnfilledFinalPlaceholders =
+        /\[Pegar aqu[íi] la descripci[óo]n exacta subida a YouTube\]|ruta-o-archivo-de-miniatura\.png|ruta-al-archivo-final\.mp4/i.test(
+          text,
+        );
+      const hasMetricsClosed =
+        Boolean(metricsText) && !/\[UNA sola mejora concreta/i.test(metricsText ?? "");
+      const verified =
+        hasOfficialTitle && hasSections && !hasUnfilledFinalPlaceholders && hasMetricsClosed;
       return {
         expected: true,
         verified,
         targetFile,
         summary: verified
-          ? "Paquete de publicación y aprendizajes documentados en entregable-final.md"
-          : "Falta paquete de publicación o aprendizajes en entregable-final.md",
+          ? "Metadata definitiva publicada en entregable-final.md y aprendizaje de cierre en 05-metricas-retencion.md verificados"
+          : "entregable-final.md o 05-metricas-retencion.md conservan placeholders de plantilla sin completar",
       };
     }
   }
@@ -479,65 +642,92 @@ export function buildContextAttestation(
     readByAgent: false,
   };
 
-  const mandatoryReferences: ReferenceAttestation[] = resolved.playbook.mandatoryReferences.map(
+  const mandatoryReferences: ReferenceAttestation[] = resolved.playbook.mandatoryReferences.flatMap(
     (label) => {
-      const targetFile = extractTargetFileFromReferenceLabel(label);
-      const disk = resolveReferenceOnDisk(targetFile, resolved.videoDir, resolved, pkgRoot);
-      return {
-        label,
-        targetFile,
-        ...(disk.resolvedPath ? { resolvedPath: disk.resolvedPath } : {}),
-        kind: "mandatory",
-        applicable: true,
-        reason: `Requerida por el playbook de ${resolved.targetPhase}`,
-        exists: disk.exists,
-        ...(disk.sha256 ? { sha256: disk.sha256 } : {}),
-        deliveredInPrompt: options.promptDelivered,
-        readByAgent: false,
-      };
+      const targetFiles = extractTargetFilesFromReferenceLabel(label);
+      return targetFiles.map((targetFile) => {
+        const disk = resolveReferenceOnDisk(targetFile, resolved.videoDir, resolved, pkgRoot);
+        return {
+          label,
+          targetFile,
+          ...(disk.resolvedPath ? { resolvedPath: disk.resolvedPath } : {}),
+          kind: "mandatory" as const,
+          applicable: true,
+          reason: `Requerida por el playbook de ${resolved.targetPhase}`,
+          exists: disk.exists,
+          ...(disk.sha256 ? { sha256: disk.sha256 } : {}),
+          deliveredInPrompt: options.promptDelivered,
+          readByAgent: false,
+        };
+      });
     },
   );
 
   const highFactualRisk = detectHighFactualRisk(resolved.videoDir);
 
-  const conditionalReferences: ReferenceAttestation[] = resolved.playbook.conditionalReferences.map(
+  const conditionalReferences: ReferenceAttestation[] = resolved.playbook.conditionalReferences.flatMap(
     (label) => {
-      const targetFile = extractTargetFileFromReferenceLabel(label);
-      const isFrameworkRef = targetFile.startsWith("skills/");
-      const hasWorkspaceLink = Boolean(resolved.layer3.workspaceLink);
-      const disk = resolveReferenceOnDisk(targetFile, resolved.videoDir, resolved, pkgRoot);
-      const isGovRef = targetFile.includes("gobernanza-evidencia.md");
-      const applicable =
-        isGovRef && highFactualRisk
-          ? true
-          : isFrameworkRef
-          ? true
-          : hasWorkspaceLink && disk.exists;
-      const reason =
-        isGovRef && highFactualRisk
-          ? "Riesgo factual ALTO detectado en 06-fuentes-y-verificacion.md (verificación reforzada obligatoria)"
-          : isFrameworkRef
-          ? `Referencia normativa disponible para ${resolved.targetPhase}`
-          : !hasWorkspaceLink
-          ? "No aplicable: sin vínculo de oficina/canal (/yts-link)"
-          : disk.exists
-          ? "Aplicable: archivo detectado en oficina/canal vinculado"
-          : "No aplicable: archivo opcional no presente en oficina/canal";
+      const targetFiles = extractTargetFilesFromReferenceLabel(label);
+      return targetFiles.map((targetFile) => {
+        const isFrameworkRef = targetFile.startsWith("skills/");
+        const hasWorkspaceLink = Boolean(resolved.layer3.workspaceLink);
+        const disk = resolveReferenceOnDisk(targetFile, resolved.videoDir, resolved, pkgRoot);
+        const isGovRef = targetFile.includes("gobernanza-evidencia.md");
+        const applicable =
+          isGovRef && highFactualRisk
+            ? true
+            : isFrameworkRef
+            ? true
+            : hasWorkspaceLink && disk.exists;
+        const reason =
+          isGovRef && highFactualRisk
+            ? "Riesgo factual ALTO detectado en 06-fuentes-y-verificacion.md (verificación reforzada obligatoria)"
+            : isFrameworkRef
+            ? `Referencia normativa disponible para ${resolved.targetPhase}`
+            : !hasWorkspaceLink
+            ? "No aplicable: sin vínculo de oficina/canal (/yts-link)"
+            : disk.exists
+            ? "Aplicable: archivo detectado en oficina/canal vinculado"
+            : "No aplicable: archivo condicional no presente en oficina/canal";
 
+        return {
+          label,
+          targetFile,
+          ...(disk.resolvedPath ? { resolvedPath: disk.resolvedPath } : {}),
+          kind: "conditional" as const,
+          applicable,
+          reason,
+          exists: disk.exists,
+          ...(disk.sha256 ? { sha256: disk.sha256 } : {}),
+          deliveredInPrompt: options.promptDelivered && applicable,
+          readByAgent: false,
+        };
+      });
+    },
+  );
+
+  const optionalReferences: ReferenceAttestation[] = (
+    resolved.playbook.optionalReferences ?? []
+  ).flatMap((label) => {
+    const targetFiles = extractTargetFilesFromReferenceLabel(label);
+    return targetFiles.map((targetFile) => {
+      const disk = resolveReferenceOnDisk(targetFile, resolved.videoDir, resolved, pkgRoot);
       return {
         label,
         targetFile,
         ...(disk.resolvedPath ? { resolvedPath: disk.resolvedPath } : {}),
-        kind: "conditional",
-        applicable,
-        reason,
+        kind: "optional" as const,
+        applicable: false,
+        reason: disk.exists
+          ? "Opcional disponible en oficina/canal (no bloquea aprobación)"
+          : "Opcional no presente (no requerido)",
         exists: disk.exists,
         ...(disk.sha256 ? { sha256: disk.sha256 } : {}),
-        deliveredInPrompt: options.promptDelivered && applicable,
+        deliveredInPrompt: options.promptDelivered && disk.exists,
         readByAgent: false,
       };
-    },
-  );
+    });
+  });
 
   // If factual risk is ALTO in P02_RESEARCH, P03_SCRIPT, or P04_FACTCHECK, ensure gobernanza-evidencia.md is tracked
   if (
@@ -573,6 +763,7 @@ export function buildContextAttestation(
     expectedSkill,
     mandatoryReferences,
     conditionalReferences,
+    optionalReferences,
     applicationEvidence,
     highFactualRisk,
     ...(options.promptHash ? { promptHash: options.promptHash } : {}),
@@ -587,14 +778,52 @@ function normalizeComparablePath(videoDir: string, rawPath: string): string {
   return resolve(videoDir, cleaned);
 }
 
+function computeReadScope(
+  fullPath: string | undefined,
+  previousScope: "full" | "partial" | undefined,
+  readParams?: { offset?: number; limit?: number },
+): "full" | "partial" {
+  if (previousScope === "full") return "full";
+  if (!readParams || (readParams.offset === undefined && readParams.limit === undefined)) {
+    return "full";
+  }
+  const startLine = Math.max(1, readParams.offset ?? 1);
+  if (!fullPath || !existsSync(fullPath)) {
+    return startLine === 1 && (readParams.limit ?? 2000) >= 200 ? "full" : "partial";
+  }
+  try {
+    const totalLines = readFileSync(fullPath, "utf8").split(/\r?\n/).length;
+    const endLine =
+      readParams.limit !== undefined ? startLine + readParams.limit - 1 : totalLines;
+    if (startLine <= 1 && endLine >= totalLines) {
+      return "full";
+    }
+    return "partial";
+  } catch {
+    return "partial";
+  }
+}
+
 export function recordReferenceReadInAttestation(
   attestation: ContextAttestation,
-  videoDir: string,
-  readPath: string,
+  videoDirOrReadPath: string,
+  readPathOrVideoDir: string,
+  readParams?: { offset?: number; limit?: number },
 ): boolean {
-  if (!readPath || typeof readPath !== "string") return false;
+  if (!videoDirOrReadPath || !readPathOrVideoDir) return false;
+  // Support both (attestation, videoDir, readPath) and (attestation, readPath, videoDir)
+  let videoDir = videoDirOrReadPath;
+  let readPath = readPathOrVideoDir;
+  if (
+    /\.(md|json)(#.*)?$/i.test(videoDirOrReadPath) &&
+    !/\.(md|json)(#.*)?$/i.test(readPathOrVideoDir)
+  ) {
+    videoDir = readPathOrVideoDir;
+    readPath = videoDirOrReadPath;
+  }
+
   const absRead = normalizeComparablePath(videoDir, readPath);
-  const normalizedRaw = readPath.replace(/\\/g, "/").trim();
+  const normalizedRaw = readPath.split("#")[0].replace(/\\/g, "/").trim();
   let matched = false;
 
   if (
@@ -603,12 +832,23 @@ export function recordReferenceReadInAttestation(
     normalizedRaw.endsWith(`/${attestation.expectedSkill.relativePath}`)
   ) {
     attestation.expectedSkill.readByAgent = true;
+    attestation.expectedSkill.readScope = computeReadScope(
+      attestation.expectedSkill.resolvedPath,
+      attestation.expectedSkill.readScope,
+      readParams,
+    );
     matched = true;
   }
 
-  for (const ref of [...attestation.mandatoryReferences, ...attestation.conditionalReferences]) {
+  const allRefs = [
+    ...attestation.mandatoryReferences,
+    ...attestation.conditionalReferences,
+    ...(attestation.optionalReferences ?? []),
+  ];
+  for (const ref of allRefs) {
     if (ref.resolvedPath && resolve(ref.resolvedPath) === absRead) {
       ref.readByAgent = true;
+      ref.readScope = computeReadScope(ref.resolvedPath, ref.readScope, readParams);
       matched = true;
       continue;
     }
@@ -618,6 +858,11 @@ export function recordReferenceReadInAttestation(
       resolve(videoDir, ref.targetFile) === absRead
     ) {
       ref.readByAgent = true;
+      ref.readScope = computeReadScope(
+        ref.resolvedPath ?? resolve(videoDir, ref.targetFile),
+        ref.readScope,
+        readParams,
+      );
       matched = true;
     }
   }
@@ -654,15 +899,21 @@ export function evaluateRunAssurance(manifest: RunManifest): AssuranceEvaluation
     satisfied: manifest.context.expectedSkill.exists,
   });
 
-  // 3. Skill read (in production mode, a route in the prompt does NOT count as reading the skill)
+  // 3. Skill read (in production mode, a route in the prompt or partial read does NOT count as full skill read)
+  const skillFullRead =
+    manifest.context.expectedSkill.readByAgent &&
+    manifest.context.expectedSkill.readScope !== "partial";
   const skillReadSatisfied =
     manifest.workMode === "read_only"
       ? manifest.context.expectedSkill.deliveredInPrompt
-      : manifest.context.expectedSkill.readByAgent;
+      : skillFullRead;
   controls.push({
     control: "Skill leída",
-    result: manifest.context.expectedSkill.readByAgent
-      ? "Verificado"
+    result: skillFullRead
+      ? "Verificado (lectura completa)"
+      : manifest.context.expectedSkill.readByAgent &&
+        manifest.context.expectedSkill.readScope === "partial"
+      ? "Lectura parcial (insuficiente)"
       : manifest.workMode === "read_only"
       ? "No requerida (modo lectura)"
       : manifest.context.expectedSkill.deliveredInPrompt
@@ -688,26 +939,37 @@ export function evaluateRunAssurance(manifest: RunManifest): AssuranceEvaluation
     satisfied: appEvSatisfied,
   });
 
-  // 4. Mandatory references availability
-  // In P06_ASSEMBLY before render, aceptacion.json may be created during the phase; count it missing only if it still doesn't exist
+  // 5. Mandatory references availability AND full read when phaseSubmitted in production
   const missingMandatory = manifest.context.mandatoryReferences.filter((r) => !r.exists);
-  const mandatoryOk =
+  const unreadMandatory = manifest.context.mandatoryReferences.filter(
+    (r) => r.exists && (!r.readByAgent || r.readScope === "partial"),
+  );
+  const mandatoryExistsOk =
     manifest.workMode === "read_only"
       ? manifest.context.expectedSkill.exists
       : missingMandatory.length === 0;
+  const mandatoryReadOk =
+    manifest.workMode === "production" && manifest.phaseSubmitted
+      ? unreadMandatory.length === 0
+      : true;
+  const mandatoryOk = mandatoryExistsOk && mandatoryReadOk;
   controls.push({
     control: "Referencias obligatorias",
     result:
-      missingMandatory.length === 0
-        ? "Completas"
-        : `Incompletas (faltan: ${missingMandatory.map((r) => r.targetFile).join(", ")})`,
+      missingMandatory.length > 0
+        ? `Incompletas (faltan: ${missingMandatory.map((r) => r.targetFile).join(", ")})`
+        : !mandatoryReadOk
+        ? `Sin lectura completa (${unreadMandatory.map((r) => r.targetFile).join(", ")})`
+        : "Completas y verificadas",
     satisfied: mandatoryOk,
   });
 
-  // 5. Conditional references
+  // 6. Conditional references
   const applicableCond = manifest.context.conditionalReferences.filter((r) => r.applicable);
   const missingCond = applicableCond.filter((r) => !r.exists);
-  const unreadCond = applicableCond.filter((r) => r.exists && !r.readByAgent);
+  const unreadCond = applicableCond.filter(
+    (r) => r.exists && (!r.readByAgent || r.readScope === "partial"),
+  );
   let condResult = "No aplicable";
   let condSatisfied = true;
   if (applicableCond.length > 0) {
@@ -715,7 +977,7 @@ export function evaluateRunAssurance(manifest: RunManifest): AssuranceEvaluation
       condResult = `Ausente (${missingCond.map((r) => r.targetFile).join(", ")})`;
       condSatisfied = false;
     } else if (manifest.workMode === "production" && manifest.phaseSubmitted && unreadCond.length > 0) {
-      condResult = "No verificada";
+      condResult = `Sin lectura completa (${unreadCond.map((r) => r.targetFile).join(", ")})`;
       condSatisfied = false;
     } else if (unreadCond.length === 0) {
       condResult = "Verificada";
@@ -729,6 +991,23 @@ export function evaluateRunAssurance(manifest: RunManifest): AssuranceEvaluation
     control: "Referencia condicional",
     result: condResult,
     satisfied: condSatisfied,
+  });
+
+  // 6b. Optional references (4th tier): surfaced for transparency, never an approval requirement
+  const optionalRefs = manifest.context.optionalReferences ?? [];
+  const presentOptional = optionalRefs.filter((r) => r.exists);
+  const readOptional = presentOptional.filter((r) => r.readByAgent);
+  controls.push({
+    control: "Referencia opcional",
+    result:
+      optionalRefs.length === 0
+        ? "Ninguna declarada"
+        : presentOptional.length === 0
+        ? `No disponible (${optionalRefs.map((r) => r.targetFile).join(", ")}) — no requerida`
+        : `${readOptional.length}/${presentOptional.length} leídas (${presentOptional
+            .map((r) => r.targetFile)
+            .join(", ")}) — no bloquea aprobación`,
+    satisfied: true,
   });
 
   // 6. Phase tools policy
@@ -801,7 +1080,7 @@ export function evaluateRunAssurance(manifest: RunManifest): AssuranceEvaluation
   }
 
   const hasMissingRefIncident = manifest.incidents.some((inc) => inc.kind === "missing_reference");
-  if (!manifest.context.expectedSkill.exists || !mandatoryOk || hasMissingRefIncident) {
+  if (!manifest.context.expectedSkill.exists || !mandatoryExistsOk || hasMissingRefIncident) {
     const missingList = !manifest.context.expectedSkill.exists
       ? manifest.context.expectedSkill.relativePath
       : missingMandatory.map((r) => r.targetFile).join(", ");
@@ -928,15 +1207,18 @@ export function evaluateRunAssurance(manifest: RunManifest): AssuranceEvaluation
   if (
     hasWarnChecks ||
     !condSatisfied ||
-    !manifest.context.expectedSkill.readByAgent ||
+    !skillFullRead ||
+    !mandatoryReadOk ||
     !appEvSatisfied
   ) {
     let reason: string;
     if (hasWarnChecks) {
       reason =
         "Las verificaciones finalizaron con advertencia WARN que exige reconocimiento explícito del creador (--ack-warn).";
-    } else if (!manifest.context.expectedSkill.readByAgent) {
-      reason = `Se completó el trabajo estructural y las verificaciones automáticas, pero la skill asignada (${manifest.context.expectedSkill.name}) no tiene evidencia de lectura efectiva.`;
+    } else if (!skillFullRead) {
+      reason = `Se completó el trabajo estructural y las verificaciones automáticas, pero la skill asignada (${manifest.context.expectedSkill.name}) no tiene evidencia de lectura completa.`;
+    } else if (!mandatoryReadOk) {
+      reason = `Se completó el trabajo estructural y las verificaciones automáticas, pero faltó lectura completa de referencias obligatorias (${unreadMandatory.map((r) => r.targetFile).join(", ")}).`;
     } else if (!appEvSatisfied) {
       reason = `Se completó el trabajo estructural y las verificaciones automáticas, pero falta evidencia de aplicación en el entregable (${appEv?.summary ?? "incompleta"}).`;
     } else {

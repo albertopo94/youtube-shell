@@ -1,0 +1,84 @@
+# Assurance Hardening & Real-Host Verification (`youtube-shell` v0.16.0)
+
+Close all findings from `/Users/albertmac11/Reguero/Proyectos/youtube-shell/problemas que aun detecta mi amiga.md`: eliminate template false positives/negatives in deliverable application evidence, enforce full read of mandatory references with atomic decomposition and 4-tier policy, implement the 6-state activation handshake and 3-outcome orphan reconciliation, add per-learning dynamic evaluation, unified human/agent lifecycle timeline, media-engine concrete outcome checks, path privacy/retention/ledger durability, and real-`pi` binary E2E tests.
+Delivery: direct commits on `main` per repository convention; forecast ~950 authored changed lines across 5 work-unit commits (`T1`–`T5`).
+
+## Specs
+
+- **S1 — Deliverable Application Evidence without Template False Positives or False Negatives (`P1.1`):**
+  - Replace permissive keyword regexes in `inspectDeliverableApplicationEvidence(videoDir, phase)` (`src/core/assurance.ts`) so untouched canonical templates from `templates/pipeline-video/` (`01-packaging.md`, `02-guion.md`, `03-storyboard-y-edicion.md`, `04-registro-recursos.md`, `05-metricas-retencion.md`, `06-fuentes-y-verificacion.md`, `entregable-final.md`) ALWAYS evaluate to `verified: false` across all 7 phases (`P01_PACKAGING`..`P07_CLOSE`), and reject template placeholders such as `[Insertar URL]`, `[Insertar...]`, `...`, `TBD`, or empty fields.
+  - Concrete evidence required per phase (verbatim from audit table):
+    - `P01`: `"Cinco títulos realmente cumplimentados, palanca identificada por título, justificación del seleccionado y tres conceptos de miniatura diferenciados."`
+    - `P02`: `"Fuentes de partida con URL/DOI, hechos y limitaciones de la evidencia, y régimen de verificación declarado."`
+    - `P03`: `"Comprobaciones de apertura respondidas, bloques de guion cumplimentados y promesa narrativa identificada."`
+    - `P04`: `"Afirmaciones concretas vinculadas a fuentes, fecha, estado de verificación y matices."`
+    - `P05`: `"Locución, storyboard y decisiones de continuidad realmente cumplimentados."`
+    - `P06`: `"Escenas y recursos identificados, licencias registradas, aceptación previa y master medido."`
+    - `P07`: `"Metadata, archivos finales, publicación y documentación de cierre realmente cumplimentados."` (inspecting the real sections of `entregable-final.md` — `## 1. Metadata Definitiva Publicada`, `## 2. Archivo Master y Assets`, `## 3. Créditos y Licencias en Descripción` — and `05-metricas-retencion.md`).
+  - In `evaluateRunAssurance(manifest)`, when `workMode === "production"` and `phaseSubmitted === true`, `applicationEvidence.verified === false` must prevent `PASSED` and classify the run as `DEGRADED`.
+
+- **S2 — Four-Tier Reference Policy, Mandatory Read Enforcement, Full vs. Partial Read Scope & Atomic Reference Decomposition (`P1.2`, `§5`):**
+  - Establish an explicit 4-tier reference policy in `src/core/context-resolver.ts` and `src/core/assurance.ts`:
+    - `"mandatory"` (`Obligatoria`): `"debe existir y debe haber evidencia de lectura efectiva antes del submit."`
+    - `"conditional"` applicable (`Condicional aplicable`): `"debe existir y debe leerse cuando se active su condición."`
+    - `"conditional"` not applicable (`Condicional no aplicable`): `"se registra por qué no aplica."`
+    - `"optional"` (`Opcional`): `"puede estar disponible sin convertirse en requisito de aprobación."`
+  - Decompose grouped reference descriptions in `PHASE_PLAYBOOKS` (`src/core/context-resolver.ts`) such as `"ideas.md y backlog-ideas.md"`, `"02-guion.md y 03-storyboard-y-edicion.md"`, and `"05-metricas-retencion.md y entregable-final.md"` into individual reference entries so each file gets its own independent `ReferenceAttestation` (`targetFile`, `exists`, `sha256`, `readByAgent`, `readScope`).
+  - Track `readScope?: "full" | "partial"` on `SkillAttestation` and `ReferenceAttestation`: when `recordReferenceReadInAttestation` records a `read` tool call, if `limit` or `offset` only read a slice smaller than the file's total line count without covering the file, record `readScope: "partial"`; a complete read (no `offset`/`limit` truncation, or covering the file) records `readScope: "full"`. Require `readByAgent === true` and `readScope !== "partial"` for the assigned skill and all mandatory/applicable-conditional references before a submitted `production` run can achieve `PASSED` (degrading to `DEGRADED` otherwise).
+
+- **S3 — Real Activation Handshake (`Launcher ↔ Pi ↔ Extension`) and 3-Outcome Orphaned Run Reconciliation (`P1.3`, `§4.A`):**
+  - Implement a persistent activation handshake ledger (`.youtube-shell/runs/activation-state.json`) covering the exact sequence:
+    `Launcher iniciado → Preflight superado → Pi arrancado → Extensión cargada → Hook de sesión activado → before_agent_start ejecutado → Run creado`
+    and distinguishing the 6 explicit states:
+    `NOT_STARTED`, `PREFLIGHT_FAILED`, `HOST_STARTED`, `EXTENSION_NOT_CONFIRMED`, `EXTENSION_ACTIVATED`, `RUN_STARTED`.
+  - Detect and record whether Pi was launched via `youtube-shell` (`launchedViaWrapper: true`, via `YOUTUBE_SHELL_ACTIVATION_ID` / env) or directly via `pi` (`launchedViaWrapper: false`), and if the host started via `youtube-shell` without extension confirmation, diagnose `EXTENSION_NOT_CONFIRMED`.
+  - Bind every `RunManifest` to the real Pi session identifier (`sessionId`) and OS process identity (`pid`).
+  - Add `reconcileOrphanedRuns(videoDir, options?)` invoked on session startup (`session_start`) and before `--runs` / `--audit` / `/yts-runs` / `/yts-audit`:
+    - If the original process/session is still active (`pid` alive in current host), keep `STARTED`.
+    - If the process terminated abnormally (`pid` dead), transition the run to `ORPHANED` (or `ABORTED` with `orphaned_process` incident, adding `ORPHANED` / `UNKNOWN` support or explicit status reason) and persist it.
+    - If it cannot be determined (`pid` missing/unverifiable), mark `DEGRADED` with reason `UNKNOWN_PROCESS_STATE`, never assuming success.
+
+- **S4 — Unified Human/Agent Lifecycle Timeline, Dynamic Per-Learning Evaluation (`53 atomic_learnings`), Two-Dimension Audit Report & Media-Engine Outcome Verification (`§4.B`, `§4.C`, `§4.D`, `§5`):**
+  - **§4.B Unified Chronology:** Record human commands (`/yts-init`, `/yts-approve`, `/yts-reject`, `/yts-approve-sheet`, `/yts-mode`, `/yts-link`) into `.youtube-shell/runs/lifecycle.jsonl` (and link them to `run_id` and `phase_id` when applicable) so `/yts-runs`, `/yts-audit`, `youtube-shell --runs`, and `youtube-shell --audit` reconstruct the full sequence:
+    `Ejecución del agente → Comprobaciones → Envío a revisión → Inspección del creador → Aprobación o rechazo → Correcciones → Nueva ejecución → Publicación`.
+  - **§4.C Dynamic Evaluation of the 53 Atomic Learnings:** Connect `framework-map.json` `atomic_learnings` (`learning_id`) to each `RunManifest` (`learningEvaluations`), evaluating every learning with one of the explicit statuses:
+    `APPLICABLE`, `NOT_APPLICABLE`, `DELIVERED`, `OBSERVED`, `VERIFIED`, `HUMAN_CONFIRMED`, `NOT_VERIFIED`.
+  - **§4.D Two Explicit Dimensions (`Run assurance` vs `Production lifecycle`):** In `RunManifest` and `formatRunAuditReport()`, separate:
+    - `Run assurance`: `"El agente ejecutó los controles verificables de su trabajo."`
+    - `Production lifecycle`: `"La fase fue aprobada por el creador y la producción alcanzó el estado correspondiente."`
+    Include an explicit disclaimer in `/yts-audit` (`--audit`) that `PASSED` is an execution assurance verdict, not an editorial approval or publication certificate.
+  - **§5 Concrete Outcome Verification for Media Engines (`FilmCraft`, `EffectCraft`, `SoundCraft`):** When a run in `P05_ANIMATIC` or `P06_ASSEMBLY` executes mutation tools on `filmcraft`, `effectcraft`, or `soundcraft`, require subsequent concrete outcome verification (an inspection tool call such as `sequence_inspect`, `doc_inspect`, `get_comp`, `get_state`, `inspect_session`, `parity` or verified output file/master measurement) before allowing `PASSED`; otherwise classify as `DEGRADED`.
+
+- **S5 — Path Privacy, Storage Retention Policy & Ledger Robustness (`§4.E`, `§4.F`):**
+  - **§4.E Privacy:** Sanitize all paths stored in `manifest.json`, `events.jsonl`, and `lifecycle.jsonl` (`resolvedPath`, `targetPath`, `path`, `masterPath`, `acceptanceSheetPath`, `command`) so they are stored relative to `<video>`, `<pkg>`, or `<office>` and never leak the OS user home directory (`os.homedir()`) or raw external absolute paths.
+  - **§4.E Retention & Storage Limits:** Enforce explicit retention limits in `src/store/run-ledger.ts` (cap maximum events/bytes per `events.jsonl` and prune oldest non-referenced runs beyond a configurable limit, Default e.g. 50 runs, while never pruning a run linked to a current approval in `registro.json`).
+  - **§4.F Ledger Robustness & Tool Duration:**
+    1. Strictly validate `runId` against `/^run-\d{8}T\d{6}Z-[a-f0-9]{6,16}$/` before constructing file paths in `loadRunManifest()` / `loadRunEvents()`, and verify `manifest.runId === runId`.
+    2. Make `loadRunEvents()` parse line-by-line, recovering all valid JSON lines and reporting/recording corrupted line numbers instead of returning `[]` on a single bad line.
+    3. Use `openSync` + `writeFileSync` + `fsyncSync` + `closeSync` in `appendRunEvent()` when durability is required (or by default on ledger events) so abrupt termination does not lose flushed events.
+    4. Fix `tool_result` vs `tool_execution_end` deduplication in `src/gate/pi-extension.ts` so `durationMs` arriving on `tool_execution_end` updates the recorded tool execution and appends/updates the duration instead of being dropped.
+
+- **S6 — Driven E2E Test Suite with the Real `pi` Binary (`P1.4`, `§7`):**
+  - Add `test/pi-real-e2e.test.ts` that spawns the real `pi` binary (via `youtube-shell` / `buildPiInvocation`) with an isolated temporary `--home`, a local `node:http` server on `127.0.0.1` implementing a deterministic programmed `openai-completions` model provider (`models.json`), and a temporary video folder, proving end-to-end:
+    1. Real `pi` loads `src/gate/pi-extension.ts` from the package and completes the activation handshake (`HOST_STARTED → EXTENSION_ACTIVATED → RUN_STARTED`).
+    2. Real hooks (`session_start`, `before_agent_start`, `tool_call`, `tool_result`, `tool_execution_end`, `agent_settled`) fire in order and populate `.youtube-shell/runs/<run-id>/manifest.json` and `events.jsonl` with sanitized paths.
+    3. A read-only consultation or a phase run executes real tools and settles deterministically.
+
+- **S7 — Release `v0.16.0`, Documentation & Upstream Synchronization:**
+  - Bump version `0.15.0` → `0.16.0` in `package.json`, `README.md`, `docs/progreso.md`, `_framework/compatibilidad-consumidores.md` in `albertopo94/youtube`, `upstream-lock.json`, and `framework-map.json` (`consumer_sha256` and `upstream_commit`), and pass all tests (`npm test`, `npm run smoke`, `npm run engines:surface`) and GitHub Actions CI.
+
+## Tasks
+
+- [x] **T1** (`S1`, `S2`) — (commit: ver Log L5; el hash no se auto-referencia) — `gentle-ai-worker` (Context backstop): Harden `inspectDeliverableApplicationEvidence` across `P01..P07` (zero false positives on untouched templates, fix `P07_CLOSE` false negative), implement the 4-tier reference policy (`mandatory`, `conditional` applicable/not-applicable, `optional`), decompose compound references in `PHASE_PLAYBOOKS`, track `readScope` (`full` vs `partial`), and require full read of mandatory references before `submit` in `production`.
+- [ ] **T2** (`S3`) — `gentle-ai-worker` (Context backstop): Implement the 6-state activation handshake (`.youtube-shell/runs/activation-state.json`: `NOT_STARTED`, `PREFLIGHT_FAILED`, `HOST_STARTED`, `EXTENSION_NOT_CONFIRMED`, `EXTENSION_ACTIVATED`, `RUN_STARTED`) across `src/cli/launcher.ts` and `src/gate/pi-extension.ts`, bind `RunManifest` to real `sessionId` and `pid`, and implement 3-outcome `reconcileOrphanedRuns`.
+- [ ] **T3** (`S4`) — `gentle-ai-worker` (Context backstop): Implement unified human/agent lifecycle chronology (`.youtube-shell/runs/lifecycle.jsonl`), per-learning dynamic evaluation for all 53 `atomic_learnings`, explicit separation of `Run assurance` vs `Production lifecycle` in `RunManifest` and `/yts-audit`, and concrete outcome verification for `filmcraft`/`effectcraft`/`soundcraft` calls.
+- [ ] **T4** (`S5`) — `gentle-ai-worker` (Context backstop): Sanitize all persisted paths in `manifest.json` and `events.jsonl` (eliminating absolute home paths), add retention/storage limits for `.youtube-shell/runs/`, enforce strict `runId` validation, line-by-line fault-tolerant `loadRunEvents()`, `fsyncSync` durability in `appendRunEvent()`, and preserve `durationMs` across `tool_result` + `tool_execution_end`.
+- [ ] **T5** (`S6`, `S7`) — `gentle-ai-worker` / Inline: Build real-`pi` E2E test suite (`test/pi-real-e2e.test.ts`) with a deterministic local HTTP model provider, then synchronize `v0.16.0` across `package.json`, `README.md`, `docs/progreso.md`, `_framework/compatibilidad-consumidores.md`, `upstream-lock.json`, and `framework-map.json`, commit, push, and verify CI.
+
+## Log
+
+- **L1 (User request verbatim):** `ahora analicemos el debate siguiente, pero no implementes nada sin que yo te de luz verde y mas aun ahora que no creo que los tokens me alcancen para hacer la implementacion. Solo proponme el plan si lo tienes claro y ya te avisare cuando quiera implementarlo. el Debate esta en: "/Users/albertmac11/Reguero/Proyectos/youtube-shell/problemas\ que\ aun\ detecta\ mi\ amiga.md"`
+- **L2 (User follow-up verbatim):** `quiero que vuelvas a leer el archivo y me digas si crees que con ese plan resolvemos lo planteado en el archivo si te quedaste corto o si fuiste superior.`
+- **L3 (User authorization verbatim):** `vale, implementalo tienes luz verde, y por si acaso deja en la raiz o donde lo tengas definido por portocolo un artefacto del plan por si la sesion se corta y debo continuarla en otro momento.`
+- **L4 (T1 evidence):** `inspectDeliverableApplicationEvidence` rewritten per phase (`verified: false` on all 7 untouched canonical templates — differential check vs base `1e5151a` proved 6 false positives eliminated; `P07_CLOSE` false negative fixed); 4-tier reference policy (`mandatory`/`conditional` applicable-not-applicable/`optional`), atomic per-file decomposition (`ideas.md`, `backlog-ideas.md`, `banco-de-titulos.md`, `referentes.md` split), `readScope: full|partial` enforcement (partial reads never certify skill/mandatory refs), optional tier reported but never blocks approval. `npm test` 159/159 pass; `npm run smoke` pass; CLI diff check base vs new on untouched fixture: no unintended behavior change. `consumer_sha256` resynced for `ORQ-APROBACION-CREADOR`, `ORQ-READ-ONLY-GATE`, `ORQ-YTS-LINK`.
+- **L5 (T1 commit):** T1 landed as `feat(assurance): zero-false-positive deliverable evidence and 4-tier reference policy`; resolve its hash with `git log --oneline --grep="zero-false-positive"` (self-referencing the hash inside the same commit is not possible).
