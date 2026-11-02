@@ -4,6 +4,7 @@ import { isAbsolute, join, resolve } from "node:path";
 import type { ResolvedWorkflowContext, WorkMode } from "./context-resolver.ts";
 import { getPhase } from "./phases.ts";
 import type { CheckVerdict, PhaseId, ProductionMode } from "./types.ts";
+import type { LearningEvaluation } from "./learning-evaluator.ts";
 
 export const RUN_STATUSES = [
   "NOT_APPLICABLE",
@@ -154,6 +155,32 @@ export interface AssuranceEvaluation {
   diagnosis: string;
 }
 
+/**
+ * Spec S4 §4.D: "did the agent run its checks" and "did the creator approve the phase" are two
+ * different facts. Run assurance is never an editorial approval or a publication certificate.
+ */
+export interface ProductionLifecycleState {
+  phaseStatus: string;
+  submitted: boolean;
+  approved: boolean;
+  summary: string;
+}
+
+export function evaluateProductionLifecycle(manifest: RunManifest): ProductionLifecycleState {
+  const phaseStatus = manifest.phaseStatusAtEnd ?? manifest.phaseStatusAtStart;
+  const approved = /APROBAD[OA]/i.test(phaseStatus);
+  const submitted = Boolean(manifest.phaseSubmitted) || /PENDIENTE_APROBACION/i.test(phaseStatus);
+  let summary: string;
+  if (approved) {
+    summary = `Fase ${manifest.targetPhase} APROBADA por el creador; la publicación y el archivo siguen siendo acciones humanas separadas.`;
+  } else if (submitted) {
+    summary = `Fase ${manifest.targetPhase} enviada a revisión; el creador aún no decide.`;
+  } else {
+    summary = `Fase ${manifest.targetPhase} en ${phaseStatus}; el ciclo de producción no avanzó a revisión en esta corrida.`;
+  }
+  return { phaseStatus, submitted, approved, summary };
+}
+
 export interface RunManifest {
   schema: "youtube-shell.run-manifest/v1";
   runId: string;
@@ -173,6 +200,9 @@ export interface RunManifest {
   phaseSubmitted?: boolean;
   process?: RunProcessBinding;
   reconciliation?: RunReconciliation;
+  learningEvaluations?: LearningEvaluation[];
+  productionLifecycle?: ProductionLifecycleState;
+  engineOutcome?: MediaEngineOutcomeVerification;
   assignedSkill: string;
   context: ContextAttestation;
   actions: RunActionsRecord;
@@ -1044,6 +1074,18 @@ export function evaluateRunAssurance(manifest: RunManifest): AssuranceEvaluation
     satisfied: !writeToolsExposedInReadOnly,
   });
 
+  // 6c. Media-engine outcome verification (filmcraft / effectcraft / soundcraft)
+  const engineOutcome = verifyMediaEngineOutcomes(manifest);
+  controls.push({
+    control: "Resultado de motores de medios",
+    result: engineOutcome.expected
+      ? engineOutcome.verified
+        ? `Verificado (${engineOutcome.verifyingActions.join(", ")})`
+        : `Sin verificar (${engineOutcome.summary})`
+      : "N/A (sin mutaciones de motores)",
+    satisfied: engineOutcome.verified,
+  });
+
   // 7. Runtime blocks
   const blockCount = manifest.actions.blockedTools.length;
   controls.push({
@@ -1251,12 +1293,15 @@ export function evaluateRunAssurance(manifest: RunManifest): AssuranceEvaluation
     !condSatisfied ||
     !skillFullRead ||
     !mandatoryReadOk ||
-    !appEvSatisfied
+    !appEvSatisfied ||
+    !engineOutcome.verified
   ) {
     let reason: string;
     if (hasWarnChecks) {
       reason =
         "Las verificaciones finalizaron con advertencia WARN que exige reconocimiento explícito del creador (--ack-warn).";
+    } else if (!engineOutcome.verified) {
+      reason = `Se modificaron motores de medios sin verificar el resultado: ${engineOutcome.summary}.`;
     } else if (!skillFullRead) {
       reason = `Se completó el trabajo estructural y las verificaciones automáticas, pero la skill asignada (${manifest.context.expectedSkill.name}) no tiene evidencia de lectura completa.`;
     } else if (!mandatoryReadOk) {
@@ -1285,6 +1330,97 @@ export function evaluateRunAssurance(manifest: RunManifest): AssuranceEvaluation
     controls,
     diagnosis:
       "Se completó el trabajo estructural, el contexto normativo estuvo disponible y todas las verificaciones automáticas de la fase resultaron PASS.",
+  };
+}
+
+export interface MediaEngineOutcomeVerification {
+  expected: boolean;
+  verified: boolean;
+  mutatedEngines: string[];
+  verifyingActions: string[];
+  summary: string;
+}
+
+const MEDIA_ENGINE_PREFIXES = ["filmcraft_", "effectcraft_", "soundcraft_"] as const;
+
+// Read-only engine surface (verified against the live MCP tools/list of each engine) plus the
+// runtime's own deterministic verifiers. A mutation with none of these afterwards is unverified.
+const ENGINE_INSPECTION_TOKENS = [
+  "inspect",
+  "describe",
+  "get_",
+  "list_",
+  "history",
+  "parity",
+  "render_preview",
+  "render_frame",
+] as const;
+
+const RUNTIME_OUTCOME_TOOLS = ["yts_measure_master", "yts_check_contract"] as const;
+
+function isMediaEngineTool(toolName: string): boolean {
+  return MEDIA_ENGINE_PREFIXES.some((p) => toolName.startsWith(p));
+}
+
+function isEngineInspection(toolName: string): boolean {
+  return isMediaEngineTool(toolName)
+    ? ENGINE_INSPECTION_TOKENS.some((tok) => toolName.includes(tok))
+    : false;
+}
+
+export function engineOfTool(toolName: string): string | undefined {
+  return MEDIA_ENGINE_PREFIXES.map((p) => p.replace(/_$/, "")).find((name) =>
+    toolName.startsWith(`${name}_`),
+  );
+}
+
+/**
+ * Spec S4 §5: an engine mutation (filmcraft/effectcraft/soundcraft) is only an outcome when the
+ * agent inspected the result or measured the output afterwards. A mutation left unchecked is
+ * reported as unverified so the run can never be certified PASSED on tool acceptance alone.
+ */
+export function verifyMediaEngineOutcomes(
+  manifest: RunManifest,
+): MediaEngineOutcomeVerification {
+  const completed = manifest.actions.completedTools;
+  const mutatedEngines = new Set<string>();
+  let lastMutationIndex = -1;
+
+  completed.forEach((rec, index) => {
+    if (rec.isError || !isMediaEngineTool(rec.toolName)) return;
+    if (isEngineInspection(rec.toolName)) return;
+    mutatedEngines.add(engineOfTool(rec.toolName) ?? rec.toolName);
+    lastMutationIndex = index;
+  });
+
+  if (lastMutationIndex === -1) {
+    return {
+      expected: false,
+      verified: true,
+      mutatedEngines: [],
+      verifyingActions: [],
+      summary: "sin mutaciones de motores de medios en esta corrida",
+    };
+  }
+
+  const verifyingActions: string[] = [];
+  for (let i = lastMutationIndex + 1; i < completed.length; i += 1) {
+    const rec = completed[i];
+    if (rec.isError) continue;
+    if (isEngineInspection(rec.toolName) || (RUNTIME_OUTCOME_TOOLS as readonly string[]).includes(rec.toolName)) {
+      verifyingActions.push(rec.toolName);
+    }
+  }
+
+  const verified = verifyingActions.length > 0;
+  return {
+    expected: true,
+    verified,
+    mutatedEngines: [...mutatedEngines],
+    verifyingActions,
+    summary: verified
+      ? `resultado verificado tras mutar ${[...mutatedEngines].join(", ")} (${verifyingActions.join(", ")})`
+      : `se mutaron los motores ${[...mutatedEngines].join(", ")} sin inspección ni medición posterior del resultado`,
   };
 }
 
@@ -1383,6 +1519,7 @@ export function formatRunAuditReport(manifest: RunManifest): string {
     "",
     `${manifest.targetPhase} · ${modeLabel} · ${manifest.startedAt}`,
     "",
+    "Dimensión 1 — Run assurance (el agente ejecutó los controles verificables de su trabajo)",
     `${assurance.satisfiedCount} / ${assurance.totalControls}`,
     "Controles con evidencia satisfactoria",
     "",
@@ -1394,9 +1531,36 @@ export function formatRunAuditReport(manifest: RunManifest): string {
     lines.push(`${item.control} | ${item.result}`);
   }
 
+  const lifecycle = manifest.production ?? evaluateProductionLifecycle(manifest);
+  lines.push("");
+  lines.push("Dimensión 2 — Production lifecycle (la fase fue aprobada por el creador y la producción alcanzó el estado correspondiente)");
+  lines.push(`- Estado de fase: ${lifecycle.phaseStatus}`);
+  lines.push(`- Enviado a revisión: ${lifecycle.submitted ? "sí" : "no"}`);
+  lines.push(`- Aprobado por el creador: ${lifecycle.approved ? "sí" : "no"}`);
+  lines.push(`- ${lifecycle.summary}`);
+
+  if (manifest.learningEvaluations && manifest.learningEvaluations.length > 0) {
+    const counts = new Map<string, number>();
+    for (const ev of manifest.learningEvaluations) {
+      counts.set(ev.status, (counts.get(ev.status) ?? 0) + 1);
+    }
+    const breakdown = [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([st, n]) => `${st}: ${n}`)
+      .join(", ");
+    lines.push("");
+    lines.push(
+      `Aprendizajes atómicos evaluados en esta corrida: ${manifest.learningEvaluations.length} (${breakdown})`,
+    );
+  }
+
   lines.push("");
   lines.push("Diagnóstico");
   lines.push(assurance.diagnosis);
+  lines.push("");
+  lines.push(
+    "Aviso: un estado PASSED certifica únicamente la ejecución verificable del trabajo del agente (Run assurance). No es una aprobación editorial ni un certificado de publicación; la aprobación de la fase y la publicación siguen siendo decisiones exclusivas del creador (/yts-approve, /yts-approve-sheet).",
+  );
 
   return lines.join("\n");
 }

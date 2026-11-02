@@ -2004,7 +2004,7 @@
       "evidence": "src/gate/pi-extension.ts (approvePhase, hasUI) + test/pi-gate.test.ts (el modelo no puede auto-aprobar)",
       "status": "complete",
       "source_sha256": "3d706a1c74b0103fa6483fc91b5648ce312e44f6b5686ca5dbc03ffc716be44d",
-      "consumer_sha256": "594646d14d76f115426a975883128ab46aeb4b00cc5dc94b17906bf48857ae85",
+      "consumer_sha256": "c8e28a2be2816e8bd3a9a895f8889597e225f9022682ee42a43ab354c99e1012",
       "activation_trigger": "GLOBAL",
       "application_evidence": "src/gate/pi-extension.ts (approvePhase, hasUI) + test/pi-gate.test.ts (el modelo no puede auto-aprobar)",
       "guarantee_level": "RUNTIME_ENFORCED",

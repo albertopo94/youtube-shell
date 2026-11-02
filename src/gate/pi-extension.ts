@@ -42,6 +42,12 @@ import {
 import type { CheckRun, Context, DeclaredEvidence, EffectiveStatus, PhaseId, Result } from "../core/types.ts";
 import { createFsReader, loadRegistry, registryPath, saveRegistry, scaffoldVideoDir, syncStatusView } from "../store/fs-store.ts";
 import {
+  appendLifecycleEvent,
+  buildLifecycleTimeline,
+  formatLifecycleTimeline,
+  readLifecycleEvents,
+} from "../store/lifecycle.ts";
+import {
   appendRunEvent,
   createRunRecord,
   finalizeRunRecord,
@@ -794,6 +800,25 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
   const catalog = buildCapabilityCatalog(options.extraCapabilities);
   const nowFn = options.now ?? (() => new Date().toISOString());
   let activeWorkMode: WorkMode = "production";
+  function recordHumanLifecycle(
+    videoDir: string,
+    command: string,
+    phaseId?: string,
+    runId?: string,
+  ): void {
+    try {
+      appendLifecycleEvent(videoDir, {
+        at: nowFn(),
+        kind: "human_command",
+        command,
+        ...(phaseId ? { phaseId } : {}),
+        ...(runId ? { runId } : {}),
+      });
+    } catch {
+      // Chronology recording must never block the creator's command.
+    }
+  }
+
   function getHostActivation(ctx: any): {
     activationId?: string;
     launchedViaWrapper: boolean;
@@ -1403,6 +1428,7 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
             : "Plantillas ya presentes; registro sincronizado.";
         refreshUi(ctx);
         ctx.ui.notify(`Video inicializado en ${basename(ctx.cwd)}. ${summary}`, "info");
+        recordHumanLifecycle(ctx.cwd, "/yts-init");
       },
     });
 
@@ -1459,7 +1485,8 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         manifest.assurance = assurance;
         saveRunManifest(ctx.cwd, manifest);
 
-        const report = formatRunAuditReport(manifest);
+        const timeline = buildLifecycleTimeline(readLifecycleEvents(ctx.cwd), [manifest]);
+        const report = `${formatRunAuditReport(manifest)}\n\n${formatLifecycleTimeline(timeline)}`;
         const level =
           assurance.status === "PASSED" || assurance.status === "NOT_APPLICABLE"
             ? "info"
@@ -1475,12 +1502,17 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
     pi.registerCommand("yts-runs", {
       description: "Lista el historial de ejecuciones registradas en .youtube-shell/runs/ con su estado de aseguramiento.",
       handler: async (_args: string, ctx: any) => {
+        reconcileOrphanedRuns(ctx.cwd, { now: nowFn() });
         const runs = listRunManifests(ctx.cwd);
         if (runs.length === 0) {
           ctx.ui.notify("No existen ejecuciones registradas en .youtube-shell/runs/.", "info");
           return;
         }
-        ctx.ui.notify(formatObservedRunsReport(runs), "info");
+        const timeline = buildLifecycleTimeline(readLifecycleEvents(ctx.cwd), runs);
+        ctx.ui.notify(
+          `${formatObservedRunsReport(runs)}\n\n${formatLifecycleTimeline(timeline)}`,
+          "info",
+        );
       },
     });
 
@@ -1537,6 +1569,12 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         saveRegistry(ctx.cwd, res.registry);
         refreshUi(ctx);
         ctx.ui.notify(`Fase ${phase} APROBADA por el creador.`, "info");
+        recordHumanLifecycle(
+          ctx.cwd,
+          `/yts-approve ${phase}`,
+          phase,
+          listRunManifests(ctx.cwd).at(-1)?.runId,
+        );
       },
     });
 
@@ -1567,6 +1605,12 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         saveRegistry(ctx.cwd, res.registry);
         refreshUi(ctx);
         ctx.ui.notify(`Fase ${phase} devuelta a EN_CURSO.`, "info");
+        recordHumanLifecycle(
+          ctx.cwd,
+          `/yts-reject ${phase}`,
+          phase,
+          listRunManifests(ctx.cwd).at(-1)?.runId,
+        );
       },
     });
 
@@ -1620,6 +1664,7 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
           `Flujo audiovisual configurado a ${mode}. Vista 00-estado-produccion.md actualizada.`,
           "info",
         );
+        recordHumanLifecycle(ctx.cwd, `/yts-mode ${mode}`);
       },
     });
 
@@ -1670,6 +1715,7 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
           `Vínculo registrado: oficina=${officeRoot}${channelDir ? ` · canal=${channelDir}` : ""}`,
           "info",
         );
+        recordHumanLifecycle(ctx.cwd, "/yts-link");
       },
     });
 
@@ -1753,6 +1799,12 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         ctx.ui.notify(
           `Hoja de aceptación pre-render "${sheetRel}" APROBADA por el creador (${fp.hash.slice(0, 19)}…).`,
           "info",
+        );
+        recordHumanLifecycle(
+          ctx.cwd,
+          `/yts-approve-sheet ${sheetRel}`,
+          "P06_ASSEMBLY",
+          listRunManifests(ctx.cwd).at(-1)?.runId,
         );
       },
     });

@@ -40,7 +40,13 @@ if (parsed.runs) {
     );
   }
   const runs = listRunManifests(process.cwd());
-  process.stdout.write(`${formatObservedRunsReport(runs)}\n`);
+  const { readLifecycleEvents, buildLifecycleTimeline, formatLifecycleTimeline } = await import(
+    "../src/store/lifecycle.ts"
+  );
+  const timeline = buildLifecycleTimeline(readLifecycleEvents(process.cwd()), runs);
+  process.stdout.write(
+    `${formatObservedRunsReport(runs)}\n\n${formatLifecycleTimeline(timeline)}\n`,
+  );
   process.exit(0);
 }
 
@@ -66,7 +72,13 @@ if (parsed.audit) {
   manifest.statusReason = assurance.reason;
   manifest.assurance = assurance;
   saveRunManifest(process.cwd(), manifest);
-  process.stdout.write(`${formatRunAuditReport(manifest)}\n`);
+  const { readLifecycleEvents, buildLifecycleTimeline, formatLifecycleTimeline } = await import(
+    "../src/store/lifecycle.ts"
+  );
+  const timeline = buildLifecycleTimeline(readLifecycleEvents(process.cwd()), [manifest]);
+  process.stdout.write(
+    `${formatRunAuditReport(manifest)}\n\n${formatLifecycleTimeline(timeline)}\n`,
+  );
   process.exit(0);
 }
 

@@ -13,10 +13,13 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, join } from "node:path";
+
+const PACKAGE_ROOT_DEFAULT = join(import.meta.dirname, "..", "..");
 import {
   buildContextAttestation,
   buildExpectedChecksForPhase,
   classifyRequestKind,
+  evaluateProductionLifecycle,
   evaluateRunAssurance,
   inspectDeliverableApplicationEvidence,
   loadDefaultEnvironmentInfo,
@@ -26,6 +29,10 @@ import {
   type RunManifest,
   type RunProcessBinding,
 } from "../core/assurance.ts";
+import {
+  evaluateAtomicLearnings,
+  loadAtomicLearningsRegistry,
+} from "../core/learning-evaluator.ts";
 import type { ResolvedWorkflowContext } from "../core/context-resolver.ts";
 
 export function runsRootDir(videoDir: string): string {
@@ -147,6 +154,13 @@ export function saveRunManifest(videoDir: string, manifest: RunManifest): void {
     videoDir,
     manifest.targetPhase,
   );
+  // Dynamic per-learning evaluation (S4 §4.C) and the second reporting dimension (S4 §4.D)
+  // are recomputed on every persist so a resumed or audited run always shows current facts.
+  const registry = loadAtomicLearningsRegistry(PACKAGE_ROOT_DEFAULT);
+  if (registry) {
+    manifest.learningEvaluations = evaluateAtomicLearnings(manifest, registry.learnings);
+  }
+  manifest.production = evaluateProductionLifecycle(manifest);
   const assurance = evaluateRunAssurance(manifest);
   manifest.status = assurance.status;
   manifest.statusReason = assurance.reason;
