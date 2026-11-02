@@ -20,6 +20,7 @@ import {
   listRunManifests,
   loadRunEvents,
   loadRunManifest,
+  reconcileOrphanedRuns,
   runEventsPath,
   runManifestPath,
   saveRunManifest,
@@ -520,3 +521,144 @@ test("S2 (v0.16.0): mandatory references require full read before submit, partia
   assert.equal(optionalRef.readByAgent, false, "optional reference was never read");
 });
 
+
+test("S3 (v0.16.0): reconcileOrphanedRuns keeps live runs STARTED, orphans dead pids as ABORTED, and marks unverifiable pids DEGRADED", (t) => {
+  const tmp = mkdtempSync(join(tmpdir(), "yts-orphan-"));
+  t.after(() => rmSync(tmp, { recursive: true, force: true }));
+
+  const now = "2026-11-01T16:00:00Z";
+  const { registry: reg } = scaffoldVideoDir(tmp, { now });
+  const reader = createFsReader(tmp);
+  const ev = evaluate(reg, reader);
+  const wf = resolveWorkflowContext({
+    videoDir: tmp,
+    promptText: "Inicia P01_PACKAGING",
+    reg,
+    evaluation: ev,
+    hasRegistry: true,
+  });
+
+  const makeRun = (runId: string, process?: Parameters<typeof createRunRecord>[0]["process"]) => {
+    const m = createRunRecord({
+      runId,
+      videoDir: tmp,
+      startedAt: now,
+      promptText: "Inicia P01_PACKAGING",
+      resolvedWorkflow: wf,
+      promptDelivered: true,
+      ...(process ? { process } : {}),
+    });
+    saveRunManifest(tmp, m);
+    return m;
+  };
+
+  makeRun("run-20261101T160000Z-a1a1a1", { pid: 4242, launchedViaWrapper: true });
+  makeRun("run-20261101T160001Z-b2b2b2", { pid: 4343, launchedViaWrapper: true });
+  makeRun("run-20261101T160002Z-c3c3c3"); // no process binding at all
+  const finished = makeRun("run-20261101T160003Z-d4d4d4", { pid: 9999 });
+  finalizeRunRecord(tmp, finished, { finishedAt: "2026-11-01T16:00:30Z", aborted: false });
+
+  const res = reconcileOrphanedRuns(tmp, {
+    now: "2026-11-01T16:01:00Z",
+    isPidAlive: (pid) => pid === 4242, // 4242 alive; 4343 dead; 9999 dead but run finished
+  });
+
+  assert.equal(res.inspected, 3, "finished runs must be skipped");
+  assert.deepEqual(res.active, ["run-20261101T160000Z-a1a1a1"]);
+  assert.deepEqual(res.orphaned, ["run-20261101T160001Z-b2b2b2"]);
+  assert.deepEqual(res.unknown, ["run-20261101T160002Z-c3c3c3"]);
+
+  const alive = loadRunManifest(tmp, "run-20261101T160000Z-a1a1a1")!;
+  assert.equal(alive.status, "STARTED");
+  assert.equal(alive.reconciliation?.outcome, "ACTIVE");
+
+  const orphan = loadRunManifest(tmp, "run-20261101T160001Z-b2b2b2")!;
+  assert.equal(orphan.status, "ABORTED");
+  assert.equal(orphan.reconciliation?.outcome, "ORPHANED");
+  assert.ok(orphan.incidents.some((i) => i.kind === "orphaned_process"));
+  assert.ok(loadRunEvents(tmp, orphan.runId).some((e) => e.type === "run_settled"));
+
+  const unknown = loadRunManifest(tmp, "run-20261101T160002Z-c3c3c3")!;
+  assert.equal(unknown.status, "DEGRADED");
+  assert.equal(unknown.reconciliation?.outcome, "UNKNOWN");
+  assert.match(unknown.statusReason, /UNKNOWN_PROCESS_STATE/);
+
+  const done = loadRunManifest(tmp, "run-20261101T160003Z-d4d4d4")!;
+  assert.equal(done.reconciliation, undefined, "settled runs are never reconciled");
+});
+
+test("S3 (v0.16.0): activation-state sequence accumulates the 6-state handshake in order", async (t) => {
+  const { advanceActivationState, diagnoseActivationState, readActivationState, ACTIVATION_STATES } =
+    await import("../src/store/activation.ts");
+
+  const tmp = mkdtempSync(join(tmpdir(), "yts-actseq-"));
+  t.after(() => rmSync(tmp, { recursive: true, force: true }));
+
+  assert.deepEqual(ACTIVATION_STATES, [
+    "NOT_STARTED",
+    "PREFLIGHT_FAILED",
+    "HOST_STARTED",
+    "EXTENSION_NOT_CONFIRMED",
+    "EXTENSION_ACTIVATED",
+    "RUN_STARTED",
+  ]);
+
+  advanceActivationState({
+    videoDir: tmp,
+    state: "HOST_STARTED",
+    at: "2026-11-01T17:00:00Z",
+    activationId: "act-20261101T170000Z-00aa11",
+    launchedViaWrapper: true,
+    pid: 123,
+  });
+  advanceActivationState({
+    videoDir: tmp,
+    state: "EXTENSION_ACTIVATED",
+    at: "2026-11-01T17:00:05Z",
+    activationId: "act-20261101T170000Z-00aa11",
+    launchedViaWrapper: true,
+    pid: 123,
+    sessionId: "ses_abc",
+  });
+  advanceActivationState({
+    videoDir: tmp,
+    state: "RUN_STARTED",
+    at: "2026-11-01T17:00:10Z",
+    activationId: "act-20261101T170000Z-00aa11",
+    launchedViaWrapper: true,
+    pid: 123,
+    sessionId: "ses_abc",
+  });
+
+  const state = readActivationState(tmp)!;
+  assert.deepEqual(
+    state.sequence.map((s) => s.state),
+    ["HOST_STARTED", "EXTENSION_ACTIVATED", "RUN_STARTED"],
+  );
+  assert.equal(state.sessionId, "ses_abc");
+
+  // A wrapper-launched host that stopped at HOST_STARTED must be diagnosed as EXTENSION_NOT_CONFIRMED
+  const tmp2 = mkdtempSync(join(tmpdir(), "yts-actseq2-"));
+  t.after(() => rmSync(tmp2, { recursive: true, force: true }));
+  advanceActivationState({
+    videoDir: tmp2,
+    state: "HOST_STARTED",
+    at: "2026-11-01T17:01:00Z",
+    activationId: "act-20261101T170100Z-22bb33",
+    launchedViaWrapper: true,
+    pid: 124,
+  });
+  const diag = diagnoseActivationState(tmp2, { now: "2026-11-01T17:02:00Z" })!;
+  assert.equal(diag.state, "EXTENSION_NOT_CONFIRMED");
+  assert.match(diag.conclusion, /EXTENSION_NOT_CONFIRMED/);
+  const after = readActivationState(tmp2)!;
+  assert.deepEqual(
+    after.sequence.map((s) => s.state),
+    ["HOST_STARTED", "EXTENSION_NOT_CONFIRMED"],
+  );
+
+  // An already-activated state must be left untouched by diagnosis
+  const diag2 = diagnoseActivationState(tmp, { now: "2026-11-01T17:00:20Z" })!;
+  assert.equal(diag2.state, "RUN_STARTED");
+  assert.equal(readActivationState(tmp)!.sequence.length, 3);
+});

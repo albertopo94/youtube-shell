@@ -1,5 +1,13 @@
 import { accessSync, chmodSync, constants, copyFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { delimiter, join, resolve } from "node:path";
+import {
+  ACTIVATION_ID_ENV,
+  advanceActivationState,
+  generateActivationId,
+  type ActivationStateRecord,
+} from "../store/activation.ts";
+
+export const VIDEO_DIR_ENV = "YOUTUBE_SHELL_VIDEO_DIR";
 
 export const PI_SUBCOMMANDS = [
   "install",
@@ -68,6 +76,49 @@ export function verifyHarnessPreflight(
 
 function isPiSubcommand(token: string): token is PiSubcommand {
   return (PI_SUBCOMMANDS as readonly string[]).includes(token);
+}
+
+export type LauncherActivationResult =
+  | { ok: true; activationId: string; state: ActivationStateRecord }
+  | { ok: false; reason: string; state?: ActivationStateRecord };
+
+/**
+ * Record the first half of the activation handshake in the video folder before pi is
+ * spawned: HOST_STARTED when the harness is complete, PREFLIGHT_FAILED when it is not.
+ * The extension later advances EXTENSION_ACTIVATED / RUN_STARTED, which is what proves the
+ * extension really loaded instead of merely existing on disk.
+ */
+export function recordLauncherActivation(
+  packageRoot: string,
+  videoDir: string,
+  now: () => string,
+): LauncherActivationResult {
+  const at = now();
+  const preflight = verifyHarnessPreflight(packageRoot);
+
+  if (!preflight.ok) {
+    const state = advanceActivationState({
+      videoDir,
+      state: "PREFLIGHT_FAILED",
+      at,
+      launchedViaWrapper: true,
+      pid: process.pid,
+      detail: preflight.reason,
+    });
+    return { ok: false, reason: preflight.reason, state };
+  }
+
+  const activationId = generateActivationId(at);
+  const state = advanceActivationState({
+    videoDir,
+    state: "HOST_STARTED",
+    at,
+    activationId,
+    launchedViaWrapper: true,
+    pid: process.pid,
+    detail: `lanzador listo para invocar pi desde ${packageRoot}`,
+  });
+  return { ok: true, activationId, state };
 }
 
 export function parseLauncherArgs(argv: readonly string[]): ParsedLauncherArgs {
@@ -240,6 +291,8 @@ export function buildPiInvocation(options: {
   homeDir: string;
   parsed: ParsedLauncherArgs;
   baseEnv: Record<string, string | undefined>;
+  activationId?: string;
+  videoDir?: string;
 }): {
   command: string;
   args: string[];
@@ -256,6 +309,13 @@ export function buildPiInvocation(options: {
       args: [...options.parsed.passthrough],
       env,
     };
+  }
+
+  // Handshake: the wrapper identifies itself to the extension so a host started through
+  // youtube-shell can be told apart from a bare `pi` run.
+  if (options.activationId) {
+    env[ACTIVATION_ID_ENV] = options.activationId;
+    env[VIDEO_DIR_ENV] = options.videoDir ?? process.cwd();
   }
 
   return {

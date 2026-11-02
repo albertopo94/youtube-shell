@@ -12,15 +12,16 @@ const {
   formatLauncherHelp,
   parseLauncherArgs,
   prepareIsolatedHome,
+  recordLauncherActivation,
   resolveAgentHome,
   resolvePiBinary,
-  verifyHarnessPreflight,
 } = await import("../src/cli/launcher.ts");
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = resolve(__dirname, "..");
 
 const parsed = parseLauncherArgs(process.argv.slice(2));
+let lastActivationId;
 
 if (parsed.help) {
   process.stdout.write(`${formatLauncherHelp()}\n`);
@@ -28,17 +29,26 @@ if (parsed.help) {
 }
 
 if (parsed.runs) {
-  const { listRunManifests } = await import("../src/store/run-ledger.ts");
+  const { listRunManifests, reconcileOrphanedRuns } = await import("../src/store/run-ledger.ts");
   const { formatObservedRunsReport } = await import("../src/core/assurance.ts");
+  const reconciliation = reconcileOrphanedRuns(process.cwd(), {
+    now: new Date().toISOString(),
+  });
+  if (reconciliation.orphaned.length > 0 || reconciliation.unknown.length > 0) {
+    process.stderr.write(
+      `Reconciliación de corridas no asentadas: ${reconciliation.orphaned.length} huérfana(s), ${reconciliation.unknown.length} con estado de proceso desconocido.\n`,
+    );
+  }
   const runs = listRunManifests(process.cwd());
   process.stdout.write(`${formatObservedRunsReport(runs)}\n`);
   process.exit(0);
 }
 
 if (parsed.audit) {
-  const { listRunManifests, loadRunManifest, saveRunManifest } = await import(
+  const { listRunManifests, loadRunManifest, saveRunManifest, reconcileOrphanedRuns } = await import(
     "../src/store/run-ledger.ts"
   );
+  reconcileOrphanedRuns(process.cwd(), { now: new Date().toISOString() });
   const { evaluateRunAssurance, formatRunAuditReport } = await import("../src/core/assurance.ts");
   const manifest = parsed.auditRunId
     ? loadRunManifest(process.cwd(), parsed.auditRunId)
@@ -107,11 +117,12 @@ if (home.mode === "isolated" || home.mode === "custom") {
 }
 
 if (!parsed.piSubcommand) {
-  const preflight = verifyHarnessPreflight(PACKAGE_ROOT);
-  if (!preflight.ok) {
-    process.stderr.write(`Error de integridad pre-vuelo: ${preflight.reason}\n`);
+  const activation = recordLauncherActivation(PACKAGE_ROOT, process.cwd(), () => new Date().toISOString());
+  if (!activation.ok) {
+    process.stderr.write(`Error de integridad pre-vuelo: ${activation.reason}\n`);
     process.exit(1);
   }
+  lastActivationId = activation.activationId;
 }
 
 const invocation = buildPiInvocation({
@@ -120,6 +131,7 @@ const invocation = buildPiInvocation({
   homeDir: home.dir,
   parsed,
   baseEnv: process.env,
+  ...(lastActivationId ? { activationId: lastActivationId, videoDir: process.cwd() } : {}),
 });
 
 const child = spawn(invocation.command, invocation.args, {

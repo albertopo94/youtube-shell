@@ -20,9 +20,11 @@ import {
   evaluateRunAssurance,
   inspectDeliverableApplicationEvidence,
   loadDefaultEnvironmentInfo,
+  type OrphanOutcome,
   type RunIncident,
   type RunLedgerEvent,
   type RunManifest,
+  type RunProcessBinding,
 } from "../core/assurance.ts";
 import type { ResolvedWorkflowContext } from "../core/context-resolver.ts";
 
@@ -58,6 +60,7 @@ export interface CreateRunRecordOptions {
   promptDelivered: boolean;
   promptHash?: string;
   packageRoot?: string;
+  process?: RunProcessBinding;
 }
 
 export function createRunRecord(options: CreateRunRecordOptions): RunManifest {
@@ -116,6 +119,7 @@ export function createRunRecord(options: CreateRunRecordOptions): RunManifest {
     },
     targetPhase: wf.targetPhase,
     phaseStatusAtStart,
+    ...(options.process ? { process: options.process } : {}),
     assignedSkill: wf.playbook.skill,
     context,
     actions: {
@@ -270,6 +274,102 @@ export function listRunManifests(videoDir: string): RunManifest[] {
   }
   manifests.sort((a, b) => a.startedAt.localeCompare(b.startedAt) || a.runId.localeCompare(b.runId));
   return manifests;
+}
+
+export interface ReconcileOrphanedRunsOptions {
+  now: string;
+  /** Injectable liveness probe so tests never depend on real OS processes. */
+  isPidAlive?: (pid: number) => boolean;
+}
+
+export interface ReconcileOrphanedRunsResult {
+  inspected: number;
+  active: string[];
+  orphaned: string[];
+  unknown: string[];
+}
+
+function defaultPidAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    // EPERM means the process exists but belongs to another user.
+    return (err as NodeJS.ErrnoException)?.code === "EPERM";
+  }
+}
+
+/**
+ * Three-outcome reconciliation of runs that never settled:
+ * - pid alive            -> keep STARTED (the run is still in flight)
+ * - pid known and dead   -> ORPHANED (abnormal termination, persisted as ABORTED)
+ * - pid missing/invalid  -> UNKNOWN_PROCESS_STATE (persisted as DEGRADED, never success)
+ */
+export function reconcileOrphanedRuns(
+  videoDir: string,
+  options: ReconcileOrphanedRunsOptions,
+): ReconcileOrphanedRunsResult {
+  const result: ReconcileOrphanedRunsResult = {
+    inspected: 0,
+    active: [],
+    orphaned: [],
+    unknown: [],
+  };
+  const alive = options.isPidAlive ?? defaultPidAlive;
+
+  for (const manifest of listRunManifests(videoDir)) {
+    if (manifest.finishedAt) continue;
+    result.inspected += 1;
+
+    const pid = manifest.process?.pid;
+    let outcome: OrphanOutcome;
+    let reason: string;
+    let pidAlive: boolean | undefined;
+
+    if (typeof pid === "number" && Number.isInteger(pid) && pid > 0) {
+      pidAlive = alive(pid);
+      if (pidAlive) {
+        outcome = "ACTIVE";
+        reason = `El proceso pi (pid=${pid}) de la ejecución sigue activo; la corrida permanece STARTED.`;
+      } else {
+        outcome = "ORPHANED";
+        reason = `El proceso pi (pid=${pid}) que creó la ejecución ya no existe y la corrida nunca se asentó.`;
+      }
+    } else {
+      outcome = "UNKNOWN";
+      reason =
+        "UNKNOWN_PROCESS_STATE: la ejecución no registra un pid verificable, por lo que no se puede probar su término limpio.";
+    }
+
+    manifest.reconciliation = {
+      reconciledAt: options.now,
+      outcome,
+      reason,
+      ...(pidAlive !== undefined ? { pidAlive } : {}),
+    };
+
+    if (outcome === "ORPHANED") {
+      result.orphaned.push(manifest.runId);
+      manifest.incidents.push({ at: options.now, kind: "orphaned_process", summary: reason });
+    } else if (outcome === "UNKNOWN") {
+      result.unknown.push(manifest.runId);
+    } else {
+      result.active.push(manifest.runId);
+      saveRunManifest(videoDir, manifest);
+      continue;
+    }
+
+    saveRunManifest(videoDir, manifest);
+    appendRunEvent(videoDir, manifest.runId, {
+      at: options.now,
+      type: "run_settled",
+      phase: manifest.targetPhase,
+      workMode: manifest.workMode,
+      details: { reconciliation: outcome, reason, status: manifest.status },
+    });
+  }
+
+  return result;
 }
 
 export function sanitizeToolInputForLedger(

@@ -209,6 +209,7 @@
         "pi.setActiveTools",
         "ctx.cwd",
         "ctx.hasUI",
+        "ctx.sessionManager",
         "ctx.ui.confirm",
         "ctx.ui.notify",
         "ctx.ui.setHeader",

@@ -33,6 +33,12 @@ import {
 } from "../core/machine.ts";
 import { getPhase, parseProductionMode, PHASE_IDS } from "../core/phases.ts";
 import { extractSection } from "../core/sections.ts";
+import {
+  ACTIVATION_ID_ENV,
+  advanceActivationState,
+  diagnoseActivationState,
+  readActivationState,
+} from "../store/activation.ts";
 import type { CheckRun, Context, DeclaredEvidence, EffectiveStatus, PhaseId, Result } from "../core/types.ts";
 import { createFsReader, loadRegistry, registryPath, saveRegistry, scaffoldVideoDir, syncStatusView } from "../store/fs-store.ts";
 import {
@@ -41,6 +47,7 @@ import {
   finalizeRunRecord,
   listRunManifests,
   loadRunManifest,
+  reconcileOrphanedRuns,
   sanitizeToolInputForLedger,
   saveRunManifest,
 } from "../store/run-ledger.ts";
@@ -787,6 +794,26 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
   const catalog = buildCapabilityCatalog(options.extraCapabilities);
   const nowFn = options.now ?? (() => new Date().toISOString());
   let activeWorkMode: WorkMode = "production";
+  function getHostActivation(ctx: any): {
+    activationId?: string;
+    launchedViaWrapper: boolean;
+    sessionId?: string;
+    pid: number;
+  } {
+    const envId = process.env[ACTIVATION_ID_ENV];
+    const state = ctx?.cwd ? readActivationState(ctx.cwd) : undefined;
+    const sessionId =
+      typeof ctx?.sessionManager?.getSessionId === "function"
+        ? ctx.sessionManager.getSessionId()
+        : undefined;
+    return {
+      ...(envId ? { activationId: envId } : state?.activationId ? { activationId: state.activationId } : {}),
+      launchedViaWrapper: Boolean(envId) || Boolean(state?.launchedViaWrapper),
+      ...(sessionId ? { sessionId } : {}),
+      pid: process.pid,
+    };
+  }
+
   let currentRun: {
     videoDir: string;
     manifest: RunManifest;
@@ -820,6 +847,7 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
       if (activeWorkMode === "read_only") {
         resolvedWorkflow.workMode = "read_only";
       }
+      const host = getHostActivation({ cwd: videoDir });
       const manifest = createRunRecord({
         videoDir,
         startedAt: nowIso,
@@ -827,6 +855,12 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         resolvedWorkflow,
         promptDelivered: false,
         packageRoot: options.packageRoot,
+        process: {
+          pid: host.pid,
+          ...(host.sessionId ? { sessionId: host.sessionId } : {}),
+          ...(host.activationId ? { activationId: host.activationId } : {}),
+          launchedViaWrapper: host.launchedViaWrapper,
+        },
       });
       if (regCorruptError) {
         manifest.incidents.push({
@@ -1022,6 +1056,26 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
 
   return function youtubeShellExtension(pi: any) {
     pi.on("session_start", async (_event: any, ctx: any) => {
+      try {
+        const nowIso = nowFn();
+        reconcileOrphanedRuns(ctx.cwd, { now: nowIso });
+        const host = getHostActivation(ctx);
+        if (host.launchedViaWrapper) {
+          diagnoseActivationState(ctx.cwd, { now: nowIso });
+          advanceActivationState({
+            videoDir: ctx.cwd,
+            state: "EXTENSION_ACTIVATED",
+            at: nowIso,
+            ...(host.activationId ? { activationId: host.activationId } : {}),
+            launchedViaWrapper: true,
+            pid: host.pid,
+            ...(host.sessionId ? { sessionId: host.sessionId } : {}),
+            detail: "extensión cargada y hook de sesión activo",
+          });
+        }
+      } catch {
+        // Activation recording must never block session start.
+      }
       refreshUi(ctx);
     });
 
@@ -1746,6 +1800,7 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
       const governanceBlock = buildThreeLayerPrompt(resolvedWorkflow);
       const promptHash = sha256Text(governanceBlock);
 
+      const host = getHostActivation(ctx);
       const manifest = createRunRecord({
         videoDir: ctx.cwd,
         startedAt: nowIso,
@@ -1755,6 +1810,12 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
         promptDelivered: true,
         promptHash,
         packageRoot: options.packageRoot,
+        process: {
+          pid: host.pid,
+          ...(host.sessionId ? { sessionId: host.sessionId } : {}),
+          ...(host.activationId ? { activationId: host.activationId } : {}),
+          launchedViaWrapper: host.launchedViaWrapper,
+        },
       });
 
       const integrity = getFrameworkIntegrity();
@@ -1767,6 +1828,16 @@ export function createYoutubeShellExtension(options: YoutubeShellExtensionOption
       }
 
       saveRunManifest(ctx.cwd, manifest);
+      advanceActivationState({
+        videoDir: ctx.cwd,
+        state: "RUN_STARTED",
+        at: nowIso,
+        ...(host.activationId ? { activationId: host.activationId } : {}),
+        launchedViaWrapper: host.launchedViaWrapper,
+        pid: host.pid,
+        ...(host.sessionId ? { sessionId: host.sessionId } : {}),
+        detail: `run ${manifest.runId} sobre ${manifest.targetPhase}`,
+      });
       appendRunEvent(ctx.cwd, manifest.runId, {
         at: nowIso,
         type: "run_started",

@@ -9,10 +9,13 @@ import {
   buildPiInvocation,
   parseLauncherArgs,
   prepareIsolatedHome,
+  recordLauncherActivation,
   resolveAgentHome,
   resolvePiBinary,
   verifyHarnessPreflight,
 } from "../src/cli/launcher.ts";
+import { advanceActivationState, diagnoseActivationState, readActivationState } from "../src/store/activation.ts";
+import { reconcileOrphanedRuns } from "../src/store/run-ledger.ts";
 
 const ROOT = join(import.meta.dirname, "..");
 
@@ -174,6 +177,74 @@ test("buildPiInvocation isolates extensions and skills for interactive runs and 
   });
 
   assert.deepEqual(subcommand.args, ["mcp", "list"]);
+});
+
+test("S3 (v0.16.0): buildPiInvocation injects activation env for normal runs and not for pi subcommands", () => {
+  const parsedNormal: Parameters<typeof buildPiInvocation>[0]["parsed"] = {
+    help: false,
+    version: false,
+    link: false,
+    runs: false,
+    audit: false,
+    piSubcommand: undefined,
+    passthrough: ["--print", "Hola"],
+  };
+  const parsedSub: Parameters<typeof buildPiInvocation>[0]["parsed"] = {
+    help: false,
+    version: false,
+    link: false,
+    runs: false,
+    audit: false,
+    piSubcommand: "mcp",
+    passthrough: ["mcp", "list"],
+  };
+  const baseOptions = {
+    piCommand: "/usr/local/bin/pi",
+    packageRoot: "/repo/youtube-shell",
+    homeDir: "/Users/creator/.youtube-shell/agent",
+    videoDir: "/Users/creator/video",
+    baseEnv: { PATH: "/usr/bin" },
+  };
+
+  const normal = buildPiInvocation({ ...baseOptions, parsed: parsedNormal, activationId: "act-20261101T140000Z-ab12cd" });
+  assert.equal(normal.env.YOUTUBE_SHELL_ACTIVATION_ID, "act-20261101T140000Z-ab12cd");
+  assert.equal(normal.env.YOUTUBE_SHELL_VIDEO_DIR, "/Users/creator/video");
+
+  const sub = buildPiInvocation({ ...baseOptions, parsed: parsedSub, activationId: "act-20261101T140000Z-ab12cd" });
+  assert.ok(!("YOUTUBE_SHELL_ACTIVATION_ID" in sub.env), "pi subcommands must not receive the activation env");
+});
+
+test("S3 (v0.16.0): recordLauncherActivation persists HOST_STARTED on a valid harness and PREFLIGHT_FAILED on a broken one", (t) => {
+  const videoDir = mkdtempSync(join(tmpdir(), "yts-activation-"));
+  t.after(() => rmSync(videoDir, { recursive: true, force: true }));
+
+  const okRes = recordLauncherActivation(ROOT, videoDir, () => "2026-11-01T14:00:00Z");
+  assert.equal(okRes.ok, true);
+  if (okRes.ok) {
+    assert.match(okRes.activationId, /^act-\d{8}T\d{6}Z-[0-9a-f]{6}$/);
+  }
+  const okState = readActivationState(videoDir);
+  assert.equal(okState?.state, "HOST_STARTED");
+  assert.equal(okState?.launchedViaWrapper, true);
+  assert.equal(okState?.pid, process.pid);
+  assert.match(okState?.activationId ?? "", /^act-\d{8}T\d{6}Z-[0-9a-f]{6}$/);
+  assert.deepEqual(okState?.sequence.map((s) => s.state), ["HOST_STARTED"]);
+
+  const brokenRoot = mkdtempSync(join(tmpdir(), "yts-preflight-broken2-"));
+  t.after(() => rmSync(brokenRoot, { recursive: true, force: true }));
+  const videoDir2 = mkdtempSync(join(tmpdir(), "yts-activation2-"));
+  t.after(() => rmSync(videoDir2, { recursive: true, force: true }));
+
+  const badRes = recordLauncherActivation(brokenRoot, videoDir2, () => "2026-11-01T14:00:01Z");
+  assert.equal(badRes.ok, false);
+  if (!badRes.ok) {
+    assert.match(badRes.reason, /NOT_TRIGGERED/);
+  }
+  const badState = readActivationState(videoDir2);
+  assert.equal(badState?.state, "PREFLIGHT_FAILED");
+  assert.equal(badState?.launchedViaWrapper, true);
+  assert.equal(badState?.pid, process.pid);
+  assert.deepEqual(badState?.sequence.map((s) => s.state), ["PREFLIGHT_FAILED"]);
 });
 
 test("resolvePiBinary honors YOUTUBE_SHELL_PI and PATH lookup", (t) => {

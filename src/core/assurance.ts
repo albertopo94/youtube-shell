@@ -107,7 +107,8 @@ export type IncidentKind =
   | "check_failed"
   | "transition_denied"
   | "integrity_failure"
-  | "aborted";
+  | "aborted"
+  | "orphaned_process";
 
 export interface RunIncident {
   at: string;
@@ -119,6 +120,23 @@ export interface RunEnvironmentInfo {
   youtubeShellVersion: string;
   piReviewedVersion: string;
   upstreamYoutubeCommit: string;
+}
+
+/** Host identity captured when the run was created, used to reconcile orphaned runs. */
+export interface RunProcessBinding {
+  pid: number;
+  sessionId?: string;
+  activationId?: string;
+  launchedViaWrapper?: boolean;
+}
+
+export type OrphanOutcome = "ACTIVE" | "ORPHANED" | "UNKNOWN";
+
+export interface RunReconciliation {
+  reconciledAt: string;
+  outcome: OrphanOutcome;
+  reason: string;
+  pidAlive?: boolean;
 }
 
 export interface AssuranceControlItem {
@@ -153,6 +171,8 @@ export interface RunManifest {
   phaseStatusAtStart: string;
   phaseStatusAtEnd?: string;
   phaseSubmitted?: boolean;
+  process?: RunProcessBinding;
+  reconciliation?: RunReconciliation;
   assignedSkill: string;
   context: ContextAttestation;
   actions: RunActionsRecord;
@@ -1046,6 +1066,28 @@ export function evaluateRunAssurance(manifest: RunManifest): AssuranceEvaluation
   const totalControls = controls.length;
 
   // Determine RunStatus
+  if (manifest.reconciliation?.outcome === "ORPHANED") {
+    return {
+      status: "ABORTED",
+      reason: `ORPHANED: el proceso pi (pid=${manifest.process?.pid ?? "desconocido"}) terminó de forma anómala sin asentar la ejecución.`,
+      satisfiedCount,
+      totalControls,
+      controls,
+      diagnosis:
+        "La corrida quedó huérfana: el proceso que la creó ya no existe y nunca registró un asentamiento. No se asume éxito; reanude la fase para verificar los artefactos pendientes.",
+    };
+  }
+  if (manifest.reconciliation?.outcome === "UNKNOWN") {
+    return {
+      status: "DEGRADED",
+      reason: "UNKNOWN_PROCESS_STATE: no se pudo verificar si el proceso de la ejecución sigue vivo.",
+      satisfiedCount,
+      totalControls,
+      controls,
+      diagnosis:
+        "La corrida no tiene identidad de proceso verificable, por lo que su estado real es desconocido. Nunca se asume éxito ante evidencia de proceso ausente.",
+    };
+  }
   if (manifest.aborted) {
     return {
       status: "ABORTED",
