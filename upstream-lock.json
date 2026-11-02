@@ -152,7 +152,7 @@
           "upstream_path": "_framework/compatibilidad-consumidores.md",
           "upstream_sha256": "73c88b5809c4c58e1cd84c46910b26431734823c5868bd45f8b766902b2bf4c9",
           "local_target": "upstream-lock.json",
-          "role": "consumer_contract; consumer version declared: youtube-shell v0.15.0 (aligned 8/8 templates; 53 atomic_learnings complete with guarantee_level + source_sha256 + consumer_sha256; execution observability ledger, CLI --runs/--audit and 9 E2E assurance scenarios)"
+          "role": "consumer_contract; consumer version declared: youtube-shell v0.16.0 (aligned 8/8 templates; 53 atomic_learnings complete with guarantee_level + source_sha256 + consumer_sha256; execution observability ledger, CLI --runs/--audit and 9 E2E assurance scenarios)"
         },
         {
           "upstream_path": "_framework/gobernanza-evidencia.md",

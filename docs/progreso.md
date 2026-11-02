@@ -18,14 +18,14 @@ Orden de trabajo de [brief-lector.md §12.5](brief-lector.md). Se actualiza en c
 
 ## 2. Dónde nos quedamos (Handoff para la próxima sesión)
 
-- **Versión actual:** `0.15.0` (`157/157` tests en verde con `npm test` y `npm run smoke`).
+- **Versión actual:** `0.16.0` (`176/176` tests en verde con `npm test` y `npm run smoke`).
 - **Upstreams fijados en [`upstream-lock.json`](../upstream-lock.json):**
   - `albertopo94/youtube`: commit `7ff07e03581b10854e48d46b2f0822273304d776` (`2026-11-01T20:31:48Z`, `v0.7.2-alineacion-epistemica-y-criterio-outliers`, con las 8 plantillas `00..06` + `entregable-final.md` espejadas en `mirrored` y las 18 fuentes normativas/consolidadas bloqueadas con SHA-256 en `normative_sources` incluyendo `gobernanza-evidencia.md`, `registro-tecnicas.md`, `check-contrato.sh` y `medicion-master-piloto.md`).
   - `earendil-works/pi`: versión revisada `v1.4.0` (`4a080252f06caf63a525d7873c5d94d3c23887e0`, `2026-10-21T22:29:13Z`, auditada retrocompatible en todas las 17 APIs de extensiones consumidas incluyendo `tool_result`, `tool_execution_end` y `agent_settled`).
   - `storytold/filmcraft`: versión revisada `0.15.0` (`94ceaa91a58e3e18ebe5676c10befa56759c9ceb`), 17 herramientas MCP verificadas contra el binario instalado (`mcp_surface_sha256`).
   - `storytold/effectcraft`: versión revisada `0.19.0` (`afa3c938f6d7f2fd8688e9cd6f58dba0c606b1b4`), 27 herramientas MCP verificadas contra el binario instalado, incluido `list_commands` que estaba sin catalogar.
   - `storytold/soundcraft`: versión revisada `0.15.0` (`a97ce7556c5362718e8bcab5349477381ff3fb65`), 17 herramientas MCP verificadas contra el binario instalado, acotadas a `P06_ASSEMBLY`.
-- **Estado de Git:** `main` local en `v0.15.0`; comando `youtube-shell` enlazado globalmente en `/Users/albertmac11/.local/bin/youtube-shell` mediante `npm link`.
+- **Estado de Git:** `main` local en `v0.16.0`; comando `youtube-shell` enlazado globalmente en `/Users/albertmac11/.local/bin/youtube-shell` mediante `npm link`.
 
 ---
 
